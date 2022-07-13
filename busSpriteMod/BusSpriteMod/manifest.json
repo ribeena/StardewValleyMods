@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Bus Sprite Positions Modd",
+  "Author": "ribeena",
+  "Version": "1.0.0",
+  "Description": "Something",
+  "UniqueID": "ribeena.busspritemod",
+  "EntryDll": "BusSpriteMod.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}

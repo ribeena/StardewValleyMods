@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Bus Sprite Adjuster",
+  "Author": "ribeena",
+  "Version": "0.0.1",
+  "Description": "One or two sentences about the mod",
+  "UniqueID": "ribeena.busspriteadjuster",
+  "EntryDll": "BusSpriteAdjust.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}
