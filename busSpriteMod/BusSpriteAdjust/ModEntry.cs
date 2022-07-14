@@ -18,6 +18,7 @@ namespace BusSpriteAdjust
     public class ModEntry : Mod
     {
         public static ModEntry context;//single instance
+        public static Harmony harmony;
         public static TemporaryAnimatedSprite customBusDoor;
         public static Texture2D busWheelsTex;
         public static Vector2 busPosition;
@@ -59,6 +60,9 @@ namespace BusSpriteAdjust
         public static bool desertArrived = false;
         public static bool travelToBusStop = false;
 
+        public static bool BusLocationsModded = false;
+        public static IBusStopEventsApi busLocationsApi;
+
         /*********
         ** Public methods
         *********/
@@ -66,7 +70,8 @@ namespace BusSpriteAdjust
         /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
         {
-            helper.Events.Player.Warped += this.OnWarp;
+            helper.Events.Player.Warped += OnWarp;
+            helper.Events.GameLoop.GameLaunched += OnGameLaunched;
 
             context = this;
 
@@ -89,7 +94,7 @@ namespace BusSpriteAdjust
             //Animated wheels
             busWheelsTex = helper.Content.Load<Texture2D>("assets/bus_wheels.png");
 
-            var harmony = new Harmony(ModManifest.UniqueID);
+            harmony = new Harmony(ModManifest.UniqueID);
 
             //Before drawing handle the bus door with a new custom temporary animated sprite
             //also fix pam
@@ -134,8 +139,32 @@ namespace BusSpriteAdjust
                 postfix: new HarmonyMethod(typeof(ModEntry), nameof(d_busDriveOff_post))
             );
 
+
             
 
+        }
+
+        public static void OnGameLaunched(object sender, GameLaunchedEventArgs e)
+        {
+            //BusLocations comptaibility
+            //https://github.com/ShinyFurretz/StardewMods/blob/master/BusLocations/ModEntry.cs
+            context.Monitor.Log("Checking BusLocations", LogLevel.Debug);
+
+            busLocationsApi = context.Helper.ModRegistry.GetApi<IBusStopEventsApi>("hootless.BusLocations");
+            if (busLocationsApi != null)
+            {
+                context.Monitor.Log("BusLocations installed, hooking up events", LogLevel.Debug);
+
+                BusLocationsModded = true;
+                //Set the action for when answer is yes
+                busLocationsApi.SetJumpToLocation(bs_answerDialogueBusLocations);
+
+                //Use the new warping method
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(BusStop), "busLeftToDesert"),
+                    postfix: new HarmonyMethod(typeof(ModEntry), nameof(post_busLeftToDesert))
+                );
+            }
         }
 
 
@@ -479,8 +508,9 @@ namespace BusSpriteAdjust
 
         private static void bs_answerDialogue_post()
         {
+            
             //the player is told to move to the bus door
-            if(Game1.player.controller != null)
+            if (Game1.player.controller != null)
             {
                 //Open the tile
                 Game1.currentLocation.setMapTileIndex(busStopTile.X + doorTileOffset.X, busStopTile.Y + 1, blankTile, "Buildings");
@@ -491,6 +521,23 @@ namespace BusSpriteAdjust
                 Game1.player.controller = new PathFindController(Game1.player, Game1.currentLocation, busStopTile + doorTileOffset, 0, bs_pathDone);
             }
 
+        }
+
+        public static void bs_answerDialogueBusLocations()
+        {
+            context.Monitor.Log("Start walking path", LogLevel.Debug);
+
+            Game1.freezeControls = true;
+            Game1.viewportFreeze = true;
+            //Open the tile
+            Game1.currentLocation.setMapTileIndex(busStopTile.X + doorTileOffset.X, busStopTile.Y + 1, blankTile, "Buildings");
+
+            Game1.player.controller = new PathFindController(Game1.player, Game1.currentLocation, busStopTile + doorTileOffset, 0, bs_pathDone);
+            Game1.player.setRunning(isRunning: true);
+            if (Game1.player.mount != null)
+            {
+                Game1.player.mount.farmerPassesThrough = true;
+            }
         }
 
         private static void bs_pathDone(Character c, GameLocation location) {
@@ -513,6 +560,18 @@ namespace BusSpriteAdjust
             Game1.player.faceDirection(2);
             //close off the access to bus
             Game1.currentLocation.setMapTileIndex(busStopTile.X + doorTileOffset.X, busStopTile.Y + 1, roadTile, "Buildings");
+        }
+
+        //BusLocations compatibility
+        public static void post_busLeftToDesert()
+        {
+            if (busLocationsApi.GetDestinationMap() != "Desert") //Run the default code for desert
+            {
+                //context.Monitor.Log("Player to warp", LogLevel.Debug);
+                Game1.viewportFreeze = true;
+                Game1.warpFarmer(busLocationsApi.GetDestinationMap(), busLocationsApi.GetDestinationPoint().X, busLocationsApi.GetDestinationPoint().Y, busLocationsApi.GetDestinationFacing());
+                Game1.globalFade = false;
+            }
         }
 
         private static void d_UpdateWhenCurrentLocation_post(Desert __instance)
@@ -567,8 +626,6 @@ namespace BusSpriteAdjust
                         Game1.globalFadeToClear();
                     });
                 }
-
-               
             }
             ///////////////////////////////////
             
@@ -736,7 +793,14 @@ namespace BusSpriteAdjust
                 Game1.currentLocation.setTileProperty(desertStopTile.X + doorTileOffset.X, desertStopTile.Y, "Back", "TouchAction", "DesertBus");
                 Game1.currentLocation.setMapTileIndex(desertStopTile.X + doorTileOffset.X, desertStopTile.Y, blankTile, "Buildings");
             }
-
         }
+    }
+
+    public interface IBusStopEventsApi
+    {
+        public void SetJumpToLocation(Action handler);
+        public string GetDestinationMap();
+        public Point GetDestinationPoint();
+        public int GetDestinationFacing();
     }
 }
