@@ -5,7 +5,7 @@
   "Description": "Make per Farmer changes to your body's appearance.",
   "UniqueID": "ribeena.dynamicbodies",
   "EntryDll": "DynamicBodies.dll",
-  "MinimumApiVersion": "3.0.0",
+  "MinimumApiVersion": "3.15.0",
   "UpdateKeys": [],
   "Dependencies": [
     {

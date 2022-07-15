@@ -79,6 +79,10 @@ namespace DynamicBodies.Data
 
         public static string GetKey(Farmer who)
         {
+            if (who.isFakeEventActor)
+            {
+                return who.UniqueMultiplayerID.ToString() + "_fake";
+            }
             return who.UniqueMultiplayerID.ToString();
         }
 
