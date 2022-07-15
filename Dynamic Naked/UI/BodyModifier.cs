@@ -47,7 +47,7 @@ namespace DynamicBodies.UI
 
 		public const int swatchsize = 40;
 
-
+		private Farmer who;
 
 		private PlayerBaseExtended pbe;
 		public Source source;
@@ -121,26 +121,28 @@ namespace DynamicBodies.UI
 		public BodyModifier(Source source, bool wizardSub = false)
 		: base(Game1.uiViewport.Width / 2 - (632 + IClickableMenu.borderWidth * 2) / 2, Game1.uiViewport.Height / 2 - (windowHeight[source] + IClickableMenu.borderWidth * 2) / 2 - 64, 632 + IClickableMenu.borderWidth * 2, windowHeight[source] + IClickableMenu.borderWidth * 2 + 64)
 		{
+			who = Game1.player;
+
 			isWizardSubmenu = wizardSub;
-			this.pbe = PlayerBaseExtended.Get(Game1.player);
+			this.pbe = PlayerBaseExtended.Get(who);
 			if (pbe == null)
 			{
-				pbe = new PlayerBaseExtended(Game1.player, "Characters\\Farmer\\farmer_base", -2, Game1.player.GetPantsIndex(), -2);
+				pbe = new PlayerBaseExtended(who, "Characters\\Farmer\\farmer_base");
 			}
 			//Store settings for resetting
-			initEyeColor = Game1.player.newEyeColor.Value;
-			initHairColor = new Color((uint)Game1.player.hairColor);
-			settingsBefore["acc"] = Game1.player.accessory.ToString();
-			settingsBefore["DB." + pbe.body.name] = pbe.body.GetOptionModData(Game1.player);
-			settingsBefore["DB." + pbe.arm.name] = pbe.arm.GetOptionModData(Game1.player);
-			settingsBefore["DB." + pbe.beard.name] = pbe.beard.GetOptionModData(Game1.player);
+			initEyeColor = who.newEyeColor.Value;
+			initHairColor = new Color((uint)who.hairColor);
+			settingsBefore["acc"] = who.accessory.ToString();
+			settingsBefore["DB." + pbe.body.name] = pbe.body.GetOptionModData(who);
+			settingsBefore["DB." + pbe.arm.name] = pbe.arm.GetOptionModData(who);
+			settingsBefore["DB." + pbe.beard.name] = pbe.beard.GetOptionModData(who);
 			
-			settingsBefore["DB." + pbe.bodyHair.name] = pbe.bodyHair.GetOptionModData(Game1.player);
-			settingsBefore["DB." + pbe.nakedLower.name] = pbe.nakedLower.GetOptionModData(Game1.player);
-			settingsBefore["DB." + pbe.nakedUpper.name] = pbe.nakedUpper.GetOptionModData(Game1.player);
-			if (Game1.player.modData.ContainsKey("DB.darkHair"))
+			settingsBefore["DB." + pbe.bodyHair.name] = pbe.bodyHair.GetOptionModData(who);
+			settingsBefore["DB." + pbe.nakedLower.name] = pbe.nakedLower.GetOptionModData(who);
+			settingsBefore["DB." + pbe.nakedUpper.name] = pbe.nakedUpper.GetOptionModData(who);
+			if (who.modData.ContainsKey("DB.darkHair"))
 			{
-				settingsBefore["DB.darkHair"] = Game1.player.modData["DB.darkHair"];
+				settingsBefore["DB.darkHair"] = who.modData["DB.darkHair"];
 			}
 			else
 			{
@@ -178,13 +180,13 @@ namespace DynamicBodies.UI
 			}
 
 			clothingToggles["hat"] = new ClothingToggle() { offset = 16 };
-			clothingToggles["hat"].active = clothingToggles["hat"].showing = Game1.player.hat.Value != null;
+			clothingToggles["hat"].active = clothingToggles["hat"].showing = who.hat.Value != null;
 			clothingToggles["shirt"] = new ClothingToggle() { offset = 32 };
-			clothingToggles["shirt"].active = clothingToggles["shirt"].showing = Game1.player.shirtItem.Get() != null;
+			clothingToggles["shirt"].active = clothingToggles["shirt"].showing = who.shirtItem.Get() != null;
 			clothingToggles["pants"] = new ClothingToggle() { offset = 48 };
-			clothingToggles["pants"].active = clothingToggles["pants"].showing = Game1.player.GetPantsIndex() != 14;
+			clothingToggles["pants"].active = clothingToggles["pants"].showing = who.GetPantsIndex() != 14;
 			clothingToggles["shoes"] = new ClothingToggle() { offset = 64 };
-			clothingToggles["shoes"].active = clothingToggles["shoes"].showing = Game1.player.shoes.Value != 12;
+			clothingToggles["shoes"].active = clothingToggles["shoes"].showing = who.shoes.Value != 12;
 
 			switch (source) {
 				case Source.Doctors:
@@ -203,12 +205,12 @@ namespace DynamicBodies.UI
             
 			this._recolorEyesAction = delegate
 			{
-				Game1.player.changeEyeColor(this.eyeColorPicker.getSelectedColor());
+				who.changeEyeColor(this.eyeColorPicker.getSelectedColor());
 			};
 			this._recolorHairAction = delegate
 			{
-				Game1.player.changeHairColor(this.hairColorPicker.getSelectedColor());
-				Game1.player.modData["DB.darkHair"] = this.hairDarkColorPicker.getSelectedColor().PackedValue.ToString();
+				who.changeHairColor(this.hairColorPicker.getSelectedColor());
+				who.modData["DB.darkHair"] = this.hairDarkColorPicker.getSelectedColor().PackedValue.ToString();
 				ModEntry.MakePlayerDirty();
 			};
 			this._displayFarmer = this.GetOrCreateDisplayFarmer();
@@ -232,7 +234,7 @@ namespace DynamicBodies.UI
 		{
 			if (this._displayFarmer == null)
 			{
-				this._displayFarmer = Game1.player;
+				this._displayFarmer = who;
 				this._displayFarmer.faceDirection(2);
 				this._displayFarmer.FarmerSprite.StopAnimation();
 			}
@@ -295,7 +297,7 @@ namespace DynamicBodies.UI
 				X = portraitBox.X + portraitBox.Width + 10 * 4,
 				Y = base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 16,
 				Width = 104 * 4,
-				Text = title+Game1.player.Name
+				Text = title+who.Name
 			};
 
 			int yOffset = 32;
@@ -353,7 +355,7 @@ namespace DynamicBodies.UI
 			this.labels.Add(new ClickableComponent(new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_EyeColor")));
 			
 			this.eyeColorPicker = new ColorPicker("Eyes", top.X, top.Y);
-			this.eyeColorPicker.setColor(Game1.player.newEyeColor.Value);
+			this.eyeColorPicker.setColor(who.newEyeColor.Value);
 			this.colorPickerCCs.Add(new ClickableComponent(new Rectangle(top.X, top.Y, 128, 20), "")
 			{
 				myID = region_colorPicker1,
@@ -386,7 +388,7 @@ namespace DynamicBodies.UI
 			this.labels.Add(new ClickableComponent(new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_HairColor")));
 
 			this.hairColorPicker = new ColorPicker("Hair", top.X, top.Y);
-			this.hairColorPicker.setColor(Game1.player.hairstyleColor.Value);
+			this.hairColorPicker.setColor(who.hairstyleColor.Value);
 			this.colorPickerCCs.Add(new ClickableComponent(new Rectangle(top.X, top.Y, 128, 20), "")
 			{
 				myID = region_colorPicker4,
@@ -420,9 +422,9 @@ namespace DynamicBodies.UI
 			this.labels.Add(new ClickableComponent(new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("hair_dark")+":"));
 			this.hairDarkColorPicker = new ColorPicker("HairDark", top.X, top.Y);
 
-			if (Game1.player.modData.ContainsKey("DB.darkHair"))
+			if (who.modData.ContainsKey("DB.darkHair"))
 			{
-				this.hairDarkColorPicker.setColor(new Color(uint.Parse(Game1.player.modData["DB.darkHair"])));
+				this.hairDarkColorPicker.setColor(new Color(uint.Parse(who.modData["DB.darkHair"])));
 			}
 			else
 			{
@@ -1043,18 +1045,18 @@ namespace DynamicBodies.UI
 
 		private void RevertChanges()
         {
-			PlayerBaseExtended pbe = PlayerBaseExtended.Get(Game1.player);
-			Game1.player.changeEyeColor(initEyeColor);
-			Game1.player.changeHairColor(initHairColor);
-			Game1.player.modData["DB.darkHair"] = settingsBefore["DB.darkHair"];
-			Game1.player.accessory.Set(Int32.Parse(settingsBefore["acc"]));
+			PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
+			who.changeEyeColor(initEyeColor);
+			who.changeHairColor(initHairColor);
+			who.modData["DB.darkHair"] = settingsBefore["DB.darkHair"];
+			who.accessory.Set(Int32.Parse(settingsBefore["acc"]));
 
-			Game1.player.modData["DB." + pbe.body.name] = settingsBefore["DB." + pbe.body.name];
-			Game1.player.modData["DB." + pbe.arm.name] = settingsBefore["DB." + pbe.arm.name];
-			Game1.player.modData["DB." + pbe.beard.name] = settingsBefore["DB." + pbe.beard.name];
-			Game1.player.modData["DB." + pbe.bodyHair.name] = settingsBefore["DB." + pbe.bodyHair.name];
-			Game1.player.modData["DB." + pbe.nakedLower.name] = settingsBefore["DB." + pbe.nakedLower.name];
-			Game1.player.modData["DB." + pbe.nakedUpper.name] = settingsBefore["DB." + pbe.nakedUpper.name];
+			who.modData["DB." + pbe.body.name] = settingsBefore["DB." + pbe.body.name];
+			who.modData["DB." + pbe.arm.name] = settingsBefore["DB." + pbe.arm.name];
+			who.modData["DB." + pbe.beard.name] = settingsBefore["DB." + pbe.beard.name];
+			who.modData["DB." + pbe.bodyHair.name] = settingsBefore["DB." + pbe.bodyHair.name];
+			who.modData["DB." + pbe.nakedLower.name] = settingsBefore["DB." + pbe.nakedLower.name];
+			who.modData["DB." + pbe.nakedUpper.name] = settingsBefore["DB." + pbe.nakedUpper.name];
 			pbe.dirty = true;
 		}
 
@@ -1064,10 +1066,10 @@ namespace DynamicBodies.UI
 			{
 				if (clothingToggles["pants"].storeItem != null)
 				{
-					Game1.player.pantsItem.Set(clothingToggles["pants"].storeItem as Clothing);
+					who.pantsItem.Set(clothingToggles["pants"].storeItem as Clothing);
 				} else
                 {
-					Game1.player.changePantStyle(clothingToggles["pants"].store);
+					who.changePantStyle(clothingToggles["pants"].store);
 				}
 				clothingToggles["pants"].showing = true;
 			}
@@ -1075,7 +1077,7 @@ namespace DynamicBodies.UI
 			if (!clothingToggles["shoes"].showing)
 			{
 
-				Game1.player.shoes.Set(clothingToggles["shoes"].store);
+				who.shoes.Set(clothingToggles["shoes"].store);
 				Game1.playSound("pickUpItem");
 
 				clothingToggles["shoes"].showing = true;
@@ -1083,7 +1085,7 @@ namespace DynamicBodies.UI
 
 			if (!clothingToggles["shirt"].showing)
 			{
-				Game1.player.shirtItem.Set(clothingToggles["shirt"].storeItem as Clothing);
+				who.shirtItem.Set(clothingToggles["shirt"].storeItem as Clothing);
 
 				clothingToggles["shirt"].showing = true;
 
@@ -1092,7 +1094,7 @@ namespace DynamicBodies.UI
 			if (!clothingToggles["hat"].showing)
 			{
 
-				Game1.player.hat.Set(clothingToggles["hat"].storeItem as Hat);
+				who.hat.Set(clothingToggles["hat"].storeItem as Hat);
 				clothingToggles["hat"].showing = true;
 
 			}
@@ -1152,11 +1154,11 @@ namespace DynamicBodies.UI
 				case "OK":
 					{
 						RevertClothing();
-						Game1.player.isCustomized.Value = true;
+						who.isCustomized.Value = true;
 						// Declare beauty change
 						/*if (source == Source.Doctors)
 						{
-							Game1.multiplayer.globalChatInfoMessage("Makeover", Game1.player.Name+" got some surgery.");
+							Game1.multiplayer.globalChatInfoMessage("Makeover", who.Name+" got some surgery.");
 						}*/
 						
 						if (isWizardSubmenu)
@@ -1166,7 +1168,7 @@ namespace DynamicBodies.UI
 						}
 						else
 						{
-							Game1.player.Money -= cost;
+							who.Money -= cost;
 							this.exitThisMenu(false);
 							Game1.playSound("purchase");
 						}
@@ -1190,7 +1192,7 @@ namespace DynamicBodies.UI
 				case "Hair":
 					{
 						List<int> all_hairs = Farmer.GetAllHairstyleIndices();
-						int current_index = all_hairs.IndexOf(Game1.player.hair.Value);
+						int current_index = all_hairs.IndexOf(who.hair.Value);
 						current_index += change;
 						if (current_index >= all_hairs.Count)
 						{
@@ -1200,17 +1202,17 @@ namespace DynamicBodies.UI
 						{
 							current_index = all_hairs.Count() - 1;
 						}
-						Game1.player.changeHairStyle(all_hairs[current_index]);
+						who.changeHairStyle(all_hairs[current_index]);
 						//Update the base file recording as needed
-						PlayerBaseExtended.Get(Game1.player).SetVanillaFile(Game1.player.getTexture());
+						pbe.SetVanillaFile(who.getTexture());
 						ModEntry.MakePlayerDirty();
 						Game1.playSound("grassyStep");
 						break;
 					}
 				case "Body":
 					{
-						List<string> all_bodys = ModEntry.getContentPackOptions(ModEntry.bodyOptions, Game1.player.IsMale).ToList();
-						int current_index = all_bodys.IndexOf((Game1.player.modData.ContainsKey("DB.body")) ? Game1.player.modData["DB.body"] : "Default");
+						List<string> all_bodys = ModEntry.getContentPackOptions(ModEntry.bodyOptions, who.IsMale).ToList();
+						int current_index = all_bodys.IndexOf((who.modData.ContainsKey("DB.body")) ? who.modData["DB.body"] : "Default");
 						current_index += change;
 						if (current_index >= all_bodys.Count)
 						{
@@ -1220,15 +1222,15 @@ namespace DynamicBodies.UI
 						{
 							current_index = all_bodys.Count() - 1;
 						}
-						Game1.player.modData["DB.body"] = all_bodys[current_index];
+						pbe.SetModData(who, "DB.body", all_bodys[current_index]);
 
 						Game1.playSound("grassyStep");
 						break;
 					}
 				case "Arm":
 					{
-						List<string> all_arms = ModEntry.getContentPackOptions(ModEntry.armOptions, Game1.player.IsMale).ToList();
-						int current_index = all_arms.IndexOf((Game1.player.modData.ContainsKey("DB.arm")) ? Game1.player.modData["DB.arm"] : "Default");
+						List<string> all_arms = ModEntry.getContentPackOptions(ModEntry.armOptions, who.IsMale).ToList();
+						int current_index = all_arms.IndexOf((who.modData.ContainsKey("DB.arm")) ? who.modData["DB.arm"] : "Default");
 						current_index += change;
 						if (current_index >= all_arms.Count)
 						{
@@ -1238,15 +1240,15 @@ namespace DynamicBodies.UI
 						{
 							current_index = all_arms.Count() - 1;
 						}
-						Game1.player.modData["DB.arm"] = all_arms[current_index];
+						pbe.SetModData(who, "DB.arm", all_arms[current_index]);
 
 						Game1.playSound("grassyStep");
 						break;
 					}
 				case "Beard":
 					{
-						List<string> all_beards = ModEntry.getContentPackOptions(ModEntry.beardOptions, Game1.player.IsMale).ToList();
-						int current_index = all_beards.IndexOf((Game1.player.modData.ContainsKey("DB.beard")) ? Game1.player.modData["DB.beard"] : "Default");
+						List<string> all_beards = ModEntry.getContentPackOptions(ModEntry.beardOptions, who.IsMale).ToList();
+						int current_index = all_beards.IndexOf((who.modData.ContainsKey("DB.beard")) ? who.modData["DB.beard"] : "Default");
 						current_index += change;
 						if (current_index >= all_beards.Count)
 						{
@@ -1256,15 +1258,15 @@ namespace DynamicBodies.UI
 						{
 							current_index = all_beards.Count() - 1;
 						}
-						Game1.player.modData["DB.beard"] = all_beards[current_index];
+						pbe.SetModData(who, "DB.beard", all_beards[current_index]);
 
 						Game1.playSound("grassyStep");
 						break;
 					}
 				case "BodyHair":
 					{
-						List<string> all_bh = ModEntry.getContentPackOptions(ModEntry.bodyHairOptions, Game1.player.IsMale).ToList();
-						int current_index = all_bh.IndexOf((Game1.player.modData.ContainsKey("DB.bodyHair")) ? Game1.player.modData["DB.bodyHair"] : "Default");
+						List<string> all_bh = ModEntry.getContentPackOptions(ModEntry.bodyHairOptions, who.IsMale).ToList();
+						int current_index = all_bh.IndexOf((who.modData.ContainsKey("DB.bodyHair")) ? who.modData["DB.bodyHair"] : "Default");
 						current_index += change;
 						if (current_index >= all_bh.Count)
 						{
@@ -1274,15 +1276,15 @@ namespace DynamicBodies.UI
 						{
 							current_index = all_bh.Count() - 1;
 						}
-						Game1.player.modData["DB.bodyHair"] = all_bh[current_index];
+						pbe.SetModData(who, "DB.bodyHair", all_bh[current_index]);
 						
 						Game1.playSound("grassyStep");
 						break;
 					}
 				case "Naked":
 					{
-						List<string> all_no = ModEntry.getContentPackOptions(ModEntry.nudeLOptions, Game1.player.IsMale).ToList();
-						int current_index = all_no.IndexOf((Game1.player.modData.ContainsKey("DB.nakedLower")) ? Game1.player.modData["DB.nakedLower"] : "Default");
+						List<string> all_no = ModEntry.getContentPackOptions(ModEntry.nudeLOptions, who.IsMale).ToList();
+						int current_index = all_no.IndexOf((who.modData.ContainsKey("DB.nakedLower")) ? who.modData["DB.nakedLower"] : "Default");
 						current_index += change;
 						if (current_index >= all_no.Count)
 						{
@@ -1292,15 +1294,15 @@ namespace DynamicBodies.UI
 						{
 							current_index = all_no.Count() - 1;
 						}
-						Game1.player.modData["DB.nakedLower"] = all_no[current_index];
+						pbe.SetModData(who, "DB.nakedLower", all_no[current_index]);
 
 						Game1.playSound("grassyStep");
 						break;
 					}
 				case "NakedU":
 					{
-						List<string> all_no = ModEntry.getContentPackOptions(ModEntry.nudeUOptions, Game1.player.IsMale).ToList();
-						int current_index = all_no.IndexOf((Game1.player.modData.ContainsKey("DB.nakedUpper")) ? Game1.player.modData["DB.nakedUpper"] : "Default");
+						List<string> all_no = ModEntry.getContentPackOptions(ModEntry.nudeUOptions, who.IsMale).ToList();
+						int current_index = all_no.IndexOf((who.modData.ContainsKey("DB.nakedUpper")) ? who.modData["DB.nakedUpper"] : "Default");
 						current_index += change;
 						if (current_index >= all_no.Count)
 						{
@@ -1310,13 +1312,13 @@ namespace DynamicBodies.UI
 						{
 							current_index = all_no.Count() - 1;
 						}
-						Game1.player.modData["DB.nakedUpper"] = all_no[current_index];
+						pbe.SetModData(who, "DB.nakedUpper", all_no[current_index]);
 
 						Game1.playSound("grassyStep");
 						break;
 					}
 				case "Acc":
-					int newacc = (int)Game1.player.accessory.Value;
+					int newacc = (int)who.accessory.Value;
 					//Skip the beards
 					if (newacc >= 0 && newacc <= 6 && change < 0)
 					{
@@ -1330,7 +1332,7 @@ namespace DynamicBodies.UI
 					{
 						newacc += change;
 					}
-					Game1.player.changeAccessory(newacc);
+					who.changeAccessory(newacc);
 					Game1.playSound("purchase");
 					break;
 				case "Direction":
@@ -1363,10 +1365,10 @@ namespace DynamicBodies.UI
 				}
 				if (eyeSwatch != 0)
 				{
-					Game1.player.changeEyeColor(eyeSwatchColors[eyeSwatch - 1]);
+					who.changeEyeColor(eyeSwatchColors[eyeSwatch - 1]);
 				} else
                 {
-					Game1.player.changeEyeColor(initEyeColor);
+					who.changeEyeColor(initEyeColor);
                 }
 				
 				Game1.playSound("purchase");
@@ -1386,12 +1388,12 @@ namespace DynamicBodies.UI
 				}
 				if (hairSwatch != 0)
 				{
-					Game1.player.changeHairColor(hairSwatchColors[hairSwatch - 1]);
+					who.changeHairColor(hairSwatchColors[hairSwatch - 1]);
 					ModEntry.MakePlayerDirty();
 				}
 				else
 				{
-					Game1.player.changeHairColor(initHairColor);
+					who.changeHairColor(initHairColor);
 				}
 
 				Game1.playSound("purchase");
@@ -1411,13 +1413,11 @@ namespace DynamicBodies.UI
 				}
 				if (hairDarkSwatch != 0)
 				{
-					Game1.player.modData["DB.darkHair"] = hairDarkSwatchColors[hairDarkSwatch - 1].PackedValue.ToString();
-					ModEntry.MakePlayerDirty();
+					pbe.SetModData(who, "DB.darkHair", hairDarkSwatchColors[hairDarkSwatch - 1].PackedValue.ToString());
 				}
 				else
 				{
-					Game1.player.modData["DB.darkHair"] = settingsBefore["DB.darkHair"];
-					ModEntry.MakePlayerDirty();
+					pbe.SetModData(who, "DB.darkHair", settingsBefore["DB.darkHair"]);
 				}
 
 				Game1.playSound("purchase");
@@ -1687,16 +1687,16 @@ namespace DynamicBodies.UI
 			if (this.hairColorPicker != null && this.hairColorPicker.containsPoint(x, y))
 			{
 				Color color2 = this.hairColorPicker.click(x, y);
-				Game1.player.changeHairColor(color2);
+				who.changeHairColor(color2);
 				this.lastHeldColorPicker = this.hairColorPicker;
 			} else if (this.hairDarkColorPicker != null && this.hairDarkColorPicker.containsPoint(x, y))
 			{
 				Color color2 = this.hairDarkColorPicker.click(x, y);
-				Game1.player.modData["DB.darkHair"] = color2.PackedValue.ToString();
+				pbe.SetModData(who, "DB.darkHair", color2.PackedValue.ToString());
 				this.lastHeldColorPicker = this.hairDarkColorPicker;
 			} else if (this.eyeColorPicker != null && this.eyeColorPicker.containsPoint(x, y))
 			{
-				Game1.player.changeEyeColor(this.eyeColorPicker.click(x, y));
+				who.changeEyeColor(this.eyeColorPicker.click(x, y));
 				this.lastHeldColorPicker = this.eyeColorPicker;
 			}
 
@@ -1704,15 +1704,15 @@ namespace DynamicBodies.UI
 			{
                 if (clothingToggles["pants"].showing)
                 {
-					if (Game1.player.pantsItem.Value != null)
+					if (who.pantsItem.Value != null)
 					{
-						clothingToggles["pants"].storeItem = Game1.player.pantsItem.Value as Item;
-						Game1.player.pantsItem.Set(null);
+						clothingToggles["pants"].storeItem = who.pantsItem.Value as Item;
+						who.pantsItem.Set(null);
 					}
 					else
 					{
-						clothingToggles["pants"].store = Game1.player.GetPantsIndex();
-						Game1.player.changePantStyle(14, false);
+						clothingToggles["pants"].store = who.GetPantsIndex();
+						who.changePantStyle(14, false);
 					}
 					Game1.playSound("scissors");
 				}
@@ -1720,11 +1720,11 @@ namespace DynamicBodies.UI
                 {
 					if (clothingToggles["pants"].storeItem != null)
 					{
-						Game1.player.pantsItem.Set(clothingToggles["pants"].storeItem as Clothing);
+						who.pantsItem.Set(clothingToggles["pants"].storeItem as Clothing);
 					}
 					else
 					{
-						Game1.player.changePantStyle(clothingToggles["pants"].store);
+						who.changePantStyle(clothingToggles["pants"].store);
 					}
 					Game1.playSound("pickUpItem");
 				}
@@ -1736,14 +1736,14 @@ namespace DynamicBodies.UI
 			{
 				if (clothingToggles["shoes"].showing)
 				{
-					clothingToggles["shoes"].store = Game1.player.shoes.Get();
-					Game1.player.shoes.Set(12);
+					clothingToggles["shoes"].store = who.shoes.Get();
+					who.shoes.Set(12);
 			
 					Game1.playSound("scissors");
 				}
 				else
 				{
-					Game1.player.shoes.Set(clothingToggles["shoes"].store);
+					who.shoes.Set(clothingToggles["shoes"].store);
 					Game1.playSound("pickUpItem");
 				}
 				clothingToggles["shoes"].showing = !clothingToggles["shoes"].showing;
@@ -1754,13 +1754,13 @@ namespace DynamicBodies.UI
 			{
 				if (clothingToggles["shirt"].showing)
 				{
-					clothingToggles["shirt"].storeItem = Game1.player.shirtItem.Get() as Item;
-					Game1.player.shirtItem.Set(null);
+					clothingToggles["shirt"].storeItem = who.shirtItem.Get() as Item;
+					who.shirtItem.Set(null);
 					Game1.playSound("scissors");
 				}
 				else
 				{
-					Game1.player.shirtItem.Set(clothingToggles["shirt"].storeItem as Clothing);
+					who.shirtItem.Set(clothingToggles["shirt"].storeItem as Clothing);
 					Game1.playSound("pickUpItem");
 				}
 				clothingToggles["shirt"].showing = !clothingToggles["shirt"].showing;
@@ -1771,13 +1771,13 @@ namespace DynamicBodies.UI
 			{
 				if (clothingToggles["hat"].showing)
 				{
-					clothingToggles["hat"].storeItem = Game1.player.hat.Get() as Item;
-					Game1.player.hat.Set(null);
+					clothingToggles["hat"].storeItem = who.hat.Get() as Item;
+					who.hat.Set(null);
 					Game1.playSound("scissors");
 				}
 				else
 				{
-					Game1.player.hat.Set(clothingToggles["hat"].storeItem as Hat);
+					who.hat.Set(clothingToggles["hat"].storeItem as Hat);
 					Game1.playSound("pickUpItem");
 				}
 				clothingToggles["hat"].showing = !clothingToggles["hat"].showing;
@@ -1801,21 +1801,20 @@ namespace DynamicBodies.UI
 				if (this.lastHeldColorPicker.Equals(this.hairColorPicker))
 				{
 					Color color2 = this.hairColorPicker.clickHeld(x, y);
-					Game1.player.changeHairColor(color2);
+					who.changeHairColor(color2);
 					ModEntry.MakePlayerDirty();
 				}
 
 				if (this.lastHeldColorPicker.Equals(this.hairDarkColorPicker))
 				{
 					Color color2 = this.hairDarkColorPicker.clickHeld(x, y);
-					//Game1.player.changeHairColor(color2);
-					Game1.player.modData["DB.darkHair"] = color2.PackedValue.ToString();
-					ModEntry.MakePlayerDirty();
+					//who.changeHairColor(color2);
+					pbe.SetModData(who, "DB.darkHair", color2.PackedValue.ToString());
 				}
 
 				if (this.lastHeldColorPicker.Equals(this.eyeColorPicker))
 				{
-					Game1.player.changeEyeColor(this.eyeColorPicker.clickHeld(x, y));
+					who.changeEyeColor(this.eyeColorPicker.clickHeld(x, y));
 				}
 			}
 			this.colorPickerTimer = 100;
@@ -1921,7 +1920,7 @@ namespace DynamicBodies.UI
 
 		public bool canPay()
 		{
-			return Game1.player.Money >= cost;
+			return who.Money >= cost;
 		}
 
 		//Draw the menu and its various buttons
@@ -2047,14 +2046,14 @@ namespace DynamicBodies.UI
 					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
 					if (c3 == this.hairLabel)
 					{
-						sub = (Farmer.GetAllHairstyleIndices().IndexOf(Game1.player.hair.Value) + 1).ToString() ?? "";
+						sub = (Farmer.GetAllHairstyleIndices().IndexOf(who.hair.Value) + 1).ToString() ?? "";
 					}
 				}
 				else if (c3 == this.accLabel)
 				{
 					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
-					sub = ((int)Game1.player.accessory.Value + 2).ToString() ?? "";
-					if (Game1.player.accessory.Value == -1)
+					sub = ((int)who.accessory.Value + 2).ToString() ?? "";
+					if (who.accessory.Value == -1)
 					{
 						sub = T("none");
 					}
@@ -2062,32 +2061,32 @@ namespace DynamicBodies.UI
 				else if (c3 == this.bodyLabel)
 				{
 					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
-					tiny_sub = (Game1.player.modData.ContainsKey("DB.body")) ? Game1.player.modData["DB.body"] : "Default";
+					tiny_sub = (who.modData.ContainsKey("DB.body")) ? who.modData["DB.body"] : "Default";
 				}
 				else if (c3 == this.armLabel)
 				{
 					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
-					tiny_sub = (Game1.player.modData.ContainsKey("DB.arm")) ? Game1.player.modData["DB.arm"] : "Default";
+					tiny_sub = (who.modData.ContainsKey("DB.arm")) ? who.modData["DB.arm"] : "Default";
 				}
 				else if (c3 == this.beardLabel)
 				{
 					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
-					tiny_sub = (Game1.player.modData.ContainsKey("DB.beard")) ? Game1.player.modData["DB.beard"] : "Default";
+					tiny_sub = (who.modData.ContainsKey("DB.beard")) ? who.modData["DB.beard"] : "Default";
 				}
 				else if (c3 == this.bodyHairLabel)
 				{
 					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
-					tiny_sub = (Game1.player.modData.ContainsKey("DB.bodyHair")) ? Game1.player.modData["DB.bodyHair"] : "Default";
+					tiny_sub = (who.modData.ContainsKey("DB.bodyHair")) ? who.modData["DB.bodyHair"] : "Default";
 				}
 				else if (c3 == this.nakedLabel)
 				{
 					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
-					tiny_sub = (Game1.player.modData.ContainsKey("DB.nakedLower")) ? Game1.player.modData["DB.nakedLower"] : "Default";
+					tiny_sub = (who.modData.ContainsKey("DB.nakedLower")) ? who.modData["DB.nakedLower"] : "Default";
 				}
 				else if (c3 == this.nakedULabel)
 				{
 					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
-					tiny_sub = (Game1.player.modData.ContainsKey("DB.nakedUpper")) ? Game1.player.modData["DB.nakedUpper"] : "Default";
+					tiny_sub = (who.modData.ContainsKey("DB.nakedUpper")) ? who.modData["DB.nakedUpper"] : "Default";
 				}
 				else if (c3 == this.costLabel)
 				{

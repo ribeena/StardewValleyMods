@@ -8,6 +8,8 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Objects;
 
+using DynamicBodies.Patches;
+
 namespace DynamicBodies.Data
 {
     public class PlayerBaseExtended
@@ -39,8 +41,10 @@ namespace DynamicBodies.Data
         public Texture2D lowerSkinOverlay = null;
         public string lowerSkinOverlayName = "Default";
         public bool dirty { get; set; }
+        public int firstFrame = 1;
         public bool recalcVanillaRecolor { get; set; }
-        public PlayerBaseExtended(Farmer who, string baseTexture, int shirtIndex, int pantsIndex, int shoesIndex)
+        public PlayerBaseExtended(Farmer who) : this(who, who.FarmerRenderer.textureName.Value) { }
+        public PlayerBaseExtended(Farmer who, string baseTexture)
         {
             body = new BodyPartStyle("body");
 
@@ -53,10 +57,10 @@ namespace DynamicBodies.Data
             nakedLower = new BodyPartStyle("nakedLower");
             nakedUpper = new BodyPartStyle("nakedUpper");
 
-            shirt = shirtIndex;
-            pants = pantsIndex;
-            shoes = shoesIndex;
-            hair = 0;
+            shirt = who.shirt.Value;
+            pants = who.pants.Value;
+            shoes = who.shoes.Value;
+            hair = (uint)who.hairColor;
             dhair = 0;
             sleeveLength = "Normal";
             shoeStyle = "Normal";
@@ -65,7 +69,8 @@ namespace DynamicBodies.Data
 
             dirty = true;
 
-            extendedFarmers[GetKey(who)] = this;
+            string whoID = GetKey(who);
+            extendedFarmers[whoID] = this;
         }
 
         public static PlayerBaseExtended Get(Farmer who)
@@ -73,6 +78,15 @@ namespace DynamicBodies.Data
             if (extendedFarmers.ContainsKey(GetKey(who)))
             {
                 return extendedFarmers[GetKey(who)];
+            }
+            return null;
+        }
+
+        public static PlayerBaseExtended Get(string whoID)
+        {
+            if (extendedFarmers.ContainsKey(whoID))
+            {
+                return extendedFarmers[whoID];
             }
             return null;
         }
@@ -99,6 +113,23 @@ namespace DynamicBodies.Data
             nakedUpper.SetDefault(who);
         }
 
+        public void SetModData(Farmer who, string key, string value)
+        {
+            bool change = false;
+            if (who.modData.ContainsKey(key))
+            {
+                if(who.modData[key] != value)
+                {
+                    change = true;
+                }
+            }
+            who.modData[key] = value;
+            if (change)
+            {
+                UpdateTextures(who);
+            }
+        }
+
         public void SetVanillaFile(string file)
         {
             vanilla.file = file.Split("\\").Last();
@@ -108,52 +139,7 @@ namespace DynamicBodies.Data
 
         public void UpdateTextures(Farmer who)
         {
-            PlayerBaseExtended pbe = this;
-            //Check if the texture needs updating
-            if (pbe.shirt != who.GetShirtIndex())
-            {
-                pbe.shirt = who.GetShirtIndex();
-                if (who.shirtItem.Value == null)
-                {
-                    pbe.sleeveLength = "Sleeveless";
-                }
-                else
-                {
-                    pbe.sleeveLength = ModEntry.AssignShirtLength(who.shirtItem.Value as Clothing, who.IsMale);
-                }
-
-                if (who.shirtItem.Value != null)
-                {
-                    if (who.shirtItem.Value.GetOtherData().Contains("DB.PantsOverlay"))
-                    {
-                        foreach (ShirtOverlay shirtOverlay in ModEntry.shirtOverlays)
-                        {
-                            if (shirtOverlay.overlays.ContainsKey(who.shirtItem.Value.Name))
-                            {
-                                ModEntry.debugmsg($"Shirt Overlay Index [{shirtOverlay.GetIndex(who.shirtItem.Value.Name, who.isMale)}] override for [{who.GetShirtIndex()}]", LogLevel.Debug);
-                                pbe.shirtOverlayIndex = shirtOverlay.GetIndex(who.shirtItem.Value.Name, who.isMale);
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        pbe.shirtOverlayIndex = -1;
-                    }
-                }
-                pbe.dirty = true;
-            }
-
-            if (pbe.shoes != who.shoes.Value)
-            {
-                pbe.shoes = who.shoes.Value;
-                pbe.shoeStyle = "Normal";
-                if (pbe.shoes == 12)
-                {
-                    pbe.shoeStyle = "None";
-                }
-                pbe.dirty = true;
-            }
+            PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
 
             //Check for custom body
             if (!pbe.body.OptionMatchesModData(who))
