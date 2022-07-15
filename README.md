@@ -6,7 +6,7 @@ documentation and release notes.
   _Part of a mostly visual mod "Ribeena's vehicles", this makes the bus
   a bit more responsive and moves the bus door._
 
-* **Dynamic Bodies**
+* **Dynamic Bodies** <small>([Nexus](https://www.nexusmods.com/stardewvalley/mods/12893))</small>
   _Overhaul of the Farmer Rendering to allow for customisable characters, includes
   new interfaces (Doctor's, Leah's and a bonus), adjusts the Wizard menu to
   also make these accessible, adjustments for Boots so they display on character,
