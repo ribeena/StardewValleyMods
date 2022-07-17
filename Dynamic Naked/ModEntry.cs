@@ -94,6 +94,13 @@ namespace DynamicBodies
             //Fix up rendering of the farmer
             farmerRendererPatcher = new FarmerRendererPatched(harmony);
 
+            //Intervene with the loading process so we can store separate textures per user
+            //and add event listeners when FarmerRender is made
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Farmer), "farmerInit"),
+                postfix: new HarmonyMethod(GetType(), nameof(post_Farmer_setup))
+            );
+
             //Patch for touch events
             /*harmony.Patch(
                 original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.performTouchAction), new[] { typeof(string), typeof(Vector2) }),
@@ -152,7 +159,14 @@ namespace DynamicBodies
             return context.Helper.Translation.Get(toTranslate);
         }
 
-        
+        public static void post_Farmer_setup(Farmer __instance)
+        {
+            __instance.boots.fieldChangeEvent += delegate { FarmerRendererPatched.FieldChanged("shoes", __instance); };
+            __instance.shirtItem.fieldChangeEvent += delegate { FarmerRendererPatched.FieldChanged("shirt", __instance); };
+            __instance.pantsItem.fieldChangeEvent += delegate { FarmerRendererPatched.FieldChanged("pants", __instance); };
+        }
+
+
         //Fix for shirts/pants as ingredients
         public static void post_SpendLeftItem(TailoringMenu __instance)
         {

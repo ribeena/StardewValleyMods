@@ -95,9 +95,9 @@ namespace DynamicBodies.Data
         {
             if (who.isFakeEventActor)
             {
-                return who.UniqueMultiplayerID.ToString() + "_fake";
+                return who.Name + "_fake";
             }
-            return who.UniqueMultiplayerID.ToString();
+            return who.Name;
         }
 
         public void DefaultOptions(Farmer who)

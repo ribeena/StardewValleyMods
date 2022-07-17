@@ -66,30 +66,16 @@ namespace DynamicBodies.Patches
 			ModEntry.debugmsg($"LCMO in farmerRenderer constructor for {farmer.Name}/{farmer.UniqueMultiplayerID}", LogLevel.Debug);
 			//Add a wrapping layer around the texture manager for the farmerrenderer
 			LocalizedContentManagerOverride lcmo = new LocalizedContentManagerOverride(___farmerTextureManager.ServiceProvider, ___farmerTextureManager.RootDirectory);
-			___farmerTextureManager = (LocalizedContentManager)lcmo.CreateTemporary(ModEntry.context, farmer);
-
-            string whoID = PlayerBaseExtended.GetKey(farmer);
-            //Add Events for interactions
-            ___textureName.fieldChangeVisibleEvent += delegate { FieldChanged("textureName", whoID); };
-			___eyes.fieldChangeEvent += delegate { FieldChanged("eyes", whoID); };
-			___skin.fieldChangeEvent += delegate { FieldChanged("skin", whoID); };
-			___shoes.fieldChangeEvent += delegate { FieldChanged("shoes", whoID); };
-            farmer.boots.fieldChangeEvent += delegate { FieldChanged("shoes", whoID); };
-            ___shirt.fieldChangeEvent += delegate { FieldChanged("shirt", whoID); };
-            farmer.shirtItem.fieldChangeEvent += delegate { FieldChanged("shirt", whoID); };
-            ___pants.fieldChangeEvent += delegate { FieldChanged("pants", whoID); };
-            farmer.pantsItem.fieldChangeEvent += delegate { FieldChanged("pants", whoID); };
-            
+			___farmerTextureManager = (LocalizedContentManager)lcmo.CreateTemporary(ModEntry.context, farmer);          
         }
 
-        public static void FieldChanged(string field, string whoID)
+        public static void FieldChanged(string field, Farmer who)
         {
-            PlayerBaseExtended pbe = PlayerBaseExtended.Get(whoID);
+            PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
             if(pbe == null)
             {
                 try
                 {
-                    Farmer who = Game1.getFarmer(long.Parse(whoID));
                     pbe = new PlayerBaseExtended(who);
                 } catch (NullReferenceException e)
                 {
@@ -107,6 +93,10 @@ namespace DynamicBodies.Patches
             if(field == "shoes")
             {
                 pbe.shoes = -1;//force shoe change
+            }
+            if (field == "pants")
+            {
+                pbe.pants = -1;//force pants change
             }
 
             pbe.dirty = true;
