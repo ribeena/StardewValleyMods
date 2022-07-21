@@ -57,7 +57,9 @@ namespace DynamicBodies.Patches
                 prefix: new HarmonyMethod(GetType(), nameof(pre_drawMiniPortrat))
             );
 
-            harmony.CreateReversePatcher(AccessTools.Method(typeof(FarmerRenderer), "executeRecolorActions", new[] { typeof(Farmer) }), new HarmonyMethod(GetType(), nameof(ExecuteRecolorActionsReversePatch))).Patch();
+            harmony.CreateReversePatcher(AccessTools.Method(typeof(FarmerRenderer), "executeRecolorActions", new[] { typeof(Farmer) }),
+                new HarmonyMethod(GetType(), nameof(ExecuteRecolorActionsReversePatch))
+                ).Patch();
         }
 
         //Adjust the base texture before rendering and add event listeners

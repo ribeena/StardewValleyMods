@@ -433,6 +433,47 @@ namespace DynamicBodies.Data
             return texture;
         }
 
+        public static Texture2D ApplyExtendedSkinColor(int skin, Texture2D source_texture)
+        {
+            Texture2D texture = null;
+            //Need to render a new texture
+            texture = new Texture2D(Game1.graphics.GraphicsDevice, source_texture.Width, source_texture.Height);
+
+            //Calculate the skin colours
+            int which = skin;
+            Texture2D glandColors = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Character/extendedSkinColors.png");
+
+            Color[] glandColorsData = new Color[glandColors.Width * glandColors.Height];
+            if (which < 0) which = glandColors.Height - 1;
+            if (which > glandColors.Height - 1) which = 0;
+            glandColors.GetData(glandColorsData);
+
+            //Colours to replace
+            Color glandDark_old = glandColorsData[0], glandLight_old = glandColorsData[1];
+
+            //Store what the colours are
+            Color glandDark = glandColorsData[which * 2 % (glandColors.Height * 2)];
+            Color glandLight = glandColorsData[which * 2 % (glandColors.Height * 2) + 1];
+
+            Color[] data = new Color[texture.Width * texture.Height];
+            source_texture.GetData(data);
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (data[i].Equals(glandDark_old))
+                {
+                    data[i] = glandDark;
+                }
+                else if (data[i].Equals(glandLight_old))
+                {
+                    data[i] = glandLight;
+                }
+
+            }
+            texture.SetData<Color>(data);
+            return texture;
+        }
+
     }
 
     public class BodyPartStyle

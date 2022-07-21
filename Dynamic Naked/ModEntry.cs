@@ -529,6 +529,9 @@ namespace DynamicBodies
                     bodyText2D.GetData(data, 0, data.Length);
                     pbe.cacheImage.SetData(data);
 
+                    //Render any extended colours on the base
+                    pbe.cacheImage = PlayerBaseExtended.ApplyExtendedSkinColor(who.skin.Value, pbe.cacheImage);
+
                     pbe.dirty = false;
                 } 
 
