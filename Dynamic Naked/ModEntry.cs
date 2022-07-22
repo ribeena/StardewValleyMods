@@ -441,24 +441,37 @@ namespace DynamicBodies
                 //Needs redrawing
                 if (pbe.cacheImage == null)
                 {
+                    string bald = "";
+                    if (pbe.vanilla.file.EndsWith("_bald"))
+                    {
+                        bald = "_bald";
+                    }
 
                     //Load the base texture from this mod
                     if (pbe.body.option == "Default")
                     {
-                        bodyText2D = context.Helper.ModContent.Load<Texture2D>($"assets\\Character\\{gender}{pbe.vanilla.file}.png");
+                        bodyText2D = context.Helper.ModContent.Load<Texture2D>($"assets\\Character\\{gender}{pbe.vanilla.file[..^bald.Length]}.png");
                     }
                     else
                     {
-                        string bald = "";
-                        if (pbe.vanilla.file.EndsWith("_bald"))
-                        {
-                            bald = "_bald";
-                        }
+                        
                         //Otherwise load it from a content pack
-                        bodyText2D = pbe.body.provider.ModContent.Load<Texture2D>($"assets\\bodies\\{gender}{pbe.body.file}{bald}.png");
+                        bodyText2D = pbe.body.provider.ModContent.Load<Texture2D>($"assets\\bodies\\{gender}{pbe.body.file}.png");
                     }
 
                     var editor = context.Helper.ModContent.GetPatchHelper(bodyText2D).AsImage();
+
+                    Texture2D faceText2D;
+                    if (pbe.face.option == "Default")
+                    {
+                        faceText2D = context.Helper.ModContent.Load<Texture2D>($"assets\\Character\\{gender}face{bald}.png");
+                    }
+                    else
+                    {
+                        faceText2D = pbe.face.provider.ModContent.Load<Texture2D>($"assets\\faces\\{pbe.face.file}{bald}.png");
+                    }
+                    editor.PatchImage(faceText2D, new Rectangle(0, 0, faceText2D.Width, faceText2D.Height), targetArea: new Rectangle(0, 0, faceText2D.Width, faceText2D.Height), PatchMode.Overlay);
+
 
                     Texture2D armsText2D;
                     if (pbe.arm.option == "Default")
@@ -680,6 +693,7 @@ namespace DynamicBodies
                 {
                     ContentPack data = contentPack.ReadJsonFile<ContentPack>("content.json");
                     bodyOptions.AddRange(data.GetOptions(contentPack, "bodyStyles"));
+                    faceOptions.AddRange(data.GetOptions(contentPack, "faces"));
                     armOptions.AddRange(data.GetOptions(contentPack, "arms"));
                     bodyHairOptions.AddRange(data.GetOptions(contentPack, "bodyHair"));
                     beardOptions.AddRange(data.GetOptions(contentPack, "beards"));
@@ -769,6 +783,7 @@ namespace DynamicBodies
         public string author { get; set; }
         public bool male = true;
         public bool female = true;
+        public List<string> metadata { get; set; }
         public IContentPack contentPack;
         public ContentPackOption(string name, string file, string author, IContentPack contentPack)
         {
@@ -793,9 +808,16 @@ namespace DynamicBodies
             }
         }
 
-    }
+        public void SetMetadata(List<string> data)
+        {
+            metadata = data;
+        }
 
-    
-    
+        public bool hasMetadata(string query)
+        {
+            return metadata.Contains(query);
+        }
+
+    }
 
 }

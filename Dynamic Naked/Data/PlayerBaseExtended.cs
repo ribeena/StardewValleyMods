@@ -30,6 +30,7 @@ namespace DynamicBodies.Data
         public string shoeStyle { get; set; }
         public BodyPartStyle vanilla;
         public BodyPartStyle body;
+        public BodyPartStyle face;
         public BodyPartStyle arm;
         public BodyPartStyle beard;
         public BodyPartStyle bodyHair;
@@ -51,6 +52,7 @@ namespace DynamicBodies.Data
             vanilla = new BodyPartStyle("body");
             SetVanillaFile(baseTexture);
 
+            face = new BodyPartStyle("face");
             arm = new BodyPartStyle("arm");
             beard = new BodyPartStyle("beard");
             bodyHair = new BodyPartStyle("bodyHair");
@@ -106,6 +108,7 @@ namespace DynamicBodies.Data
             SetVanillaFile(who.FarmerRenderer.textureName.Value);
             body.file = vanilla.file;
 
+            face.SetDefault(who);
             arm.SetDefault(who);
             beard.SetDefault(who);
             bodyHair.SetDefault(who);
@@ -145,6 +148,13 @@ namespace DynamicBodies.Data
             if (!pbe.body.OptionMatchesModData(who))
             {
                 pbe.body.SetOptionFromModData(who, ModEntry.bodyOptions);
+                pbe.dirty = true;
+            }
+
+            //Check for custom face
+            if (!pbe.face.OptionMatchesModData(who))
+            {
+                pbe.face.SetOptionFromModData(who, ModEntry.faceOptions);
                 pbe.dirty = true;
             }
 
@@ -360,8 +370,17 @@ namespace DynamicBodies.Data
             if (nakedLower.texture == null && nakedLower.option != "Default")
             {
                 Texture2D texture = nakedLower.provider.ModContent.Load<Texture2D>($"assets\\nakedLower\\{nakedLower.file}.png");
-                //recalculate the skin colours on the overlay
-                nakedLower.texture = ApplySkinColor(skin, texture);
+                
+                if (nakedLower.CheckForOption("no skin"))
+                {
+                    //Don't calculate new colours, it doesn't have them
+                    nakedLower.texture = texture;
+                }
+                else
+                {
+                    //recalculate the skin colours on the overlay
+                    nakedLower.texture = ApplySkinColor(skin, texture);
+                }
             }
             if (nakedLower.option == "Default")
             {
@@ -484,6 +503,8 @@ namespace DynamicBodies.Data
         public IContentPack provider;
         public Texture2D texture;
         public Dictionary<string, Texture2D> textures = new Dictionary<string, Texture2D>();
+        public List<string> metadata;
+        public bool fullAnimation = true;
         public BodyPartStyle(string n)
         {
             name = n;
@@ -503,6 +524,12 @@ namespace DynamicBodies.Data
             return option == (who.modData.ContainsKey("DB." + name) ? who.modData["DB." + name] : "Default");
         }
 
+        public bool CheckForOption(string option)
+        {
+            if (metadata == null) return false;
+            return metadata.Contains(option);
+        }
+
         public void SetOptionFromModData(Farmer who, List<ContentPackOption> options)
         {
             option = (who.modData.ContainsKey("DB." + name) ? who.modData["DB." + name] : "Default");
@@ -514,6 +541,7 @@ namespace DynamicBodies.Data
             {
                 provider = null;
                 file = null;
+                metadata = null;
             }
             else
             {
@@ -523,11 +551,20 @@ namespace DynamicBodies.Data
                     //Option not installed
                     option = "Default";
                     provider = null;
+                    metadata = null;
                 }
                 else
                 {
                     provider = choice.contentPack;
                     file = choice.file;
+                    metadata = choice.metadata;
+                    if(metadata != null && metadata.Contains("no animation"))
+                    {
+                        fullAnimation = false;
+                    } else
+                    {
+                        fullAnimation = true;
+                    }
                 }
             }
         }

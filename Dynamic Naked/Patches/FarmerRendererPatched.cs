@@ -280,13 +280,37 @@ namespace DynamicBodies.Patches
                 }
             }
 
+            Texture2D nakedUpperTexture = pbe.GetNakedUpperTexture(who.skin.Value);
             if (drawNakedOverlay)
             {
-                Texture2D nakedOverlayTexture = pbe.GetNakedUpperTexture(who.skin.Value);
-
-                if (nakedOverlayTexture != null)
+                if (nakedUpperTexture != null)
                 {
-                    Rectangle pants_rect = new Rectangle(sourceRect.X, sourceRect.Y, sourceRect.Width, sourceRect.Height);
+                    Vector2 animoffset = Vector2.Zero;
+
+                    Rectangle overlay_rect = sourceRect;
+                    bool flipped = animationFrame.flip;
+                    if (!pbe.nakedUpper.fullAnimation)
+                    {
+                        //Simple one frame per direction like shirts
+                        overlay_rect.X = 0;
+                        switch (who.facingDirection.Value)
+                        {
+                            case 0:
+                                overlay_rect.Y = 2*sourceRect.Height;
+                                break;
+                            case 1:
+                                overlay_rect.Y = sourceRect.Height;
+                                break;
+                            case 2:
+                                overlay_rect.Y = 0;
+                                break;
+                            case 3:
+                                overlay_rect.Y = 3*sourceRect.Height;
+                                flipped = false;
+                                break;
+                        }
+                        animoffset = new Vector2((float)(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4), (float)(FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4) + (float)(int)__instance.heightOffset.Value * scale);
+                    }
                     float layerOffset = ((who.FarmerSprite.CurrentAnimationFrame.frame == 5) ? 0.00096f : 9.6E-08f);
 
                     if (!FarmerRenderer.isDrawingForUI && (bool)who.swimming.Value)
@@ -301,11 +325,11 @@ namespace DynamicBodies.Patches
                             //Change the frame for UI version
                             sourceRect.X = 0;
                             sourceRect.Y = 0;
-                            b.Draw(nakedOverlayTexture, position + origin + ___positionOffset, sourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + layerOffset);
+                            b.Draw(nakedUpperTexture, position + origin + ___positionOffset, overlay_rect, overrideColor, rotation, origin, 4f * scale, flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + layerOffset);
                         }
                         else
                         {
-                            b.Draw(nakedOverlayTexture, position + origin + ___positionOffset, sourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + layerOffset);
+                            b.Draw(nakedUpperTexture, position + origin + ___positionOffset + animoffset, overlay_rect, overrideColor, rotation, origin, 4f * scale, flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + layerOffset);
                         }
                     }
                 }
@@ -313,10 +337,11 @@ namespace DynamicBodies.Patches
 
 
             bool drawPants = true;
+            Texture2D nakedLowerTexture = pbe.GetNakedLowerTexture(who.skin.Value);
             if (who.GetPantsIndex() == 14 || who.pantsItem.Value == null)
             {
-                Texture2D nakedOverlayTexture = pbe.GetNakedLowerTexture(who.skin.Value);
-                if (nakedOverlayTexture != null)
+                
+                if (nakedLowerTexture != null)
                 {
                     drawPants = false;
                 }
@@ -329,18 +354,11 @@ namespace DynamicBodies.Patches
                 }
             }
             if (drawPants) AdjustedVanillaMethods.drawPants(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref ___baseTexture, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
+            if (nakedLowerTexture != null && pbe.nakedLower.CheckForOption("below accessories")) DrawLowerNaked(__instance, ___positionOffset, ___rotationAdjustment, ___baseTexture, animationFrame, sourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth, 9.2E-08f, 9.2E-08f);
             AdjustedVanillaMethods.drawEyes(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref ___baseTexture, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
             __instance.drawHairAndAccesories(b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth);
             AdjustedVanillaMethods.drawArms(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref ___baseTexture, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
             
-            //Hacky fix for first draw being wrong
-            /*if(pbe.firstFrame > 0)
-            {
-                pbe.firstFrame--;
-                pbe.cacheImage = null;
-                pbe.dirty = true;
-                ModEntry.debugmsg("FirstFrame re-render for " + who.UniqueMultiplayerID, LogLevel.Debug);
-            }*/
             //prevent further rendering
             return false;
         }
@@ -349,7 +367,6 @@ namespace DynamicBodies.Patches
         {
             new NotImplementedException("It's a stub!");
         }
-
 
         private static void DrawBodyHair(FarmerRenderer __instance, Vector2 ___positionOffset, Vector2 ___rotationAdjustment, Texture2D ___baseTexture, FarmerSprite.AnimationFrame animationFrame, Rectangle sourceRect, SpriteBatch b, int facingDirection, Farmer who, Vector2 position, Vector2 origin, float scale, int currentFrame, float rotation, Color overrideColor, float layerDepth)
         {
@@ -364,6 +381,60 @@ namespace DynamicBodies.Patches
             {
                 //Draw the body hair
                 b.Draw(pbe.GetBodyHairTexture(who), position + origin + ___positionOffset, sourceRect, Color.White, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + ((who.FarmerSprite.CurrentAnimationFrame.frame == 5) ? 0.00072f : 7.2E-08f));
+            }
+        }
+
+        private static void DrawLowerNaked(FarmerRenderer __instance, Vector2 ___positionOffset, Vector2 ___rotationAdjustment, Texture2D ___baseTexture, FarmerSprite.AnimationFrame animationFrame, Rectangle sourceRect, SpriteBatch b, int facingDirection, Farmer who, Vector2 position, Vector2 origin, float scale, int currentFrame, float rotation, Color overrideColor, float layerDepth, float layerOff1, float layeroff2)
+        {
+            PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
+
+            ///////////////////////////////
+            /// Setup a new overlay drawing for lower body
+            //no pants
+            bool drawNakedOverlay = who.GetPantsIndex() == 14 || who.pantsItem.Value == null;
+            if (!drawNakedOverlay && who.bathingClothes.Value)
+            {
+                if (who.modData.ContainsKey("DB.bathers"))
+                {
+                    drawNakedOverlay = who.modData["DB.bathers"] == "false";
+                }
+            }
+
+            if (drawNakedOverlay)
+            {
+                Texture2D nakedOverlayTexture = pbe.GetNakedLowerTexture(who.skin.Value);
+
+                if (nakedOverlayTexture != null)
+                {
+                    Rectangle pants_rect = new Rectangle(sourceRect.X, sourceRect.Y, sourceRect.Width, sourceRect.Height);
+                    float layerOffset = layerOff1;
+                    if (who.getFacingDirection() == 2)
+                    {
+                        layerOffset = layeroff2;//above arms when facing forward
+                    }
+
+                    if (!FarmerRenderer.isDrawingForUI && (bool)who.swimming.Value)
+                    {
+                        //don't draw it in the water
+                    }
+                    else
+                    {
+
+                        if (FarmerRenderer.isDrawingForUI)
+                        {
+                            //Change the frame for UI version
+                            sourceRect.X = 0;
+                            sourceRect.Y = 0;
+
+                            float layerFix = 2E-05f + 3E-05f;
+                            b.Draw(nakedOverlayTexture, position + origin + ___positionOffset, sourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + (layerOffset + layerFix));
+                        }
+                        else
+                        {
+                            b.Draw(nakedOverlayTexture, position + origin + ___positionOffset, sourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + layerOffset);
+                        }
+                    }
+                }
             }
         }
 
@@ -560,56 +631,8 @@ namespace DynamicBodies.Patches
                         break;
                 }
 
-                ///////////////////////////////
-                /// Setup a new overlay drawing for lower body
-                //no pants
-                bool drawNakedOverlay = who.GetPantsIndex() == 14 || who.pantsItem.Value == null;
-                if (!drawNakedOverlay && who.bathingClothes.Value)
-                {
-                    if (who.modData.ContainsKey("DB.bathers"))
-                    {
-                        drawNakedOverlay = who.modData["DB.bathers"] == "false";
-                    }
-                }
-
-                if (drawNakedOverlay)
-                {
-                    Texture2D nakedOverlayTexture = pbe.GetNakedLowerTexture(who.skin.Value);
-
-                    if (nakedOverlayTexture != null)
-                    {
-                        Rectangle pants_rect = new Rectangle(sourceRect.X, sourceRect.Y, sourceRect.Width, sourceRect.Height);
-                        //below Fasion Sense's pants layer, though doubt this will be compatible
-                        float layerOffset = ModEntry.FS_pantslayer;
-                        //float FS_pantslayer = 0.009E-05f;
-                        if (who.getFacingDirection() == 2)
-                        {
-                            layerOffset = 5.95E-05f;//above arms when facing forward
-                        }
-
-                        if (!FarmerRenderer.isDrawingForUI && (bool)who.swimming.Value)
-                        {
-                            //don't draw it in the water
-                        }
-                        else
-                        {
-
-                            if (FarmerRenderer.isDrawingForUI)
-                            {
-                                //Change the frame for UI version
-                                sourceRect.X = 0;
-                                sourceRect.Y = 0;
-
-                                float layerFix = 2E-05f + 3E-05f;
-                                b.Draw(nakedOverlayTexture, position + origin + ___positionOffset, sourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + (layerOffset + layerFix) * (float)sort_direction);
-                            }
-                            else
-                            {
-                                b.Draw(nakedOverlayTexture, position + origin + ___positionOffset, sourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + layerOffset);
-                            }
-                        }
-                    }
-                }
+                //Draw naked
+                if (!pbe.nakedLower.CheckForOption("below accessories")) DrawLowerNaked(__instance, ___positionOffset, ___rotationAdjustment, ___baseTexture, animationFrame, sourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth, ModEntry.FS_pantslayer, 5.95E-05f);
 
                 //Draw the Vanilla hat
                 if (who.hat.Value != null && !who.bathingClothes.Value)

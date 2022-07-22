@@ -9,13 +9,19 @@ namespace DynamicBodies
 {
     internal class ContentPack
     {
+        public struct additionalSettings
+        {
+            public string name { get; set; }
+            public List<string> options { get; set; }
+        }
         public struct characterSettings
         {
             public Dictionary<string, string> arms { get; set; }
-            public Dictionary<string, string> hairBodys { get; set; }
-            public Dictionary<string, string> hairFaces { get; set; }
-            public Dictionary<string, string> nakedUppers { get; set; }
-            public Dictionary<string, string> nakedLowers { get; set; }
+            public Dictionary<string, string> faces { get; set; }
+            public Dictionary<string, string> hairBacks { get; set; }
+            public Dictionary<string, string> hairFronts { get; set; }
+            public Dictionary<string, additionalSettings> nakedUppers { get; set; }
+            public Dictionary<string, additionalSettings> nakedLowers { get; set; }
             public Dictionary<string, string> bodyStyles { get; set; }
             public Dictionary<string, string> bodyHair { get; set; }
             public Dictionary<string, string> beards { get; set; }
@@ -36,6 +42,8 @@ namespace DynamicBodies
                     return GetOptions_bodyStyles(contentPack);
                 case "arms":
                     return GetOptions_arms(contentPack);
+                case "faces":
+                    return GetOptions_faces(contentPack);
                 case "bodyHair":
                     return GetOptions_bodyHair(contentPack);
                 case "beards":
@@ -49,6 +57,59 @@ namespace DynamicBodies
             }
         }
 
+        private List<ContentPackOption> GetOptions_faces(IContentPack contentPack)
+        {
+            List<ContentPackOption> options = new List<ContentPackOption>();
+
+            //Due to the custom nature of each frame - this only supports male/female
+
+            if (male.faces != null && male.faces.Count > 0)
+            {
+                //record all the body options
+                foreach (var dataKeyPair in male.faces)
+                {
+                    if (contentPack.HasFile($"assets\\faces\\{dataKeyPair.Value}.png")
+                        && contentPack.HasFile($"assets\\faces\\{dataKeyPair.Value}_bald.png"))
+                    {
+                        //TODO check the images are right size
+                        //Texture2D image = contentPack.LoadAsset<Texture2D>("image.png");
+                        ContentPackOption faceOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value, contentPack.Manifest.Author, contentPack, true);
+                        options.Add(faceOption);
+                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added male face file for '{dataKeyPair.Value}'", LogLevel.Debug);
+
+                    }
+                    else
+                    {
+                        ModEntry.monitor.Log($"{contentPack.Manifest.Name} is missing a face file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                    }
+                }
+            }
+
+            if (female.faces != null && female.faces.Count > 0)
+            {
+                //record all the body options
+                foreach (var dataKeyPair in female.faces)
+                {
+                    if (contentPack.HasFile($"assets\\faces\\{dataKeyPair.Value}.png")
+                        && contentPack.HasFile($"assets\\faces\\{dataKeyPair.Value}_bald.png"))
+                    {
+                        //TODO check the images are right size
+                        //Texture2D image = contentPack.LoadAsset<Texture2D>("image.png");
+                        ContentPackOption faceOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value, contentPack.Manifest.Author, contentPack, false);
+                        options.Add(faceOption);
+                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added female face file for '{dataKeyPair.Value}'", LogLevel.Debug);
+
+                    }
+                    else
+                    {
+                        ModEntry.monitor.Log($"{contentPack.Manifest.Name} is missing a female face file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                    }
+                }
+            }
+
+            return options;
+        }
+
         private List<ContentPackOption> GetOptions_bodyStyles(IContentPack contentPack)
         {
             List<ContentPackOption> options = new List<ContentPackOption>();
@@ -58,8 +119,7 @@ namespace DynamicBodies
                 //record all the body options
                 foreach (var dataKeyPair in unisex.bodyStyles)
                 {
-                    if (contentPack.HasFile($"assets\\bodies\\{dataKeyPair.Value}.png")
-                        && contentPack.HasFile($"assets\\bodies\\{dataKeyPair.Value}_bald.png"))
+                    if (contentPack.HasFile($"assets\\bodies\\{dataKeyPair.Value}.png"))
                     {
                         //TODO check the images are right size
                         //Texture2D image = contentPack.LoadAsset<Texture2D>("image.png");
@@ -80,8 +140,7 @@ namespace DynamicBodies
                 //record all the body options
                 foreach (var dataKeyPair in male.bodyStyles)
                 {
-                    if (contentPack.HasFile($"assets\\bodies\\{dataKeyPair.Value}.png")
-                        && contentPack.HasFile($"assets\\bodies\\{dataKeyPair.Value}_bald.png"))
+                    if (contentPack.HasFile($"assets\\bodies\\{dataKeyPair.Value}.png"))
                     {
                         //TODO check the images are right size
                         //Texture2D image = contentPack.LoadAsset<Texture2D>("image.png");
@@ -102,8 +161,7 @@ namespace DynamicBodies
                 //record all the body options
                 foreach (var dataKeyPair in female.bodyStyles)
                 {
-                    if (contentPack.HasFile($"assets\\bodies\\{dataKeyPair.Value}.png")
-                        && contentPack.HasFile($"assets\\bodies\\{dataKeyPair.Value}_bald.png"))
+                    if (contentPack.HasFile($"assets\\bodies\\{dataKeyPair.Value}.png"))
                     {
                         //TODO check the images are right size
                         //Texture2D image = contentPack.LoadAsset<Texture2D>("image.png");
@@ -330,18 +388,19 @@ namespace DynamicBodies
                 //record all the options
                 foreach (var dataKeyPair in unisex.nakedLowers)
                 {
-                    if (contentPack.HasFile($"assets\\nakedLower\\{dataKeyPair.Value}.png"))
+                    if (contentPack.HasFile($"assets\\nakedLower\\{dataKeyPair.Value.name}.png"))
                     {
                         //TODO check the images are right size
                         //Texture2D image = contentPack.LoadAsset<Texture2D>("image.png");
-                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value, contentPack.Manifest.Author, contentPack);
+                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value.name, contentPack.Manifest.Author, contentPack);
+                        nakedOption.SetMetadata(dataKeyPair.Value.options);
                         options.Add(nakedOption);
-                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added unisex naked lower file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added unisex naked lower file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
 
                     }
                     else
                     {
-                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a unisex naked lower file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a unisex naked lower file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
                     }
                 }
             }
@@ -352,18 +411,19 @@ namespace DynamicBodies
                 //record all the arm options
                 foreach (var dataKeyPair in male.nakedLowers)
                 {
-                    if (contentPack.HasFile($"assets\\nakedLower\\{dataKeyPair.Value}.png"))
+                    if (contentPack.HasFile($"assets\\nakedLower\\{dataKeyPair.Value.name}.png"))
                     {
                         //TODO check the images are right size
                         //Texture2D image = contentPack.LoadAsset<Texture2D>("image.png");
-                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value, contentPack.Manifest.Author, contentPack, true);
+                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value.name, contentPack.Manifest.Author, contentPack, true);
+                        nakedOption.SetMetadata(dataKeyPair.Value.options); 
                         options.Add(nakedOption);
-                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added male naked overlay file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added male naked overlay file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
 
                     }
                     else
                     {
-                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a male naked lower file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a male naked lower file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
                     }
                 }
             }
@@ -378,14 +438,15 @@ namespace DynamicBodies
                     {
                         //TODO check the images are right size
                         //Texture2D image = contentPack.LoadAsset<Texture2D>("image.png");
-                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value, contentPack.Manifest.Author, contentPack, false);
+                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value.name, contentPack.Manifest.Author, contentPack, false);
+                        nakedOption.SetMetadata(dataKeyPair.Value.options); 
                         options.Add(nakedOption);
-                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added female naked overlay file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added female naked overlay file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
 
                     }
                     else
                     {
-                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a female naked lower file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a female naked lower file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
                     }
                 }
             }
@@ -402,18 +463,19 @@ namespace DynamicBodies
                 //record all the options
                 foreach (var dataKeyPair in unisex.nakedUppers)
                 {
-                    if (contentPack.HasFile($"assets\\nakedUpper\\{dataKeyPair.Value}.png"))
+                    if (contentPack.HasFile($"assets\\nakedUpper\\{dataKeyPair.Value.name}.png"))
                     {
                         //TODO check the images are right size
                         //Texture2D image = contentPack.LoadAsset<Texture2D>("image.png");
-                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value, contentPack.Manifest.Author, contentPack);
+                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value.name, contentPack.Manifest.Author, contentPack);
+                        nakedOption.SetMetadata(dataKeyPair.Value.options); 
                         options.Add(nakedOption);
-                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added unisex naked lower file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added unisex naked lower file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
 
                     }
                     else
                     {
-                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a unisex naked lower file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a unisex naked lower file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
                     }
                 }
             }
@@ -424,18 +486,19 @@ namespace DynamicBodies
                 //record all the arm options
                 foreach (var dataKeyPair in male.nakedUppers)
                 {
-                    if (contentPack.HasFile($"assets\\nakedUpper\\{dataKeyPair.Value}.png"))
+                    if (contentPack.HasFile($"assets\\nakedUpper\\{dataKeyPair.Value.name}.png"))
                     {
                         //TODO check the images are right size
                         //Texture2D image = contentPack.LoadAsset<Texture2D>("image.png");
-                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value, contentPack.Manifest.Author, contentPack, true);
+                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value.name, contentPack.Manifest.Author, contentPack, true);
+                        nakedOption.SetMetadata(dataKeyPair.Value.options); 
                         options.Add(nakedOption);
-                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added male naked overlay file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added male naked overlay file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
 
                     }
                     else
                     {
-                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a male naked lower file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a male naked lower file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
                     }
                 }
             }
@@ -446,18 +509,19 @@ namespace DynamicBodies
                 //record all the arm options
                 foreach (var dataKeyPair in female.nakedUppers)
                 {
-                    if (contentPack.HasFile($"assets\\nakedUpper\\{dataKeyPair.Value}.png"))
+                    if (contentPack.HasFile($"assets\\nakedUpper\\{dataKeyPair.Value.name}.png"))
                     {
                         //TODO check the images are right size
                         //Texture2D image = contentPack.LoadAsset<Texture2D>("image.png");
-                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value, contentPack.Manifest.Author, contentPack, false);
+                        ContentPackOption nakedOption = new ContentPackOption(dataKeyPair.Key, dataKeyPair.Value.name, contentPack.Manifest.Author, contentPack, false);
+                        nakedOption.SetMetadata(dataKeyPair.Value.options); 
                         options.Add(nakedOption);
-                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added female naked overlay file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.debugmsg($"{contentPack.Manifest.Name} added female naked overlay file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
 
                     }
                     else
                     {
-                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a female naked lower file for '{dataKeyPair.Value}'", LogLevel.Debug);
+                        ModEntry.context.Monitor.Log($"{contentPack.Manifest.Name} is missing a female naked lower file for '{dataKeyPair.Value.name}'", LogLevel.Debug);
                     }
                 }
             }

@@ -31,7 +31,7 @@ namespace DynamicBodies.UI
 		private bool isWizardSubmenu = false;
 
 		public const int region_okbutton = 505, region_backbutton = 81114, region_accLeft = 516, region_accRight = 517, region_directionLeft = 520, region_directionRight = 521;
-		public const int region_hairLeft = 514, region_hairRight = 515, region_bodyLeft = 516, region_bodyRight = 517;
+		public const int region_hairLeft = 514, region_hairRight = 515, region_bodyLeft = 516, region_bodyRight = 517, region_faceLeft = 416, region_faceRight = 417;
 		public const int region_armLeft = 518, region_armRight = 519, region_beardLeft = 520, region_beardRight = 521;
 		public const int region_bodyHairLeft = 531, region_bodyHairRight = 532, region_nakedLeft = 533, region_nakedRight = 534, region_nakedLeftU = 535, region_nakedRightU = 536;
 
@@ -75,6 +75,7 @@ namespace DynamicBodies.UI
 		private ClickableComponent accLabel;
 		private List<int> accessoryOptions;
 		private ClickableComponent bodyLabel;
+		private ClickableComponent faceLabel;
 		private ClickableComponent armLabel;
 		private ClickableComponent beardLabel;
 		private ClickableComponent bodyHairLabel;
@@ -716,26 +717,25 @@ namespace DynamicBodies.UI
 				downNeighborID = -99998
 			});
 
-			if (allow_accessory_changes)
+			
+			this.leftSelectionButtons.Add(new ClickableTextureComponent("Face", new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
 			{
-				this.leftSelectionButtons.Add(new ClickableTextureComponent("Acc", new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-				{
-					myID = region_accLeft,
-					upNeighborID = -99998,
-					leftNeighborID = -99998,
-					rightNeighborID = -99998,
-					downNeighborID = -99998
-				});
-				this.labels.Add(this.accLabel = new ClickableComponent(new Rectangle(label_col2_position + arrow_size / 2 + label_col1_width / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_Accessory")));
-				this.rightSelectionButtons.Add(new ClickableTextureComponent("Acc", new Rectangle(label_col2_position + label_col1_width + arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-				{
-					myID = region_accRight,
-					upNeighborID = -99998,
-					leftNeighborID = -99998,
-					rightNeighborID = -99998,
-					downNeighborID = -99998
-				});
-			}
+				myID = region_faceLeft,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			});
+			this.labels.Add(this.faceLabel = new ClickableComponent(new Rectangle(label_col2_position + arrow_size / 2 + label_col1_width / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("face_style")));
+			this.rightSelectionButtons.Add(new ClickableTextureComponent("Face", new Rectangle(label_col2_position + label_col1_width + arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
+			{
+				myID = region_faceRight,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			});
+			
 
 			//Next line
 			yOffset += 68;
@@ -1223,6 +1223,24 @@ namespace DynamicBodies.UI
 							current_index = all_bodys.Count() - 1;
 						}
 						pbe.SetModData(who, "DB.body", all_bodys[current_index]);
+
+						Game1.playSound("grassyStep");
+						break;
+					}
+				case "Face":
+					{
+						List<string> all_faces = ModEntry.getContentPackOptions(ModEntry.faceOptions, who.IsMale).ToList();
+						int current_index = all_faces.IndexOf((who.modData.ContainsKey("DB.face")) ? who.modData["DB.face"] : "Default");
+						current_index += change;
+						if (current_index >= all_faces.Count)
+						{
+							current_index = 0;
+						}
+						else if (current_index < 0)
+						{
+							current_index = all_faces.Count() - 1;
+						}
+						pbe.SetModData(who, "DB.face", all_faces[current_index]);
 
 						Game1.playSound("grassyStep");
 						break;
@@ -2062,6 +2080,11 @@ namespace DynamicBodies.UI
 				{
 					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
 					tiny_sub = (who.modData.ContainsKey("DB.body")) ? who.modData["DB.body"] : "Default";
+				}
+				else if (c3 == this.faceLabel)
+				{
+					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
+					tiny_sub = (who.modData.ContainsKey("DB.face")) ? who.modData["DB.face"] : "Default";
 				}
 				else if (c3 == this.armLabel)
 				{

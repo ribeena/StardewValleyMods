@@ -56,7 +56,7 @@ namespace DynamicBodies
 					source_texture.GetData(data, 0, data.Length);
 					toReturn.SetData(data);
 					//JA fix
-					who.FarmerRenderer.recolorShoes(who.shoes);
+					//who.FarmerRenderer.recolorShoes(who.shoes);
 
 					if (toReturn != null)
 					{
