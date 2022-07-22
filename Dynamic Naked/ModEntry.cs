@@ -30,7 +30,7 @@ namespace DynamicBodies
     {
         public static ModEntry context;//single instance
 
-        //private static ModConfig Config;
+        public static ModConfig Config;
 
         public static bool british_spelling = false;
         public static BritishStrings engb;
@@ -41,7 +41,7 @@ namespace DynamicBodies
         internal static BootsPatched bootsPatcher;
         internal static FarmerRendererPatched farmerRendererPatcher;
 
-        private static bool debugMode = false;
+        private static bool debugMode = true;
 
         public static IGenericModConfigMenuApi configMenu = null;
 
@@ -54,6 +54,7 @@ namespace DynamicBodies
 
         //Content pack options
         public static List<ContentPackOption> bodyOptions = new List<ContentPackOption>();
+        public static List<ContentPackOption> faceOptions = new List<ContentPackOption>();
         public static List<ContentPackOption> armOptions = new List<ContentPackOption>();
         public static List<ContentPackOption> bodyHairOptions = new List<ContentPackOption>();
         public static List<ContentPackOption> beardOptions = new List<ContentPackOption>();
@@ -82,7 +83,9 @@ namespace DynamicBodies
             //fallback fix
             context.Helper.Events.Content.AssetRequested += OnRequestAsset;
             //Load the config
-            //Config = context.Helper.ReadConfig<ModConfig>();
+            Config = context.Helper.ReadConfig<ModConfig>();
+            debugMode = Config.debugmsgs;
+
             context.Helper.Events.Content.AssetReady += OnAssetReady;
 
             context.Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -749,19 +752,21 @@ namespace DynamicBodies
             // get Generic Mod Config Menu's API (if it's installed)
             configMenu = this.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (configMenu is null)
-                return;
-
-            // read file
-            //var model = this.Helper.Data.ReadSaveData<ModData>("dynamic.naked");
-
-            // save file (if needed)
-            //this.Helper.Data.WriteSaveData("dynamic.naked", model);
+                return; //don't do the config menu stuff
 
             // register mod
             configMenu.Register(
                 mod: this.ModManifest,
-                reset: () => { },
-                save: () => { }
+                reset: () => Config = new ModConfig(),
+                save: () => this.Helper.WriteConfig(Config)
+            );
+
+            // add some config options
+            configMenu.AddBoolOption(
+                mod: this.ModManifest,
+                name: () => "Free character customisation",
+                getValue: () => Config.freecustomisation,
+                setValue: value => Config.freecustomisation = value
             );
         }
 

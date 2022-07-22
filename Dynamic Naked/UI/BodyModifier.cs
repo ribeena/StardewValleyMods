@@ -192,17 +192,22 @@ namespace DynamicBodies.UI
 			switch (source) {
 				case Source.Doctors:
 					cost = isWizardSubmenu ? 0 : doctor_cost;
+					if (ModEntry.Config.freecustomisation) cost = 0;
 					setUpPositionsDoctor();
 					break;
 				case Source.Leahs:
 					cost = isWizardSubmenu ? 0 : leah_cost;
+					if (ModEntry.Config.freecustomisation) cost = 0;
 					setUpPositionsLeah();
 					break;
 				case Source.Pams:
 					cost = isWizardSubmenu ? 0 : pam_cost;
+					if (ModEntry.Config.freecustomisation) cost = 0;
 					setUpPositionsPam();
 					break;
 			}
+
+			
             
 			this._recolorEyesAction = delegate
 			{
