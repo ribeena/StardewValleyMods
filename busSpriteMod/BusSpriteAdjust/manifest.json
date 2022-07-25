@@ -1,8 +1,8 @@
 ﻿{
   "Name": "Bus Sprite Adjuster",
   "Author": "ribeena",
-  "Version": "0.0.4",
-  "Description": "One or two sentences about the mod",
+  "Version": "0.0.7",
+  "Description": "Changes the way the bus renders the door, position of it etc",
   "UniqueID": "ribeena.busspriteadjuster",
   "EntryDll": "BusSpriteAdjust.dll",
   "MinimumApiVersion": "3.0.0",
@@ -10,6 +10,10 @@
   "Dependencies": [
     {
       "UniqueID": "hootless.BusLocations",
+      "IsRequired": false
+    },
+    {
+      "UniqueID": "FlashShifter.SVECode",
       "IsRequired": false
     }
   ]

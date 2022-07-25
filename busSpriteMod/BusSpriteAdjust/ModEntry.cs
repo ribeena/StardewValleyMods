@@ -756,42 +756,45 @@ namespace BusSpriteAdjust
 
         private void OnWarp(object sender, WarpedEventArgs e)
         {
-            
-            if (Game1.currentLocation.Name == "BusStop")
-            {
-                //this.Monitor.Log("Welcome to the bus stop", LogLevel.Debug);
-                customBusDoor = null;
-                doorState = NO_STATE;
-
-                //Override the current map tiles
-                blankTile = -1;// Game1.currentLocation.getTileIndexAt(busStopTile + new Point(0,1),"Buildings");
-                roadTile = 1054;// Game1.currentLocation.getTileIndexAt(busStopTile + new Point(1, 1), "Buildings");
-                Game1.currentLocation.removeTileProperty(busStopTile.X, busStopTile.Y, "Back", "TouchAction");
-                Game1.currentLocation.setMapTileIndex(busStopTile.X, busStopTile.Y+1, roadTile, "Buildings");
-                //Set the new tiles
-                Game1.currentLocation.setTileProperty(busStopTile.X + doorTileOffset.X, busStopTile.Y, "Back", "TouchAction", "Bus");
-                Game1.currentLocation.setMapTileIndex(busStopTile.X+doorTileOffset.X, busStopTile.Y + 1, blankTile, "Buildings");
-            }
-            if (Game1.currentLocation.Name == "Desert")
+            if (Game1.currentLocation != null)
             {
 
-                //context.Monitor.Log("Welcome to the desert", LogLevel.Debug);
-                //reset the custom door
-                customBusDoor = null;
-                doorState = NO_STATE;
-                desertArrived = true;
+                if (Game1.currentLocation.Name == "BusStop")
+                {
+                    //this.Monitor.Log("Welcome to the bus stop", LogLevel.Debug);
+                    customBusDoor = null;
+                    doorState = NO_STATE;
 
-                //Override the current map tiles
-                blankTile = -1;//Game1.currentLocation.getTileIndexAt(desertStopTile, "Buildings");
-                roadTile = 206;//240 in .tmx, 206 according to Game1.currentLocation.getTileIndexAt(desertStopTile + new Point(3, 0), "Buildings");, but 240 in the tmx file
-                
-                Game1.currentLocation.removeTileProperty(desertStopTile.X, desertStopTile.Y, "Back", "TouchAction");
-                //the following lin should work, but it always uses a weird graphic
-                //Game1.currentLocation.setMapTileIndex(desertStopTile.X, desertStopTile.Y, roadTile, "Buildings");
+                    //Override the current map tiles
+                    blankTile = -1;// Game1.currentLocation.getTileIndexAt(busStopTile + new Point(0,1),"Buildings");
+                    roadTile = 1054;// Game1.currentLocation.getTileIndexAt(busStopTile + new Point(1, 1), "Buildings");
+                    Game1.currentLocation.removeTileProperty(busStopTile.X, busStopTile.Y, "Back", "TouchAction");
+                    Game1.currentLocation.setMapTileIndex(busStopTile.X, busStopTile.Y + 1, roadTile, "Buildings");
+                    //Set the new tiles
+                    Game1.currentLocation.setTileProperty(busStopTile.X + doorTileOffset.X, busStopTile.Y, "Back", "TouchAction", "Bus");
+                    Game1.currentLocation.setMapTileIndex(busStopTile.X + doorTileOffset.X, busStopTile.Y + 1, blankTile, "Buildings");
+                }
+                if (Game1.currentLocation.Name == "Desert")
+                {
 
-                //Set the new tiles, the return touch and punch a hole
-                Game1.currentLocation.setTileProperty(desertStopTile.X + doorTileOffset.X, desertStopTile.Y, "Back", "TouchAction", "DesertBus");
-                Game1.currentLocation.setMapTileIndex(desertStopTile.X + doorTileOffset.X, desertStopTile.Y, blankTile, "Buildings");
+                    //context.Monitor.Log("Welcome to the desert", LogLevel.Debug);
+                    //reset the custom door
+                    customBusDoor = null;
+                    doorState = NO_STATE;
+                    desertArrived = true;
+
+                    //Override the current map tiles
+                    blankTile = -1;//Game1.currentLocation.getTileIndexAt(desertStopTile, "Buildings");
+                    roadTile = 206;//240 in .tmx, 206 according to Game1.currentLocation.getTileIndexAt(desertStopTile + new Point(3, 0), "Buildings");, but 240 in the tmx file
+
+                    Game1.currentLocation.removeTileProperty(desertStopTile.X, desertStopTile.Y, "Back", "TouchAction");
+                    //the following lin should work, but it always uses a weird graphic
+                    //Game1.currentLocation.setMapTileIndex(desertStopTile.X, desertStopTile.Y, roadTile, "Buildings");
+
+                    //Set the new tiles, the return touch and punch a hole
+                    Game1.currentLocation.setTileProperty(desertStopTile.X + doorTileOffset.X, desertStopTile.Y, "Back", "TouchAction", "DesertBus");
+                    Game1.currentLocation.setMapTileIndex(desertStopTile.X + doorTileOffset.X, desertStopTile.Y, blankTile, "Buildings");
+                }
             }
         }
     }
