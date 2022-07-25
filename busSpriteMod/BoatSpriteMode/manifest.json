@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Boat Sprite Adjuster",
+  "Author": "ribeena",
+  "Version": "0.0.7",
+  "Description": "Improves the way Willy's boat renders'",
+  "UniqueID": "ribeena.boatspriteadjuster",
+  "EntryDll": "BoatSpriteAdjust.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": [],
+}
