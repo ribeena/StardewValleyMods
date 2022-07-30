@@ -14,6 +14,7 @@ using StardewValley.Network;
 using Netcode;
 
 using DynamicBodies.Data;
+using DynamicBodies.Framework;
 using StardewValley.Objects;
 
 namespace DynamicBodies.Patches
@@ -86,14 +87,17 @@ namespace DynamicBodies.Patches
             }
             if(field == "shirt" || field == "shoes")
             {
-                pbe.cacheImage = null;
+                //pbe.cacheImage = null;
+                
             }
             if(field == "shirt")
             {
+                pbe.dirtyLayers["shirt"] = true;
                 pbe.shirt = -1;//force shirt change
             }
             if(field == "shoes")
             {
+                pbe.dirtyLayers["shoes"] = true;
                 pbe.shoes = -1;//force shoe change
             }
             if (field == "pants")
@@ -121,6 +125,7 @@ namespace DynamicBodies.Patches
         //Replace texturechanged to use the cacheimage
         public static bool pre_TextureChanged(FarmerRenderer __instance, ref Texture2D ___baseTexture, NetString ___textureName, LocalizedContentManager ___farmerTextureManager)
         {
+            ModEntry.debugmsg($"TextureChanged() called", LogLevel.Debug);
             LocalizedContentManagerOverride lcmo = ___farmerTextureManager as LocalizedContentManagerOverride;
             if (lcmo != null)
             {
@@ -147,7 +152,7 @@ namespace DynamicBodies.Patches
         }
 
         //Replace the drawing of Farmer Renderer
-        private static bool pre_Draw(FarmerRenderer __instance, ref Vector2 ___positionOffset, ref Vector2 ___rotationAdjustment, ref bool ____sickFrame, ref bool ____shirtDirty, ref bool ____spriteDirty, ref LocalizedContentManager ___farmerTextureManager, ref Dictionary<string, Dictionary<int, List<int>>> ____recolorOffsets, ref Texture2D ___baseTexture, ref string ___textureName, SpriteBatch b, FarmerSprite.AnimationFrame animationFrame, int currentFrame, Rectangle sourceRect, Vector2 position, Vector2 origin, float layerDepth, int facingDirection, Color overrideColor, float rotation, float scale, Farmer who)
+        private static bool pre_Draw(FarmerRenderer __instance, ref Vector2 ___positionOffset, ref Vector2 ___rotationAdjustment, ref bool ____sickFrame, ref bool ____spriteDirty, ref bool ____eyesDirty, ref bool ____shirtDirty, ref bool ____pantsDirty, ref bool ____shoesDirty, ref bool ____skinDirty, ref bool ____baseTextureDirty, ref LocalizedContentManager ___farmerTextureManager, ref Dictionary<string, Dictionary<int, List<int>>> ____recolorOffsets, ref Texture2D ___baseTexture, ref string ___textureName, SpriteBatch b, FarmerSprite.AnimationFrame animationFrame, int currentFrame, Rectangle sourceRect, Vector2 position, Vector2 origin, float layerDepth, int facingDirection, Color overrideColor, float rotation, float scale, Farmer who)
         {
             if (who.isFakeEventActor && Game1.eventUp)
             {
@@ -160,7 +165,6 @@ namespace DynamicBodies.Patches
             {
                 pbe = new PlayerBaseExtended(who, __instance.textureName.Value);
                 ModEntry.SetModDataDefaults(who);
-                pbe.dirty = true;
 
                 if (who.accessory.Value < 6 && who.accessory.Value > 0)
                 {
@@ -168,6 +172,32 @@ namespace DynamicBodies.Patches
                     who.accessory.Set(0);
                 }
             }
+
+            
+            bool sick_frame = currentFrame == 104 || currentFrame == 105;
+            if (____sickFrame != sick_frame)
+            {
+                ____sickFrame = sick_frame;
+                ____shirtDirty = true;
+                ____spriteDirty = true;
+            }
+
+            //Copy any dirty flags
+            pbe.dirtyLayers["sprite"] = pbe.dirtyLayers["sprite"] || ____spriteDirty;
+            pbe.dirtyLayers["baseTexture"] = pbe.dirtyLayers["baseTexture"] || ____baseTextureDirty;
+            pbe.dirtyLayers["eyes"] = pbe.dirtyLayers["eyes"] || ____eyesDirty || pbe.dirtyLayers["baseTexture"];
+            pbe.dirtyLayers["skin"] = pbe.dirtyLayers["skin"] || ____skinDirty || pbe.dirtyLayers["baseTexture"];
+            pbe.dirtyLayers["shoes"] = pbe.dirtyLayers["skin"] || ____shoesDirty || pbe.dirtyLayers["baseTexture"];
+            pbe.dirtyLayers["pants"] = pbe.dirtyLayers["pants"] || ____pantsDirty;
+            pbe.dirtyLayers["shirt"] = pbe.dirtyLayers["shirt"] || ____shirtDirty || pbe.dirtyLayers["baseTexture"];
+            //Wipe all dirty flags
+            ____spriteDirty = false;
+            ____baseTextureDirty = false;
+            ____eyesDirty = false;
+            ____skinDirty = false;
+            ____shoesDirty = false;
+            ____pantsDirty = false;
+            ____shirtDirty = false;
 
             //Overriding the texture loading didn't apply during construction, make it happen
             if (!pbe.overrideCheck)
@@ -179,6 +209,13 @@ namespace DynamicBodies.Patches
                     ___farmerTextureManager = (LocalizedContentManager)lcmo.CreateTemporary(ModEntry.context, who);
                 }
                 pbe.overrideCheck = true;
+            }
+
+            //Never generated the texture... i guess
+            if(___baseTexture == null)
+            {
+                ModEntry.debugmsg($"FarmerRenderer loaded a new sprite for {__instance.textureName}", LogLevel.Debug);
+                ___baseTexture = ModEntry.GetFarmerBaseSprite(who, __instance.textureName);
             }
 
             //Flat the positions to whole pixels
@@ -243,7 +280,8 @@ namespace DynamicBodies.Patches
 
 
                 //Redraw the image
-                pbe.cacheImage = null;
+                //pbe.cacheImage = null;
+                
                 //Wipe the skin colour calculations
                 ____recolorOffsets = null;
                 //Wipe hair calculations
@@ -256,15 +294,13 @@ namespace DynamicBodies.Patches
             }
 
             //Draw the character
-            bool sick_frame = currentFrame == 104 || currentFrame == 105;
-            if (____sickFrame != sick_frame)
-            {
-                ____sickFrame = sick_frame;
-                ____shirtDirty = true;
-                ____spriteDirty = true;
-            }
 
-            ExecuteRecolorActionsReversePatch(__instance, who);
+            //ExecuteRecolorActionsReversePatch(__instance, who);
+            ExecuteRecolorActionsOnBaseSprite(pbe, who);
+
+            //All fixes of rendering should be done
+            pbe.dirty = false;
+
             AdjustedVanillaMethods.drawBase(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref ___baseTexture, b, animationFrame, currentFrame, ref sourceRect, ref position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
             DrawBodyHair(__instance, ___positionOffset, ___rotationAdjustment, ___baseTexture, animationFrame, sourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth);
 
@@ -353,14 +389,281 @@ namespace DynamicBodies.Patches
                     drawPants = who.modData["DB.bathers"] == "true";
                 }
             }
-            if (drawPants) AdjustedVanillaMethods.drawPants(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref ___baseTexture, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
+            if (drawPants) AdjustedVanillaMethods.drawPants(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref pbe.cacheImage, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
             if (nakedLowerTexture != null && pbe.nakedLower.CheckForOption("below accessories")) DrawLowerNaked(__instance, ___positionOffset, ___rotationAdjustment, ___baseTexture, animationFrame, sourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth, 9.2E-08f, 9.2E-08f);
-            AdjustedVanillaMethods.drawEyes(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref ___baseTexture, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
+            AdjustedVanillaMethods.drawEyes(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref pbe.cacheImage, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
             __instance.drawHairAndAccesories(b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth);
-            AdjustedVanillaMethods.drawArms(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref ___baseTexture, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
+            AdjustedVanillaMethods.drawArms(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref pbe.cacheImage, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
             
             //prevent further rendering
             return false;
+        }
+
+        internal static void ExecuteRecolorActionsOnBaseSprite(PlayerBaseExtended pbe, Farmer who)
+        {
+            if (pbe.dirtyLayers["sprite"])
+            {
+                pbe.dirtyLayers["sprite"] = false;
+                if (pbe.dirtyLayers["baseTexture"])
+                {
+                    pbe.dirtyLayers["baseTexture"] = false;
+                    //this.textureChanged();
+                    pbe.dirtyLayers["eyes"] = true;
+                    pbe.dirtyLayers["shoes"] = true;
+                    //pbe.dirtyLayers["pants"] = true;//Pants aren't in the base sprite..?
+                    pbe.dirtyLayers["skin"] = true;
+                    pbe.dirtyLayers["shirt"] = true;
+
+
+                    //Replacement to farmerTextureManager.Load<Texture2D>
+                    Texture2D source_texture = ModEntry.GetFarmerBaseSprite(who);
+                    ModEntry.debugmsg($"Got a base texture: {source_texture != null}", LogLevel.Debug);
+                    Color[] source_pixel_data = new Color[source_texture.Width * source_texture.Height];
+
+                    //Only when the base is dirty do we recalculate all the pixels to swap 
+                    foreach (String layer in pbe.dirtyLayers.Keys)
+                    {
+                        //reset the cache of each dirty layer
+                        if (pbe.dirtyLayers[layer])
+                        {
+                            pbe.cachePixelColours.ClearLayer(layer);
+                            List<ColourCacher.ColourReplacements> coloursToSwap;
+                            switch (layer)
+                            {
+                                case "eyes":
+                                    coloursToSwap = new List<ColourCacher.ColourReplacements>() {
+                                    ColourCacher.ColourReplacements.IrisLeftD, ColourCacher.ColourReplacements.IrisLeftL,
+                                    ColourCacher.ColourReplacements.Pupil,
+                                    ColourCacher.ColourReplacements.IrisRightD, ColourCacher.ColourReplacements.IrisRightL,
+                                    ColourCacher.ColourReplacements.ScleraD, ColourCacher.ColourReplacements.ScleraL
+                                };
+                                    break;
+                                case "shoes":
+                                    coloursToSwap = new List<ColourCacher.ColourReplacements>() {
+                                    ColourCacher.ColourReplacements.ShoesD, ColourCacher.ColourReplacements.ShoesL,
+                                    ColourCacher.ColourReplacements.ShoesML, ColourCacher.ColourReplacements.ShoesMD
+                                };
+                                    break;
+                                case "skin":
+                                    coloursToSwap = new List<ColourCacher.ColourReplacements>() {
+                                    ColourCacher.ColourReplacements.SkinD, ColourCacher.ColourReplacements.SkinM, ColourCacher.ColourReplacements.ShirtL,
+                                    ColourCacher.ColourReplacements.SkinMD, ColourCacher.ColourReplacements.SkinML,
+                                    ColourCacher.ColourReplacements.SkinAltD, ColourCacher.ColourReplacements.SkinAltM, ColourCacher.ColourReplacements.SkinAltL
+                                };
+                                    break;
+                                case "shirt":
+                                    coloursToSwap = new List<ColourCacher.ColourReplacements>() {
+                                    ColourCacher.ColourReplacements.ShirtD, ColourCacher.ColourReplacements.ShirtM, ColourCacher.ColourReplacements.SkinL
+                                };
+                                    break;
+                                default:
+                                    coloursToSwap = null;
+                                    break;
+                            }
+                            if (coloursToSwap != null)
+                            {
+                                pbe.cachePixelColours.GeneratePixelIndices(layer, coloursToSwap, source_pixel_data);
+                            }
+                        }
+                    }
+
+                    //Make a copy if necessary
+                    if (pbe.cacheImage == null)
+                    {
+                        pbe.cacheImage = new Texture2D(Game1.graphics.GraphicsDevice, source_texture.Width, source_texture.Height);
+                        Color[] data = new Color[source_texture.Width * source_texture.Height];
+                        pbe.cacheImage.SetData(source_pixel_data);
+                    }
+                }
+
+                
+                Color[] pixel_data = new Color[pbe.cacheImage.Width * pbe.cacheImage.Height];
+                pbe.cacheImage.GetData(pixel_data);
+                
+                //Change the pixel colours on the cached image
+                foreach (String layer in pbe.dirtyLayers.Keys)
+                {
+                    //reset the cache of each dirty layer
+                    if (pbe.dirtyLayers[layer])
+                    {
+                        Dictionary<ColourCacher.ColourReplacements, Color> coloursToSwapIn = new Dictionary<ColourCacher.ColourReplacements, Color>();
+                        switch (layer)
+                        {
+                            case "eyes":
+                                AddEyeColours(who, ref coloursToSwapIn);
+                                break;
+                            case "shoes":
+                                AddShoeColours(who, ref coloursToSwapIn);
+                                break;
+                            case "skin":
+                                AddSkinColours(who, ref coloursToSwapIn);
+                                break;
+                            case "shirt":
+                                AddShirtColours(who, ref coloursToSwapIn);
+                                break;
+                        }
+                        //Swap the colours
+                        pbe.cachePixelColours.RecolorLayer(ref pixel_data, layer, coloursToSwapIn);
+                        pbe.dirtyLayers[layer] = false;
+                    }
+                }
+                
+                //Update the cached image
+                pbe.cacheImage.SetData(pixel_data);
+            }
+        }
+
+        private static Color changeBrightness(Color c, int brightness)
+        {
+            c.R = (byte)Math.Min(255, Math.Max(0, c.R + brightness));
+            c.G = (byte)Math.Min(255, Math.Max(0, c.G + brightness));
+            c.B = (byte)Math.Min(255, Math.Max(0, c.B + ((brightness > 0) ? (brightness * 5 / 6) : (brightness * 8 / 7))));
+            return c;
+        }
+
+        private static void AddEyeColours(Farmer who, ref Dictionary<ColourCacher.ColourReplacements, Color> coloursToSwapIn)
+        {
+            Color lightest_color = new Color((uint)who.eyeColor);
+            Color darker_color = changeBrightness(lightest_color, -75);
+            if (lightest_color.Equals(darker_color))
+            {
+                lightest_color.B += 10;
+            }
+            coloursToSwapIn[ColourCacher.ColourReplacements.IrisLeftL] = lightest_color;
+            coloursToSwapIn[ColourCacher.ColourReplacements.IrisLeftD] = darker_color;
+            //Allow for two eye colours
+            Color lightest_r_color = PlayerBaseExtended.GetColorSetting(who, "eyeColorR");
+            if(!lightest_r_color.Equals(Color.Transparent))
+            {
+                Color darker_r_color = changeBrightness(lightest_r_color, -75);
+                if (lightest_r_color.Equals(darker_r_color))
+                {
+                    lightest_r_color.B += 10;
+                }
+                coloursToSwapIn[ColourCacher.ColourReplacements.IrisRightL] = lightest_r_color;
+                coloursToSwapIn[ColourCacher.ColourReplacements.IrisRightD] = darker_r_color;
+            }
+            //Allow for sclera colours
+            Color lightest_s_color = PlayerBaseExtended.GetColorSetting(who, "eyeColorS");
+            if (!lightest_s_color.Equals(Color.Transparent))
+            {
+                Color darker_s_color = changeBrightness(lightest_s_color, -75);
+                if (lightest_s_color.Equals(darker_s_color))
+                {
+                    lightest_s_color = changeBrightness(darker_s_color, 75);
+                }
+                coloursToSwapIn[ColourCacher.ColourReplacements.ScleraL] = lightest_s_color;
+                coloursToSwapIn[ColourCacher.ColourReplacements.IrisRightD] = darker_s_color;
+            }
+        }
+
+        private static void AddSkinColours(Farmer who, ref Dictionary<ColourCacher.ColourReplacements, Color> coloursToSwapIn)
+        {
+            //Calculate the skin colours
+            int which = who.skin.Value;
+            Texture2D skinColors = Game1.content.Load<Texture2D>("Characters/Farmer/skinColors");
+            Texture2D glandColors = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Character/extendedSkinColors.png");
+
+            Color[] skinColorsData = new Color[skinColors.Width * skinColors.Height];
+            if (which < 0) which = skinColors.Height - 1;
+            if (which > skinColors.Height - 1) which = 0;
+            skinColors.GetData(skinColorsData);
+
+            Color[] glandColorsData = new Color[glandColors.Width * glandColors.Height];
+            if (which < 0) which = glandColors.Height - 1;
+            if (which > glandColors.Height - 1) which = 0;
+            glandColors.GetData(glandColorsData);
+
+            //Store what the colours are
+
+            if (skinColors.Width == 3)
+            {
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinD] = skinColorsData[which * 3 % (skinColors.Height * 3)];
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinM] = skinColorsData[which * 3 % (skinColors.Height * 3) + 1];
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinL] = skinColorsData[which * 3 % (skinColors.Height * 3) + 2];
+                //Lerp the other colours
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinMD] = Color.Lerp(coloursToSwapIn[ColourCacher.ColourReplacements.SkinD], coloursToSwapIn[ColourCacher.ColourReplacements.SkinM], 0.5f);
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinML] = Color.Lerp(coloursToSwapIn[ColourCacher.ColourReplacements.SkinM], coloursToSwapIn[ColourCacher.ColourReplacements.SkinL], 0.5f);
+            } else if(skinColors.Width == 5)
+            {
+                //Oooo someone went all in with a 5 width skin
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinD] = skinColorsData[which * 5 % (skinColors.Height * 5)];
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinMD] = skinColorsData[which * 5 % (skinColors.Height * 5) + 1];
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinM] = skinColorsData[which * 5 % (skinColors.Height * 5) + 2];
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinML] = skinColorsData[which * 5 % (skinColors.Height * 5) + 3];
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinL] = skinColorsData[which * 5 % (skinColors.Height * 5) + 4];
+            }
+            if (glandColors.Width == 2)
+            {
+                //Original format compatibility
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinAltD] = glandColorsData[which * 2 % (glandColors.Height * 2)];
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinAltL] = glandColorsData[which * 2 % (glandColors.Height * 2) + 1];
+                //Lerp the other colour
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinAltM] = Color.Lerp(coloursToSwapIn[ColourCacher.ColourReplacements.SkinAltD], coloursToSwapIn[ColourCacher.ColourReplacements.SkinAltL], 0.5f);
+            }
+            else if (glandColors.Width == 3)
+            {
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinAltD] = glandColorsData[which * 3 % (glandColors.Height * 3)];
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinAltM] = glandColorsData[which * 3 % (glandColors.Height * 3) + 1];
+                coloursToSwapIn[ColourCacher.ColourReplacements.SkinAltL] = glandColorsData[which * 3 % (glandColors.Height * 3) + 2];
+            }
+        }
+
+        private static void AddShoeColours(Farmer who, ref Dictionary<ColourCacher.ColourReplacements, Color> coloursToSwapIn)
+        {
+            Boots boots = who.boots.Value;
+            if (boots != null)
+            {
+                int which = boots.indexInColorSheet.Value;
+
+                Texture2D shoeColors = Game1.content.Load<Texture2D>("Characters\\Farmer\\shoeColors");
+                Color[] shoeColorsData = new Color[shoeColors.Width * shoeColors.Height];
+                shoeColors.GetData(shoeColorsData);
+                coloursToSwapIn[ColourCacher.ColourReplacements.ShoesD] = shoeColorsData[which * 4 % (shoeColors.Height * 4)];
+                coloursToSwapIn[ColourCacher.ColourReplacements.ShoesMD] = shoeColorsData[which * 4 % (shoeColors.Height * 4) + 1];
+                coloursToSwapIn[ColourCacher.ColourReplacements.ShoesML] = shoeColorsData[which * 4 % (shoeColors.Height * 4) + 2];
+                coloursToSwapIn[ColourCacher.ColourReplacements.ShoesL] = shoeColorsData[which * 4 % (shoeColors.Height * 4) + 3];
+            }
+        }
+
+        private static void AddShirtColours(Farmer who, ref Dictionary<ColourCacher.ColourReplacements, Color> coloursToSwapIn)
+        {
+            Color[] shirtData = new Color[FarmerRenderer.shirtsTexture.Bounds.Width * FarmerRenderer.shirtsTexture.Bounds.Height];
+            FarmerRenderer.shirtsTexture.GetData(shirtData);
+
+            int index = AdjustedVanillaMethods.ClampShirt(who.GetShirtIndex()) * 8 / 128 * 32 * FarmerRenderer.shirtsTexture.Bounds.Width + AdjustedVanillaMethods.ClampShirt(who.GetShirtIndex()) * 8 % 128 + FarmerRenderer.shirtsTexture.Width * 4;
+            int dye_index = index + 128;
+            
+            //Sleeveless is handles by textures now, so no logic here for that
+
+            Color color = Utility.MakeCompletelyOpaque(who.GetShirtColor());
+            Color shirtSleeveColor = shirtData[dye_index];
+            Color clothes_color = color;
+            if (shirtSleeveColor.A < byte.MaxValue)
+            {
+                shirtSleeveColor = shirtData[index];
+                clothes_color = Color.White;
+            }
+            shirtSleeveColor = Utility.MultiplyColor(shirtSleeveColor, clothes_color);
+            coloursToSwapIn[ColourCacher.ColourReplacements.ShirtD] = shirtSleeveColor;
+
+            shirtSleeveColor = shirtData[dye_index - FarmerRenderer.shirtsTexture.Width];
+            if (shirtSleeveColor.A < byte.MaxValue)
+            {
+                shirtSleeveColor = shirtData[index - FarmerRenderer.shirtsTexture.Width];
+                clothes_color = Color.White;
+            }
+            shirtSleeveColor = Utility.MultiplyColor(shirtSleeveColor, clothes_color);
+            coloursToSwapIn[ColourCacher.ColourReplacements.ShirtM] = shirtSleeveColor;
+
+            shirtSleeveColor = shirtData[dye_index - FarmerRenderer.shirtsTexture.Width * 2];
+            if (shirtSleeveColor.A < byte.MaxValue)
+            {
+                shirtSleeveColor = shirtData[index - FarmerRenderer.shirtsTexture.Width * 2];
+                clothes_color = Color.White;
+            }
+            shirtSleeveColor = Utility.MultiplyColor(shirtSleeveColor, clothes_color);
+            coloursToSwapIn[ColourCacher.ColourReplacements.ShirtL] = shirtSleeveColor;
         }
 
         internal static void ExecuteRecolorActionsReversePatch(FarmerRenderer __instance, Farmer who)

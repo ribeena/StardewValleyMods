@@ -9,6 +9,7 @@ using StardewValley;
 using StardewValley.Objects;
 
 using DynamicBodies.Patches;
+using DynamicBodies.Framework;
 
 namespace DynamicBodies.Data
 {
@@ -19,6 +20,8 @@ namespace DynamicBodies.Data
         public float initialLayerDepth = 0f;
         public bool overrideCheck = false;
         public Texture2D cacheImage;
+        public ColourCacher cachePixelColours;
+        public Dictionary<string, bool> dirtyLayers;
         public int shirt { get; set; }
         public int shirtOverlayIndex = -1;
         public int pants { get; set; }
@@ -47,6 +50,8 @@ namespace DynamicBodies.Data
         public PlayerBaseExtended(Farmer who) : this(who, who.FarmerRenderer.textureName.Value) { }
         public PlayerBaseExtended(Farmer who, string baseTexture)
         {
+            cachePixelColours = new ColourCacher();
+
             body = new BodyPartStyle("body");
 
             vanilla = new BodyPartStyle("body");
@@ -58,6 +63,22 @@ namespace DynamicBodies.Data
             bodyHair = new BodyPartStyle("bodyHair");
             nakedLower = new BodyPartStyle("nakedLower");
             nakedUpper = new BodyPartStyle("nakedUpper");
+
+            dirtyLayers = new Dictionary<string, bool>() {
+                { "sprite",true },
+                { "baseTexture",true },
+                { "eyes",true },
+                { "skin",true },
+                { "shoes",true },
+                { "pants",true },
+                { "shirt",true },
+                { "face",true },
+                { "arm",true },
+                { "beard",true },
+                { "bodyHair",true },
+                { "nakedLower",true },
+                { "nameUpper",true },
+            };
 
             shirt = who.shirt.Value;
             pants = who.pants.Value;
@@ -138,6 +159,16 @@ namespace DynamicBodies.Data
             vanilla.file = file.Split("\\").Last();
             if (vanilla.file == "farmer_girl_base") { vanilla.file = "farmer_base"; }
             if (vanilla.file == "farmer_girl_base_bald") { vanilla.file = "farmer_base_bald"; }
+        }
+
+        public static Color GetColorSetting(Farmer who, string name)
+        {
+            Color toReturn = Color.Transparent;
+            if (who.modData.ContainsKey("DB."+name))
+            {
+                toReturn = new Color(uint.Parse(who.modData["DB."+name]));
+            }
+            return toReturn;
         }
 
         public void UpdateTextures(Farmer who)

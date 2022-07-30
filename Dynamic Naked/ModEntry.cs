@@ -22,6 +22,7 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 using DynamicBodies.Data;
 using DynamicBodies.Patches;
+using DynamicBodies.Framework;
 
 namespace DynamicBodies
 {
@@ -140,7 +141,7 @@ namespace DynamicBodies
                 {
                     Stream stream = File.Create($"{context.Helper.DirectoryPath}\\debug_sprite.png");
                     Farmer who = Game1.player;
-                    GetFarmerBaseSprite(who, "Characters\\Farmer\\farmer_base").SaveAsPng(stream, 288, 672);
+                    GetFarmerBaseSprite(who).SaveAsPng(stream, 288, 672);
                     context.Monitor.Log($"OK, saved {context.Helper.DirectoryPath}\\debug_sprite.png.", LogLevel.Debug);
                 } else
                 {
@@ -416,15 +417,17 @@ namespace DynamicBodies
             return true;
         }
 
-        public static Texture2D GetFarmerBaseSprite(Farmer who, string texture)
+        public static Texture2D GetFarmerBaseSprite(Farmer who, string texture = "")
         {
             Texture2D bodyText2D = null;
+            bool returnNew = texture == "";
+
             //Fix up the farmer base with options
-            if (texture.Length > 0 && texture.StartsWith("Characters\\Farmer\\farmer_"))
+            if ((texture.Length > 0 && texture.StartsWith("Characters\\Farmer\\farmer_") || returnNew))
             {
 
                 string gender = "";
-                if (texture.StartsWith("Characters\\Farmer\\farmer_girl")) { gender = "f_"; }
+                if (!who.IsMale) { gender = "f_"; }
 
                 //monitor.Log($"Edit [{pbeKeyPair.Key}] {pbeKeyPair.Value.baseStyle} image through Edit<t>", LogLevel.Debug);
                 PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
@@ -441,11 +444,9 @@ namespace DynamicBodies
                     }
                 }
 
-                //Needs redrawing
-                if (pbe.cacheImage == null)
-                {
+                
                     string bald = "";
-                    if (pbe.vanilla.file.EndsWith("_bald"))
+                    if(who.IsBaldHairStyle(who.hair.Value))
                     {
                         bald = "_bald";
                     }
@@ -453,7 +454,7 @@ namespace DynamicBodies
                     //Load the base texture from this mod
                     if (pbe.body.option == "Default")
                     {
-                        bodyText2D = context.Helper.ModContent.Load<Texture2D>($"assets\\Character\\{gender}{pbe.vanilla.file[..^bald.Length]}.png");
+                        bodyText2D = context.Helper.ModContent.Load<Texture2D>($"assets\\Character\\{gender}farmer_base.png");
                     }
                     else
                     {
@@ -462,6 +463,21 @@ namespace DynamicBodies
                         bodyText2D = pbe.body.provider.ModContent.Load<Texture2D>($"assets\\bodies\\{gender}{pbe.body.file}.png");
                     }
 
+                    //Generate pixels colours for the colour cacher to swap etc
+                    if (!pbe.cachePixelColours.hasColoursToReplace() || pbe.dirtyLayers["baseTexture"])
+                    {
+                        Color[] pixels = new Color[bodyText2D.Width * bodyText2D.Height];
+                        bodyText2D.GetData(pixels);
+
+                        Dictionary<ColourCacher.ColourReplacements, Color> coloursToLookFor = new Dictionary<ColourCacher.ColourReplacements, Color>();
+                        foreach (ColourCacher.ColourReplacements replacement in (ColourCacher.ColourReplacements[])Enum.GetValues(typeof(ColourCacher.ColourReplacements)))
+                        {
+                            coloursToLookFor[replacement] = pixels[((uint)replacement)];
+                        }
+                        pbe.cachePixelColours.SetColoursToReplace(coloursToLookFor);
+                    }
+
+                    //Start modifying the base texture
                     var editor = context.Helper.ModContent.GetPatchHelper(bodyText2D).AsImage();
 
                     Texture2D faceText2D;
@@ -485,19 +501,25 @@ namespace DynamicBodies
                     {
                         armsText2D = pbe.arm.provider.ModContent.Load<Texture2D>($"assets\\arms\\{pbe.arm.file}_{pbe.sleeveLength}.png");
                     }
-                    editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width, armsText2D.Height), targetArea: new Rectangle(96, 0, armsText2D.Width, armsText2D.Height), PatchMode.Replace);
+                //editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width, armsText2D.Height), targetArea: new Rectangle(96, 0, armsText2D.Width, armsText2D.Height), PatchMode.Replace);
 
-                    //Top arms
-                    //editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width, armsText2D.Height-96), targetArea: new Rectangle(96, 0, armsText2D.Width, armsText2D.Height-96), PatchMode.Replace);
-                    //Bottom arms
-                    //editor.PatchImage(armsText2D, new Rectangle(48, 576, armsText2D.Width-48, 96), targetArea: new Rectangle(144, 576, armsText2D.Width-48, 96), PatchMode.Replace);
-                    //Bath overlay
-                    //editor.PatchImage(armsText2D, new Rectangle(0, 576, 48, 96), targetArea: new Rectangle(0, 576, 48, 96), PatchMode.Overlay);
+                //Top row
+                editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width-32, 32), targetArea: new Rectangle(96, 0, armsText2D.Width-32, 32), PatchMode.Replace);
+                //remainder
+                editor.PatchImage(armsText2D, new Rectangle(0, 32, armsText2D.Width, armsText2D.Height - 32), targetArea: new Rectangle(96, 32, armsText2D.Width, armsText2D.Height - 32), PatchMode.Replace);
 
 
-                    //monitor.Log($"Edit sleeve image through Edit<t>", LogLevel.Debug);
+                //Top arms
+                //editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width, armsText2D.Height-96), targetArea: new Rectangle(96, 0, armsText2D.Width, armsText2D.Height-96), PatchMode.Replace);
+                //Bottom arms
+                //editor.PatchImage(armsText2D, new Rectangle(48, 576, armsText2D.Width-48, 96), targetArea: new Rectangle(144, 576, armsText2D.Width-48, 96), PatchMode.Replace);
+                //Bath overlay
+                //editor.PatchImage(armsText2D, new Rectangle(0, 576, 48, 96), targetArea: new Rectangle(0, 576, 48, 96), PatchMode.Overlay);
 
-                    Texture2D shoes;
+
+                //monitor.Log($"Edit sleeve image through Edit<t>", LogLevel.Debug);
+
+                Texture2D shoes;
                     if (pbe.shoeStyle == "None")
                     {
                         shoes = context.Helper.ModContent.Load<Texture2D>($"assets\\Character\\feet.png");
@@ -537,6 +559,9 @@ namespace DynamicBodies
 
                     editor.PatchImage(shoes, new Rectangle(0, 0, shoes.Width, shoes.Height), targetArea: new Rectangle(0, 0, shoes.Width, shoes.Height), PatchMode.Overlay);
 
+                //Needs redrawing
+                if (pbe.dirtyLayers["sprite"])
+                {
                     //Store the updated version
                     pbe.cacheImage = null;
 
@@ -546,13 +571,17 @@ namespace DynamicBodies
                     pbe.cacheImage.SetData(data);
 
                     //Render any extended colours on the base
-                    pbe.cacheImage = PlayerBaseExtended.ApplyExtendedSkinColor(who.skin.Value, pbe.cacheImage);
+                    //pbe.cacheImage = PlayerBaseExtended.ApplyExtendedSkinColor(who.skin.Value, pbe.cacheImage);
 
-                    pbe.dirty = false;
-                } 
+                    pbe.dirtyLayers["sprite"] = false;
+                }
 
-                //Return the cached image
-                return pbe.cacheImage;
+                if (!returnNew)
+                {
+                    //Return the cached image
+                    return pbe.cacheImage;
+                }
+
             }
             return bodyText2D;
         }

@@ -35,7 +35,7 @@ namespace DynamicBodies
 
 		public override T Load<T>(string assetName)
 		{
-			//modEntry.Monitor.Log($"Intervening base of {assetName} for {who.Name}", LogLevel.Debug);
+			modEntry.Monitor.Log($"Intervening base of {assetName} for {who.Name}", LogLevel.Debug);
 
 			//modEntry.Monitor.Log($"Intervening base of {assetName} for {who.Name}", LogLevel.Debug);
 			if (assetName.StartsWith("Characters\\Farmer\\farmer_base")

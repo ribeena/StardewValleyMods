@@ -20,6 +20,10 @@ namespace DynamicBodies
 {
     internal class AdjustedVanillaMethods
     {
+        public static int ClampShirt(int index)
+        {
+            return (index > StardewValley.Objects.Clothing.GetMaxShirtValue() || index < 0) ? 0 : index;
+        }  
         /// <summary>
         /// Optimised from source code to be just the shirt
         /// </summary>
@@ -43,7 +47,7 @@ namespace DynamicBodies
             if (shirtIndex < 0)
             {
                 //load from the item 
-                clamped_shirt_index = (who.GetShirtIndex() > StardewValley.Objects.Clothing.GetMaxShirtValue() || who.GetShirtIndex() < 0) ? 0 : who.GetShirtIndex();
+                clamped_shirt_index = ClampShirt(who.GetShirtIndex());
             }
 
             Rectangle shirtSourceRect = new Rectangle(clamped_shirt_index * 8 % 128, clamped_shirt_index * 8 / 128 * 32, 8, 8);
