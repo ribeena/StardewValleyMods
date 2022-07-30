@@ -49,6 +49,14 @@ namespace DynamicBodies.Framework
 		public void SetColoursToReplace(Dictionary<ColourReplacements,Color> replacingPairs)
         {
 			coloursToReplace = replacingPairs;
+            if (ModEntry.Config.debugmsgs)
+            {
+				ModEntry.debugmsg("Colours to replace...", StardewModdingAPI.LogLevel.Debug);
+				foreach(ColourReplacements replacement in replacingPairs.Keys)
+                {
+					ModEntry.debugmsg($"   [{(int)replacement}] - {replacingPairs[replacement].ToString()}", StardewModdingAPI.LogLevel.Debug);
+				}
+			}
         }
 
 		public void GeneratePixelIndices(string layer_name, List<ColourReplacements> toReplace, Color[] pixels)
@@ -72,7 +80,7 @@ namespace DynamicBodies.Framework
 					//Look through the list of colours
 					foreach (ColourReplacements replacement in toReplace)
 					{
-						if (pixels[i].PackedValue == coloursToReplace[replacement].PackedValue)
+						if (pixels[i].Equals(coloursToReplace[replacement]))
 						{
 							//Add the pixel to the layer cache
 							recolorOffsets[layer_name][replacement].Add(i);

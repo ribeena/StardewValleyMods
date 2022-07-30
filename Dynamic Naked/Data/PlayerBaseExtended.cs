@@ -20,6 +20,7 @@ namespace DynamicBodies.Data
         public float initialLayerDepth = 0f;
         public bool overrideCheck = false;
         public Texture2D cacheImage;
+        public Texture2D sourceImage;
         public ColourCacher cachePixelColours;
         public Dictionary<string, bool> dirtyLayers;
         public int shirt { get; set; }
@@ -179,6 +180,7 @@ namespace DynamicBodies.Data
             if (!pbe.body.OptionMatchesModData(who))
             {
                 pbe.body.SetOptionFromModData(who, ModEntry.bodyOptions);
+                pbe.dirtyLayers["baseTexture"] = true;
                 pbe.dirty = true;
             }
 
@@ -186,6 +188,7 @@ namespace DynamicBodies.Data
             if (!pbe.face.OptionMatchesModData(who))
             {
                 pbe.face.SetOptionFromModData(who, ModEntry.faceOptions);
+                pbe.dirtyLayers["baseTexture"] = true;
                 pbe.dirty = true;
             }
 
@@ -193,6 +196,7 @@ namespace DynamicBodies.Data
             if (!pbe.arm.OptionMatchesModData(who))
             {
                 pbe.arm.SetOptionFromModData(who, ModEntry.armOptions);
+                pbe.dirtyLayers["arm"] = true;
                 pbe.dirty = true;
             }
 
