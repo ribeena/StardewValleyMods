@@ -21,7 +21,7 @@ namespace DynamicBodies.Data
         public bool overrideCheck = false;
         public Texture2D cacheImage;
         public Texture2D sourceImage;
-        public ColourCacher cachePixelColours;
+        public Vector4[] paletteCache;
         public Dictionary<string, bool> dirtyLayers;
         public int shirt { get; set; }
         public int shirtOverlayIndex = -1;
@@ -51,7 +51,8 @@ namespace DynamicBodies.Data
         public PlayerBaseExtended(Farmer who) : this(who, who.FarmerRenderer.textureName.Value) { }
         public PlayerBaseExtended(Farmer who, string baseTexture)
         {
-            cachePixelColours = new ColourCacher();
+
+            paletteCache = GetBasePalette();
 
             body = new BodyPartStyle("body");
 
@@ -122,6 +123,19 @@ namespace DynamicBodies.Data
                 return who.Name + "_fake";
             }
             return who.Name;
+        }
+
+        //Handles up to 24 colours currently
+        public static Vector4[] GetBasePalette()
+        {
+            IRawTextureData defaultColors = ModEntry.context.Helper.ModContent.Load<IRawTextureData>($"assets\\Character\\palette_skin.png");
+            Vector4[] basePalette = new Vector4[25];
+            for(int i = 0; i < 25; i++)
+            {
+                basePalette[i] = defaultColors.Data[i].ToVector4();
+                ModEntry.debugmsg($"Added palette colour {basePalette[i].ToString()}", LogLevel.Debug);
+            }
+            return basePalette;
         }
 
         public void DefaultOptions(Farmer who)

@@ -66,6 +66,8 @@ namespace DynamicBodies
 
         public const string sleeveSetting = "DB.sleeveOverride";
 
+        public static Effect paletteSwap;
+
         /*********
         ** Public methods
         *********/
@@ -95,6 +97,7 @@ namespace DynamicBodies
 
             var harmony = new Harmony(ModManifest.UniqueID);
 
+            
             //Fix up rendering of the farmer
             farmerRendererPatcher = new FarmerRendererPatched(harmony);
 
@@ -489,30 +492,6 @@ namespace DynamicBodies
 
                     if (pbe.dirtyLayers["baseTexture"]) debugmsg("base was dirty", LogLevel.Debug);
 
-                    //Generate pixels colours for the colour cacher to swap etc
-                    if (!pbe.cachePixelColours.hasColoursToReplace() || pbe.dirtyLayers["baseTexture"])
-                    {
-                        Color[] pixels = new Color[bodyText2D.Width * bodyText2D.Height];
-                        bodyText2D.GetData(pixels);
-
-                        IRawTextureData defaultColors = context.Helper.ModContent.Load<IRawTextureData>($"assets\\Character\\palette_skin.png");
-
-                        Dictionary<ColourCacher.ColourReplacements, Color> coloursToLookFor = new Dictionary<ColourCacher.ColourReplacements, Color>();
-                        foreach (ColourCacher.ColourReplacements replacement in (ColourCacher.ColourReplacements[])Enum.GetValues(typeof(ColourCacher.ColourReplacements)))
-                        {
-                            if (pixels[((int)replacement)].A > 0)//soemthing wrong with the texture
-                            {
-                                coloursToLookFor[replacement] = pixels[(int)replacement];
-                            }
-                            else
-                            {
-                                coloursToLookFor[replacement] = defaultColors.Data[(int)replacement - 256];
-                                debugmsg($"Pixel on base texture at {(int)replacement} was transparent, using default", LogLevel.Debug);
-                            }
-                        }
-                        pbe.cachePixelColours.SetColoursToReplace(coloursToLookFor);
-                    }
-
                     IRawTextureData faceText2D;
                     if (pbe.face.option == "Default")
                     {
@@ -604,7 +583,7 @@ namespace DynamicBodies
                     editor.PatchImage(armsText2D, new Rectangle(0, 32, armsText2D.Width, armsText2D.Height - 32), targetArea: new Rectangle(96, 32, armsText2D.Width, armsText2D.Height - 32), PatchMode.Replace);
                 }
                 //Needs redrawing
-                if (pbe.dirtyLayers["sprite"])
+                if (pbe.dirtyLayers["sprite"] || pbe.cacheImage == null)
                 {
                     //Store the updated version
                     pbe.cacheImage = null;
@@ -751,6 +730,13 @@ namespace DynamicBodies
 
         public void OnGameLaunched(object sender, GameLaunchedEventArgs e)
         {
+            //Try using a palette swapping shader
+            // Compile via the command: mgfxc paletteSwap.fx paletteSwap.mgfx
+            paletteSwap = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Effects", "paletteSwap.mgfx")));
+
+            //Set the default palette to test for
+            ModEntry.paletteSwap.Parameters["xSourcePalette"].SetValue(PlayerBaseExtended.GetBasePalette());
+
             //Add vanilla options to the beards
             beardOptions.Add(new ContentPackOption("Accessory 1", "0", "Vanilla", null));
             beardOptions.Add(new ContentPackOption("Accessory 2", "1", "Vanilla", null));
