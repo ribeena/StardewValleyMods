@@ -450,11 +450,8 @@ namespace DynamicBodies.Patches
                     }
                 }
 
-                ModEntry.debugmsg("############trying shader render", LogLevel.Debug);
-
                 if (pbe.sourceImage != null)
                 {
-                    ModEntry.debugmsg("############source image there", LogLevel.Debug);
                     //Use a pixel shader to handle the recolouring
                     //set up the palette render
                     ModEntry.paletteSwap.Parameters["xTargetPalette"].SetValue(pbe.paletteCache);

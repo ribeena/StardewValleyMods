@@ -400,7 +400,7 @@ namespace DynamicBodies.Data
             {
                 Texture2D texture = nakedUpper.provider.ModContent.Load<Texture2D>($"assets\\nakedUpper\\{nakedUpper.file}.png");
                 //recalculate the skin colours on the overlay
-                nakedUpper.texture = ApplySkinColor(skin, texture);
+                nakedUpper.texture = ApplyPaletteColors(texture);
             }
             if (nakedUpper.option == "Default")
             {
@@ -428,7 +428,7 @@ namespace DynamicBodies.Data
                 else
                 {
                     //recalculate the skin colours on the overlay
-                    nakedLower.texture = ApplySkinColor(skin, texture);
+                    nakedLower.texture = ApplyPaletteColors(texture);
                 }
             }
             if (nakedLower.option == "Default")
@@ -438,110 +438,36 @@ namespace DynamicBodies.Data
             return nakedLower.texture;
         }
 
-        private static Texture2D ApplySkinColor(int skin, Texture2D source_texture)
+        private static Texture2D ApplyPaletteColors(Texture2D source_texture)
         {
             Texture2D texture = null;
             //Need to render a new texture
             texture = new Texture2D(Game1.graphics.GraphicsDevice, source_texture.Width, source_texture.Height);
 
-            //Calculate the skin colours
-            int which = skin;
-            Texture2D skinColors = Game1.content.Load<Texture2D>("Characters/Farmer/skinColors");
-            Texture2D glandColors = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Character/extendedSkinColors.png");
+            //Use a pixel shader to handle the recolouring    
+            //Assumes ModEntry.paletteSwap.Parameters["xTargetPalette"].SetValue(pbe.paletteCache); is done
 
-            Color[] skinColorsData = new Color[skinColors.Width * skinColors.Height];
-            if (which < 0) which = skinColors.Height - 1;
-            if (which > skinColors.Height - 1) which = 0;
-            skinColors.GetData(skinColorsData);
+            RenderTarget2D renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, source_texture.Width, source_texture.Height, false, Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.Depth24);
+            //Store current render targets
+            RenderTargetBinding[] currentRenderTargets = Game1.graphics.GraphicsDevice.GetRenderTargets();
+            Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget);
 
-            Color[] glandColorsData = new Color[glandColors.Width * glandColors.Height];
-            if (which < 0) which = glandColors.Height - 1;
-            if (which > glandColors.Height - 1) which = 0;
-            glandColors.GetData(glandColorsData);
-
-            //Colours to replace
-            Color darkest_old = skinColorsData[0], medium_old = skinColorsData[1], lightest_old = skinColorsData[2];
-            Color glandDark_old = glandColorsData[0], glandLight_old = glandColorsData[1];
-
-            //Store what the colours are
-            Color darkest = skinColorsData[which * 3 % (skinColors.Height * 3)];
-            Color medium = skinColorsData[which * 3 % (skinColors.Height * 3) + 1];
-            Color lightest = skinColorsData[which * 3 % (skinColors.Height * 3) + 2];
-            Color glandDark = glandColorsData[which * 2 % (glandColors.Height * 2)];
-            Color glandLight = glandColorsData[which * 2 % (glandColors.Height * 2) + 1];
-
-            Color[] data = new Color[texture.Width * texture.Height];
-            source_texture.GetData(data);
-
-            for (int i = 0; i < data.Length; i++)
+            Game1.graphics.GraphicsDevice.Clear(Color.FromNonPremultiplied(0, 0, 0, 0));
+            using (SpriteBatch sb = new SpriteBatch(renderTarget.GraphicsDevice))
             {
-                if (data[i].Equals(darkest_old))
-                {
-                    data[i] = darkest;
-                }
-                else if (data[i].Equals(medium_old))
-                {
-                    data[i] = medium;
-                }
-                else if (data[i].Equals(lightest_old))
-                {
-                    data[i] = lightest;
-                }
-                else if (data[i].Equals(glandDark_old))
-                {
-                    data[i] = glandDark;
-                }
-                else if (data[i].Equals(glandLight_old))
-                {
-                    data[i] = glandLight;
-                }
-
+                sb.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, effect: ModEntry.paletteSwap);
+                sb.Draw(source_texture, new Rectangle(0, 0, source_texture.Width, source_texture.Height), Color.White);
+                sb.End();
             }
-            texture.SetData<Color>(data);
+            Color[] pixel_data = new Color[renderTarget.Width * renderTarget.Height];
+            renderTarget.GetData(pixel_data);
+            texture.SetData(pixel_data);
+
+            //return current render targets
+            Game1.graphics.GraphicsDevice.SetRenderTargets(currentRenderTargets);
+
             return texture;
         }
-
-        public static Texture2D ApplyExtendedSkinColor(int skin, Texture2D source_texture)
-        {
-            Texture2D texture = null;
-            //Need to render a new texture
-            texture = new Texture2D(Game1.graphics.GraphicsDevice, source_texture.Width, source_texture.Height);
-
-            //Calculate the skin colours
-            int which = skin;
-            Texture2D glandColors = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Character/extendedSkinColors.png");
-
-            Color[] glandColorsData = new Color[glandColors.Width * glandColors.Height];
-            if (which < 0) which = glandColors.Height - 1;
-            if (which > glandColors.Height - 1) which = 0;
-            glandColors.GetData(glandColorsData);
-
-            //Colours to replace
-            Color glandDark_old = glandColorsData[0], glandLight_old = glandColorsData[1];
-
-            //Store what the colours are
-            Color glandDark = glandColorsData[which * 2 % (glandColors.Height * 2)];
-            Color glandLight = glandColorsData[which * 2 % (glandColors.Height * 2) + 1];
-
-            Color[] data = new Color[texture.Width * texture.Height];
-            source_texture.GetData(data);
-
-            for (int i = 0; i < data.Length; i++)
-            {
-                if (data[i].Equals(glandDark_old))
-                {
-                    data[i] = glandDark;
-                }
-                else if (data[i].Equals(glandLight_old))
-                {
-                    data[i] = glandLight;
-                }
-
-            }
-            texture.SetData<Color>(data);
-            return texture;
-        }
-
     }
 
     public class BodyPartStyle
