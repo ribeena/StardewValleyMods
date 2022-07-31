@@ -67,6 +67,7 @@ namespace DynamicBodies
         public const string sleeveSetting = "DB.sleeveOverride";
 
         public static Effect paletteSwap;
+        public static Effect hairRamp;
 
         /*********
         ** Public methods
@@ -736,6 +737,9 @@ namespace DynamicBodies
 
             //Set the default palette to test for
             ModEntry.paletteSwap.Parameters["xSourcePalette"].SetValue(PlayerBaseExtended.GetBasePalette());
+
+            hairRamp = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Effects", "greyRamp.mgfx")));
+
 
             //Add vanilla options to the beards
             beardOptions.Add(new ContentPackOption("Accessory 1", "0", "Vanilla", null));

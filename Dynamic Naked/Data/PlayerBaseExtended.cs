@@ -301,63 +301,56 @@ namespace DynamicBodies.Data
 
         public Texture2D RenderHair(Farmer who, Texture2D source_texture, Rectangle rect)
         {
+
             Texture2D hairText2D = null;
-            //Need to render a new texture
-            hairText2D = new Texture2D(Game1.graphics.GraphicsDevice, rect.Width, rect.Height);
-            Color[] HairData = new Color[hairText2D.Width * hairText2D.Height];
-            source_texture.GetData<Color>(source_texture.LevelCount - 1, rect, HairData, 0, hairText2D.Width * hairText2D.Height);
-
-            //monitor.Log($"Building new hair texture", LogLevel.Debug);
-
+            if (source_texture.Height != rect.Height || source_texture.Width != rect.Width)
+            {
+                //Need to render a partial texture
+                hairText2D = new Texture2D(Game1.graphics.GraphicsDevice, rect.Width, rect.Height);
+                Color[] HairData = new Color[hairText2D.Width * hairText2D.Height];
+                source_texture.GetData<Color>(source_texture.LevelCount - 1, rect, HairData, 0, hairText2D.Width * hairText2D.Height);
+                hairText2D.SetData(HairData);
+            }
+            else
+            {
+                //just use the whole thing
+                hairText2D = source_texture;
+            }
             //Colours to replace
             Color hairdark = new Color(57, 57, 57);//default, generally dark
             if (who.modData.ContainsKey("DB.darkHair"))
             {
                 hairdark = new Color(uint.Parse(who.modData["DB.darkHair"]));
             }
-            Color hairdarker = Color.Lerp(hairdark, Color.Black, 0.25f);
-            Color hair = who.hairstyleColor.Value;
-            Color hairLight = Color.Lerp(hair, Color.White, 0.25f);
-            Color hairThreshold = new Color(57, 57, 57, 99);//36% or 99 alpha is the shadow overlay onto skin
-            Color hairUpper = new Color(240, 240, 240);
-            Color hairRange = new Color(hairUpper.R - hairThreshold.R, hairUpper.G - hairThreshold.G, hairUpper.B - hairThreshold.B);
 
-            for (int i = 0; i < HairData.Length; i++)
+            Texture2D texture = null;
+            //Need to render a new texture
+            texture = new Texture2D(Game1.graphics.GraphicsDevice, hairText2D.Width, hairText2D.Height);
+
+            //Use a pixel shader to handle the recolouring    
+            ModEntry.hairRamp.Parameters["xColor"].SetValue(who.hairstyleColor.Value.ToVector4());
+            ModEntry.hairRamp.Parameters["xDarkColor"].SetValue(hairdark.ToVector4());
+
+            RenderTarget2D renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, hairText2D.Width, hairText2D.Height, false, Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.Depth24);
+            //Store current render targets
+            RenderTargetBinding[] currentRenderTargets = Game1.graphics.GraphicsDevice.GetRenderTargets();
+            Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget);
+
+            Game1.graphics.GraphicsDevice.Clear(Color.FromNonPremultiplied(0, 0, 0, 0));
+            using (SpriteBatch sb = new SpriteBatch(renderTarget.GraphicsDevice))
             {
-                Color hairpixel = HairData[i];
-                //Check if the pixel is more solid than the hair-shadow colour
-                bool changeit = hairpixel.A > hairThreshold.A;
-                //Check if it's transparent that it is grey, then change it
-                if (!changeit && hairpixel.A > 0)
-                {
-                    changeit = hairpixel.R == hairpixel.G && hairpixel.G == hairpixel.B;
-                }
-                if (changeit)
-                {
-                    byte alpha = hairpixel.A;
-                    //Currently only uses the red chanel - ignores tinting
-                    if (hairpixel.R >= hairThreshold.R || hairpixel.R < hairUpper.R)
-                    {
-                        float perc = (float)(hairpixel.R - hairThreshold.R) / (float)hairRange.R;
-                        HairData[i] = Color.Lerp(hairdark, hair, perc);
-                    }
-
-                    if (hairpixel.R < hairThreshold.R)
-                    {
-                        float perc = (float)(hairpixel.R) / (float)hairThreshold.R;
-                        HairData[i] = Color.Lerp(hairdarker, hairdark, perc);
-                    }
-
-                    if (hairpixel.R >= hairUpper.R)
-                    {
-                        float perc = (float)(hairpixel.R - hairUpper.R) / (float)(byte.MaxValue - hairUpper.R);
-                        HairData[i] = Color.Lerp(hair, hairLight, perc);
-                    }
-                    HairData[i].A = alpha;
-                }
+                sb.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, effect: ModEntry.hairRamp);
+                sb.Draw(hairText2D, new Rectangle(0, 0, hairText2D.Width, hairText2D.Height), Color.White);
+                sb.End();
             }
-            hairText2D.SetData<Color>(HairData);
-            return hairText2D;
+            Color[] pixel_data = new Color[renderTarget.Width * renderTarget.Height];
+            renderTarget.GetData(pixel_data);
+            texture.SetData(pixel_data);
+
+            //return current render targets
+            Game1.graphics.GraphicsDevice.SetRenderTargets(currentRenderTargets);
+
+            return texture;
         }
 
         public void CheckHairTextures(Farmer who)
