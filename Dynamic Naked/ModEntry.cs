@@ -367,23 +367,19 @@ namespace DynamicBodies
             // monitor.Log($"Performed action {action}", LogLevel.Debug);
             if (action == "DynamicBodies:Doctors")
             {
-                //Open the mod
-                //configMenu.OpenModMenu(context.ModManifest);
-
-                Game1.activeClickableMenu = new BodyModifier(BodyModifier.Source.Doctors);
-
+                Game1.activeClickableMenu = new DoctorModifier();
                 return true;
             }
 
             if (action == "DynamicBodies:Leah")
             {
-                Game1.activeClickableMenu = new BodyModifier(BodyModifier.Source.Leahs);
+                Game1.activeClickableMenu = new FullColourModifier();
                 return true;
             }
 
             if (action == "DynamicBodies:Pam")
             {
-                Game1.activeClickableMenu = new BodyModifier(BodyModifier.Source.Pams);
+                Game1.activeClickableMenu = new SimpleColourModifier();
                 return true;
             }
 

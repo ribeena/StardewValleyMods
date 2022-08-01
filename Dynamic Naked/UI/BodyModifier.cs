@@ -17,17 +17,8 @@ namespace DynamicBodies.UI
 {
 	internal class BodyModifier : IClickableMenu
 	{
-		public enum Source
-		{
-			Doctors,
-			Leahs,
-			Pams
-		}
 
-		private const int doctor_cost = 250;
-		private const int leah_cost = 100;
-		private const int pam_cost = 25;
-		private int cost = 0;
+		public int cost = 0;
 		private bool isWizardSubmenu = false;
 
 		public const int region_okbutton = 505, region_backbutton = 81114, region_accLeft = 516, region_accRight = 517, region_directionLeft = 520, region_directionRight = 521;
@@ -47,10 +38,9 @@ namespace DynamicBodies.UI
 
 		public const int swatchsize = 40;
 
-		private Farmer who;
+		public Farmer who;
 
 		private PlayerBaseExtended pbe;
-		public Source source;
 
 		private string hoverText;
 		private string hoverTitle;
@@ -71,25 +61,20 @@ namespace DynamicBodies.UI
 		public ClickableTextureComponent backButton;
 		private ClickableComponent costLabel;
 
-		private ClickableComponent hairLabel;
-		private ClickableComponent accLabel;
-		private List<int> accessoryOptions;
-		private ClickableComponent bodyLabel;
-		private ClickableComponent faceLabel;
-		private ClickableComponent armLabel;
-		private ClickableComponent beardLabel;
-		private ClickableComponent bodyHairLabel;
-		private ClickableComponent nakedLabel;
-		private ClickableComponent nakedULabel;
+		public ClickableComponent hairLabel;
+		public ClickableComponent accLabel;
+		public List<int> accessoryOptions;
+		public ClickableComponent bodyLabel;
+		public ClickableComponent faceLabel;
+		public ClickableComponent armLabel;
+		public ClickableComponent beardLabel;
+		public ClickableComponent bodyHairLabel;
+		public ClickableComponent nakedLabel;
+		public ClickableComponent nakedULabel;
 
 		private Dictionary<string, string> settingsBefore = new Dictionary<string, string>();
 
-		private static Dictionary<Source, int> windowHeight = new Dictionary<Source, int>()
-        {
-            { Source.Doctors, 648},
-            { Source.Pams, 378 },
-            { Source.Leahs, 528 }
-        };
+		public Rectangle CharacterBackgroundRect;
 
 		public List<ClickableComponent> colorPickerCCs = new List<ClickableComponent>();
 		public ColorPicker hairColorPicker;
@@ -112,15 +97,15 @@ namespace DynamicBodies.UI
 
 		Texture2D UItexture;
 		private int eyeSwatch = 0;
-		Color[] eyeSwatchColors;
+		public Color[] eyeSwatchColors;
 		private int hairSwatch = 0;
-		Color[] hairSwatchColors;
+		public Color[] hairSwatchColors;
 		private int hairDarkSwatch = 0;
-		Color[] hairDarkSwatchColors;
+		public Color[] hairDarkSwatchColors;
 
 
-		public BodyModifier(Source source, bool wizardSub = false)
-		: base(Game1.uiViewport.Width / 2 - (632 + IClickableMenu.borderWidth * 2) / 2, Game1.uiViewport.Height / 2 - (windowHeight[source] + IClickableMenu.borderWidth * 2) / 2 - 64, 632 + IClickableMenu.borderWidth * 2, windowHeight[source] + IClickableMenu.borderWidth * 2 + 64)
+		public BodyModifier(int windowHeight, bool wizardSub = false)
+		: base(Game1.uiViewport.Width / 2 - (632 + IClickableMenu.borderWidth * 2) / 2, Game1.uiViewport.Height / 2 - (windowHeight + IClickableMenu.borderWidth * 2) / 2 - 64, 632 + IClickableMenu.borderWidth * 2, windowHeight + IClickableMenu.borderWidth * 2 + 64)
 		{
 			who = Game1.player;
 
@@ -151,34 +136,7 @@ namespace DynamicBodies.UI
 			}
 
 			this.accessoryOptions = new List<int> { 0, 1, 2, 3, 4, 5 };
-			this.source = source;
 			this.UItexture = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Interface/ui.png");
-
-			Texture2D eye_texture = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Interface/eyeColors.png");
-			eyeSwatchColors = new Color[eye_texture.Width * eye_texture.Height];
-			eye_texture.GetData(eyeSwatchColors, 0, eyeSwatchColors.Length);
-
-			if (source == Source.Doctors)
-			{
-				Texture2D hair_texture = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Interface/doctor_hairColors.png");
-				hairSwatchColors = new Color[hair_texture.Width * hair_texture.Height];
-				hair_texture.GetData(hairSwatchColors, 0, hairSwatchColors.Length);
-
-				Texture2D haird_texture = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Interface/doctor_hairDarkColors.png");
-				hairDarkSwatchColors = new Color[haird_texture.Width * haird_texture.Height];
-				haird_texture.GetData(hairDarkSwatchColors, 0, hairDarkSwatchColors.Length);
-			}
-
-			if (source == Source.Pams)
-			{
-				Texture2D hair_texture = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Interface/pam_hairColors.png");
-				hairSwatchColors = new Color[hair_texture.Width * hair_texture.Height];
-				hair_texture.GetData(hairSwatchColors, 0, hairSwatchColors.Length);
-
-				Texture2D haird_texture = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Interface/pam_hairDarkColors.png");
-				hairDarkSwatchColors = new Color[haird_texture.Width * haird_texture.Height];
-				haird_texture.GetData(hairDarkSwatchColors, 0, hairDarkSwatchColors.Length);
-			}
 
 			clothingToggles["hat"] = new ClothingToggle() { offset = 16 };
 			clothingToggles["hat"].active = clothingToggles["hat"].showing = who.hat.Value != null;
@@ -189,26 +147,6 @@ namespace DynamicBodies.UI
 			clothingToggles["shoes"] = new ClothingToggle() { offset = 64 };
 			clothingToggles["shoes"].active = clothingToggles["shoes"].showing = who.shoes.Value != 12;
 
-			switch (source) {
-				case Source.Doctors:
-					cost = isWizardSubmenu ? 0 : doctor_cost;
-					if (ModEntry.Config.freecustomisation) cost = 0;
-					setUpPositionsDoctor();
-					break;
-				case Source.Leahs:
-					cost = isWizardSubmenu ? 0 : leah_cost;
-					if (ModEntry.Config.freecustomisation) cost = 0;
-					setUpPositionsLeah();
-					break;
-				case Source.Pams:
-					cost = isWizardSubmenu ? 0 : pam_cost;
-					if (ModEntry.Config.freecustomisation) cost = 0;
-					setUpPositionsPam();
-					break;
-			}
-
-			
-            
 			this._recolorEyesAction = delegate
 			{
 				who.changeEyeColor(this.eyeColorPicker.getSelectedColor());
@@ -246,7 +184,7 @@ namespace DynamicBodies.UI
 			}
 			return this._displayFarmer;
 		}
-		private void setupGeneralPositions(string title)
+		public void setupGeneralPositions(string title)
 		{
 			int arrow_size = 64;
 
@@ -336,710 +274,12 @@ namespace DynamicBodies.UI
 				}
 			}
 		}
-		//Layout the menu
-		private void setUpPositionsLeah()
-		{
-			setupGeneralPositions(T("color_specialist")+": ");
-			this.colorPickerCCs.Clear();
 
-			int leftPadding = 64 + 4;
-			int yOffset = 32;
-			int label_col1_width = 42 * 4;
-			int arrow_size = 64;
+		public virtual void setUpPositions()
+        {
+			//Override how this
+        }
 
-			int leftSelectionXOffset = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ru || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.es || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.pt) ? (-20) : 0);
-			int label_col2_position = portraitBox.X + portraitBox.Width + 12 * 4;
-			int label_col2_width = 40 * 4;
-
-			//Items next to portrait box
-
-			//Line below 
-			yOffset += 32;
-			Point top = new Point(label_col2_position + label_col2_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-
-			//Eye colour picker
-			this.labels.Add(new ClickableComponent(new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_EyeColor")));
-			
-			this.eyeColorPicker = new ColorPicker("Eyes", top.X, top.Y);
-			this.eyeColorPicker.setColor(who.newEyeColor.Value);
-			this.colorPickerCCs.Add(new ClickableComponent(new Rectangle(top.X, top.Y, 128, 20), "")
-			{
-				myID = region_colorPicker1,
-				downNeighborID = -99998,
-				upNeighborID = -99998,
-				leftNeighborImmutable = true,
-				rightNeighborImmutable = true
-			});
-			this.colorPickerCCs.Add(new ClickableComponent(new Rectangle(top.X, top.Y + 20, 128, 20), "")
-			{
-				myID = region_colorPicker2,
-				upNeighborID = -99998,
-				downNeighborID = -99998,
-				leftNeighborImmutable = true,
-				rightNeighborImmutable = true
-			});
-			this.colorPickerCCs.Add(new ClickableComponent(new Rectangle(top.X, top.Y + 40, 128, 20), "")
-			{
-				myID = region_colorPicker3,
-				upNeighborID = -99998,
-				downNeighborID = -99998,
-				leftNeighborImmutable = true,
-				rightNeighborImmutable = true
-			});
-			//Next line
-			yOffset += 68;
-			top = new Point(label_col2_position + label_col2_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-			
-			//Hair Colour
-			this.labels.Add(new ClickableComponent(new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_HairColor")));
-
-			this.hairColorPicker = new ColorPicker("Hair", top.X, top.Y);
-			this.hairColorPicker.setColor(who.hairstyleColor.Value);
-			this.colorPickerCCs.Add(new ClickableComponent(new Rectangle(top.X, top.Y, 128, 20), "")
-			{
-				myID = region_colorPicker4,
-				downNeighborID = -99998,
-				upNeighborID = -99998,
-				leftNeighborImmutable = true,
-				rightNeighborImmutable = true
-			});
-			this.colorPickerCCs.Add(new ClickableComponent(new Rectangle(top.X, top.Y + 20, 128, 20), "")
-			{
-				myID = region_colorPicker5,
-				upNeighborID = -99998,
-				downNeighborID = -99998,
-				leftNeighborImmutable = true,
-				rightNeighborImmutable = true
-			});
-			this.colorPickerCCs.Add(new ClickableComponent(new Rectangle(top.X, top.Y + 40, 128, 20), "")
-			{
-				myID = region_colorPicker6,
-				upNeighborID = -99998,
-				downNeighborID = -99998,
-				leftNeighborImmutable = true,
-				rightNeighborImmutable = true
-			});
-
-			//Next line
-			yOffset += 68;
-			top = new Point(label_col2_position + label_col2_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-
-			//Dark hair
-			this.labels.Add(new ClickableComponent(new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("hair_dark")+":"));
-			this.hairDarkColorPicker = new ColorPicker("HairDark", top.X, top.Y);
-
-			if (who.modData.ContainsKey("DB.darkHair"))
-			{
-				this.hairDarkColorPicker.setColor(new Color(uint.Parse(who.modData["DB.darkHair"])));
-			}
-			else
-			{
-				//57 grey is often the darket colour of a hair style
-				this.hairDarkColorPicker.setColor(new Color(57, 57, 57));
-			}
-			this.colorPickerCCs.Add(new ClickableComponent(new Rectangle(top.X, top.Y, 128, 20), "")
-			{
-				myID = region_colorPicker7,
-				downNeighborID = -99998,
-				upNeighborID = -99998,
-				leftNeighborImmutable = true,
-				rightNeighborImmutable = true
-			});
-			this.colorPickerCCs.Add(new ClickableComponent(new Rectangle(top.X, top.Y + 20, 128, 20), "")
-			{
-				myID = region_colorPicker8,
-				upNeighborID = -99998,
-				downNeighborID = -99998,
-				leftNeighborImmutable = true,
-				rightNeighborImmutable = true
-			});
-			this.colorPickerCCs.Add(new ClickableComponent(new Rectangle(top.X, top.Y + 40, 128, 20), "")
-			{
-				myID = region_colorPicker9,
-				upNeighborID = -99998,
-				downNeighborID = -99998,
-				leftNeighborImmutable = true,
-				rightNeighborImmutable = true
-			});
-
-			//Next line
-			yOffset += 68;
-
-			//After portraitbox
-			//yOffset = 128;
-			//label_col2_position = base.xPositionOnScreen + leftPadding + label_col1_width + arrow_size / 2 + (12 * 4);
-
-			//Wider selections
-			label_col1_width += 48;
-			label_col2_position = base.xPositionOnScreen + leftPadding + label_col1_width + arrow_size / 2 + (12 * 4);
-
-			//Hair Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Hair", new Rectangle(base.xPositionOnScreen + leftPadding + leftSelectionXOffset - arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, arrow_size, arrow_size), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_hairLeft,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.hairLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + leftPadding + (label_col1_width / 2) + (leftSelectionXOffset / 2), base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_Hair"));
-			this.labels.Add(this.hairLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Hair", new Rectangle(base.xPositionOnScreen + leftPadding + label_col1_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_hairRight,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			//Next line
-			yOffset += 68;
-
-			//Beard Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Beard", new Rectangle(base.xPositionOnScreen + leftPadding + leftSelectionXOffset - arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_beardLeft,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.beardLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + leftPadding + (label_col1_width / 2) + (leftSelectionXOffset / 2), base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("beard"));
-			this.labels.Add(this.beardLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Beard", new Rectangle(base.xPositionOnScreen + leftPadding + label_col1_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_beardRight,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			//BodyHair Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("BodyHair", new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_bodyHairLeft,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.bodyHairLabel = new ClickableComponent(new Rectangle(label_col2_position + arrow_size / 2 + label_col1_width / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("body_hair"));
-			this.labels.Add(this.bodyHairLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("BodyHair", new Rectangle(label_col2_position + label_col1_width + arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_bodyHairRight,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			if (Game1.options.snappyMenus && Game1.options.gamepadControls)
-			{
-				base.populateClickableComponentList();
-				this.snapToDefaultClickableComponent();
-			}
-		}
-		private void setUpPositionsDoctor()
-		{
-			setupGeneralPositions(T("cosmetic_patient") +": ");
-			bool allow_accessory_changes = true;
-
-			this.swatches.Clear();
-
-
-			int leftPadding = 64 + 4;
-			int yOffset = 32;
-			int label_col1_width = 42 * 4;
-			int arrow_size = 64;
-
-			int leftSelectionXOffset = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ru || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.es || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.pt) ? (-20) : 0);
-
-
-			int label_col2_position = portraitBox.X + portraitBox.Width + 12 * 4;
-			int label_col2_width = 40 * 4;
-
-
-			//Items next to portrait box
-
-			//Next line
-			yOffset += 32;
-			Point top = new Point(label_col2_position + label_col2_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-
-			//Eye colour
-			this.labels.Add(new ClickableComponent(new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_EyeColor")));
-			swatches.Add(new ClickableComponent(new Rectangle(top.X, top.Y+12, swatchsize, swatchsize), "EyeSwatchLeft")
-			{
-				myID = region_eyeSwatch1,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X +swatchsize+4, top.Y + 12, swatchsize, swatchsize), "EyeSwatch0")
-			{
-				myID = region_eyeSwatch2,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize*2+8, top.Y + 12, swatchsize, swatchsize), "EyeSwatch1")
-			{
-				myID = region_eyeSwatch2,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 3+12, top.Y + 12, swatchsize, swatchsize), "EyeSwatch2")
-			{
-				myID = region_eyeSwatch4,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			//Next line
-			yOffset += 58;
-
-
-			top = new Point(label_col2_position + label_col2_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-
-			//Hair Colour
-			this.labels.Add(new ClickableComponent(new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_HairColor")));
-
-			swatches.Add(new ClickableComponent(new Rectangle(top.X, top.Y + 12, swatchsize, swatchsize), "HairSwatchLeft")
-			{
-				myID = region_hairSwatch1,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize + 4, top.Y + 12, swatchsize, swatchsize), "HairSwatch0")
-			{
-				myID = region_hairSwatch2,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 2 + 8, top.Y + 12, swatchsize, swatchsize), "HairSwatch1")
-			{
-				myID = region_hairSwatch3,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 3 + 12, top.Y + 12, swatchsize, swatchsize), "HairSwatch2")
-			{
-				myID = region_hairSwatch4,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			//Next line
-			yOffset += 58;
-
-			
-			//Hair Dark Colour
-			top = new Point(label_col2_position + label_col2_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-
-			this.labels.Add(new ClickableComponent(new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("hair_dark")+":"));
-			swatches.Add(new ClickableComponent(new Rectangle(top.X, top.Y + 12, swatchsize, swatchsize), "DarkHairSwatchLeft")
-			{
-				myID = region_hairDarkSwatch1,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize + 4, top.Y + 12, swatchsize, swatchsize), "DarkHairSwatch0")
-			{
-				myID = region_hairDarkSwatch2,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 2 + 8, top.Y + 12, swatchsize, swatchsize), "DarkHairSwatch1")
-			{
-				myID = region_hairDarkSwatch3,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 3 + 12, top.Y + 12, swatchsize, swatchsize), "DarkHairSwatch2")
-			{
-				myID = region_hairDarkSwatch4,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			//Next line
-			yOffset += 58;
-
-
-			//After portraitbox
-
-			//Wider selections
-			label_col1_width += 48;
-			label_col2_position = base.xPositionOnScreen + leftPadding + label_col1_width + arrow_size / 2 + (12 * 4);
-
-
-			label_col2_position = base.xPositionOnScreen + leftPadding + label_col1_width + arrow_size / 2 + (12 * 4);
-
-			
-
-
-			//Hair Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Hair", new Rectangle(base.xPositionOnScreen + leftPadding + leftSelectionXOffset - arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, arrow_size, arrow_size), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_hairLeft,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.hairLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + leftPadding + (label_col1_width / 2) + (leftSelectionXOffset / 2), base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_Hair"));
-			this.labels.Add(this.hairLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Hair", new Rectangle(base.xPositionOnScreen + leftPadding + label_col1_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_hairRight,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Face", new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_faceLeft,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.labels.Add(this.faceLabel = new ClickableComponent(new Rectangle(label_col2_position + arrow_size / 2 + label_col1_width / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("face_style")));
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Face", new Rectangle(label_col2_position + label_col1_width + arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_faceRight,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			
-
-			//Next line
-			yOffset += 68;
-
-			//Body Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Body", new Rectangle(base.xPositionOnScreen + leftPadding + leftSelectionXOffset - arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_bodyLeft,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.bodyLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + leftPadding + (label_col1_width / 2) + (leftSelectionXOffset / 2), base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("body_style"));
-			this.labels.Add(this.bodyLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Body", new Rectangle(base.xPositionOnScreen + leftPadding + label_col1_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_bodyRight,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			//Arm Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Arm", new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_armLeft,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.armLabel = new ClickableComponent(new Rectangle(label_col2_position + arrow_size / 2 + label_col1_width / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("arm_style"));
-			this.labels.Add(this.armLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Arm", new Rectangle(label_col2_position + label_col1_width + arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_armRight,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			//Next line
-			yOffset += 68;
-
-			//Beard Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Beard", new Rectangle(base.xPositionOnScreen + leftPadding + leftSelectionXOffset - arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_beardLeft,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.beardLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + leftPadding + (label_col1_width / 2) + (leftSelectionXOffset / 2), base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("beard"));
-			this.labels.Add(this.beardLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Beard", new Rectangle(base.xPositionOnScreen + leftPadding + label_col1_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_beardRight,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			//BodyHair Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("BodyHair", new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_bodyHairLeft,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.bodyHairLabel = new ClickableComponent(new Rectangle(label_col2_position + arrow_size / 2 + label_col1_width / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("body_hair"));
-			this.labels.Add(this.bodyHairLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("BodyHair", new Rectangle(label_col2_position + label_col1_width + arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_bodyHairRight,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			//Next line
-			yOffset += 68;
-
-			//Naked Lower Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Naked", new Rectangle(base.xPositionOnScreen + leftPadding + leftSelectionXOffset - arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_nakedLeft,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.nakedLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + leftPadding + (label_col1_width / 2) + (leftSelectionXOffset / 2), base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("naked_lower"));
-			this.labels.Add(this.nakedLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Naked", new Rectangle(base.xPositionOnScreen + leftPadding + label_col1_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_nakedRight,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			//Naked Upper Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("NakedU", new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_nakedLeftU,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.nakedULabel = new ClickableComponent(new Rectangle(label_col2_position + arrow_size / 2 + label_col1_width / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("naked_upper"));
-			this.labels.Add(this.nakedULabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("NakedU", new Rectangle(label_col2_position + label_col1_width + arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_nakedRightU,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			if (Game1.options.snappyMenus && Game1.options.gamepadControls)
-			{
-				base.populateClickableComponentList();
-				this.snapToDefaultClickableComponent();
-			}
-		}
-
-
-		private void setUpPositionsPam()
-		{
-			setupGeneralPositions(T("box_dye_user")+": ");
-			bool allow_accessory_changes = true;
-
-			this.swatches.Clear();
-
-
-			int leftPadding = 64 + 4;
-			int yOffset = 32;
-			int label_col1_width = 42 * 4;
-			int arrow_size = 64;
-
-			int leftSelectionXOffset = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ru || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.es || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.pt) ? (-20) : 0);
-
-
-			int label_col2_position = portraitBox.X + portraitBox.Width + 12 * 4;
-			int label_col2_width = 40 * 4;
-
-			//Items next to portrait box
-
-			//Next line
-			yOffset += 32;
-			Point top = new Point(label_col2_position + label_col2_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-
-
-			top = new Point(label_col2_position + label_col2_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-
-			//Hair Colour
-			this.labels.Add(new ClickableComponent(new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_HairColor")));
-
-			swatches.Add(new ClickableComponent(new Rectangle(top.X, top.Y + 12, swatchsize, swatchsize), "HairSwatchLeft")
-			{
-				myID = region_hairSwatch1,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize + 4, top.Y + 12, swatchsize, swatchsize), "HairSwatch0")
-			{
-				myID = region_hairSwatch2,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 2 + 8, top.Y + 12, swatchsize, swatchsize), "HairSwatch1")
-			{
-				myID = region_hairSwatch3,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 3 + 12, top.Y + 12, swatchsize, swatchsize), "HairSwatch2")
-			{
-				myID = region_hairSwatch4,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			//Next line
-			yOffset += 58;
-
-
-			//Hair Dark Colour
-			top = new Point(label_col2_position + label_col2_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-
-			this.labels.Add(new ClickableComponent(new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), "Hair Dark:"));
-			swatches.Add(new ClickableComponent(new Rectangle(top.X, top.Y + 12, swatchsize, swatchsize), "DarkHairSwatchLeft")
-			{
-				myID = region_hairDarkSwatch1,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize + 4, top.Y + 12, swatchsize, swatchsize), "DarkHairSwatch0")
-			{
-				myID = region_hairDarkSwatch2,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 2 + 8, top.Y + 12, swatchsize, swatchsize), "DarkHairSwatch1")
-			{
-				myID = region_hairDarkSwatch3,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 3 + 12, top.Y + 12, swatchsize, swatchsize), "DarkHairSwatch2")
-			{
-				myID = region_hairDarkSwatch4,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-
-			//After portraitbox
-			yOffset = 176;
-
-			//Wider selections
-			label_col1_width += 48;
-			label_col2_position = base.xPositionOnScreen + leftPadding + label_col1_width + arrow_size / 2 + (12 * 4);
-
-			//Hair Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Hair", new Rectangle(base.xPositionOnScreen + leftPadding + leftSelectionXOffset - arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, arrow_size, arrow_size), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = region_hairLeft,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.hairLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + leftPadding + (label_col1_width / 2) + (leftSelectionXOffset / 2), base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_Hair"));
-			this.labels.Add(this.hairLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Hair", new Rectangle(base.xPositionOnScreen + leftPadding + label_col1_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = region_hairRight,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			if (allow_accessory_changes)
-			{
-				this.leftSelectionButtons.Add(new ClickableTextureComponent("Acc", new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-				{
-					myID = region_accLeft,
-					upNeighborID = -99998,
-					leftNeighborID = -99998,
-					rightNeighborID = -99998,
-					downNeighborID = -99998
-				});
-				this.labels.Add(this.accLabel = new ClickableComponent(new Rectangle(label_col2_position + arrow_size / 2 + label_col1_width / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_Accessory")));
-				this.rightSelectionButtons.Add(new ClickableTextureComponent("Acc", new Rectangle(label_col2_position + label_col1_width + arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-				{
-					myID = region_accRight,
-					upNeighborID = -99998,
-					leftNeighborID = -99998,
-					rightNeighborID = -99998,
-					downNeighborID = -99998
-				});
-			}
-
-
-			if (Game1.options.snappyMenus && Game1.options.gamepadControls)
-			{
-				base.populateClickableComponentList();
-				this.snapToDefaultClickableComponent();
-			}
-		}
 		//Close the window
 		public override bool readyToClose()
 		{
@@ -1952,21 +1192,8 @@ namespace DynamicBodies.UI
 			bool ignoreTitleSafe = true;
 			Game1.drawDialogueBox(base.xPositionOnScreen, base.yPositionOnScreen, base.width, base.height, speaker: false, drawOnlyBox: true, null, objectDialogueWithPortrait: false, ignoreTitleSafe);
 			//b.Draw(Game1.daybg, new Vector2(this.portraitBox.X, this.portraitBox.Y), Color.White);
-			if(source == Source.Doctors)
-            {
-				//Draw hospital back
-				b.Draw(UItexture, new Vector2(this.portraitBox.X, this.portraitBox.Y), new Rectangle(32, 32, 32, 48), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.8f);
-			}
-			if (source == Source.Leahs)
-			{
-				//Draw Leah house
-				b.Draw(UItexture, new Vector2(this.portraitBox.X, this.portraitBox.Y), new Rectangle(64, 32, 32, 48), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.8f);
-			}
-			if (source == Source.Pams)
-			{
-				//Draw Leah house
-				b.Draw(UItexture, new Vector2(this.portraitBox.X, this.portraitBox.Y), new Rectangle(96, 32, 32, 48), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.8f);
-			}
+			//Draw hospital back
+			b.Draw(UItexture, new Vector2(this.portraitBox.X, this.portraitBox.Y), CharacterBackgroundRect, Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.8f);
 			//Draw frame over
 			b.Draw(UItexture, new Vector2(this.portraitBox.X, this.portraitBox.Y), new Rectangle(0, 32, 32, 48), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.8f);
 

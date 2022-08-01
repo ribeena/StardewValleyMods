@@ -76,21 +76,21 @@ namespace DynamicBodies.UI
         {
             if (doctorsButton.containsPoint(x, y))
             {
-                Game1.activeClickableMenu = new BodyModifier(BodyModifier.Source.Doctors, true);
+                Game1.activeClickableMenu = new DoctorModifier(true);
                 doctorsButton.scale -= 0.25f;
                 doctorsButton.scale = Math.Max(0.75f*doctorsButton.baseScale, doctorsButton.scale);
                 Game1.playSound("shwip");
             }
             if (leahsButton.containsPoint(x, y))
             {
-                Game1.activeClickableMenu = new BodyModifier(BodyModifier.Source.Leahs, true);
+                Game1.activeClickableMenu = new FullColourModifier(true);
                 leahsButton.scale -= 0.25f;
                 leahsButton.scale = Math.Max(0.75f * doctorsButton.baseScale, leahsButton.scale);
                 Game1.playSound("shwip");
             }
             if (pamsButton.containsPoint(x, y))
             {
-                Game1.activeClickableMenu = new BodyModifier(BodyModifier.Source.Pams, true);
+                Game1.activeClickableMenu = new SimpleColourModifier(true);
                 pamsButton.scale -= 0.25f;
                 pamsButton.scale = Math.Max(0.75f * doctorsButton.baseScale, pamsButton.scale);
                 Game1.playSound("shwip");
