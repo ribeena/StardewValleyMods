@@ -57,10 +57,6 @@ namespace DynamicBodies.Patches
                 original: AccessTools.Method(typeof(FarmerRenderer), nameof(FarmerRenderer.drawMiniPortrat), new[] { typeof(SpriteBatch), typeof(Vector2), typeof(float), typeof(float), typeof(int), typeof(Farmer) }),
                 prefix: new HarmonyMethod(GetType(), nameof(pre_drawMiniPortrat))
             );
-
-            harmony.CreateReversePatcher(AccessTools.Method(typeof(FarmerRenderer), "executeRecolorActions", new[] { typeof(Farmer) }),
-                new HarmonyMethod(GetType(), nameof(ExecuteRecolorActionsReversePatch))
-                ).Patch();
         }
 
         //Adjust the base texture before rendering and add event listeners
@@ -280,12 +276,6 @@ namespace DynamicBodies.Patches
                     pbe.dirty = true;
                 }
 
-
-                //Redraw the image
-                //pbe.cacheImage = null;
-                
-                //Wipe the skin colour calculations
-                ____recolorOffsets = null;
                 //Wipe hair calculations
                 pbe.ResetHairTextures();
                 //Wipe naked overlays
@@ -296,34 +286,15 @@ namespace DynamicBodies.Patches
             }
 
             //Draw the character
-
-            //ExecuteRecolorActionsReversePatch(__instance, who);
             
+            //Replacement to the default recolouring cache system of FarmerRenderer using a shader to palette swap
             ExecuteRecolorActionsOnBaseSprite(pbe, who);
 
             //All fixes of rendering should be done
             pbe.dirty = false;
 
-            //Try adding the pixel shader
-            //ModEntry.paletteSwap.CurrentTechnique.Passes[0].Apply();
-
-           
-            //Stop normal rendering abd start using the effect
-            //b.End();
-            //DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(mask);
-
-            //Load in the palletes
-            //ModEntry.paletteSwap.Parameters["xTargetPalette"].SetValue(pbe.paletteCache);
-            
-            
-
-            //b.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, effect: ModEntry.paletteSwap);
-            
             AdjustedVanillaMethods.drawBase(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref pbe.cacheImage, b, animationFrame, currentFrame, ref sourceRect, ref position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
-
-            //b.End();
-            //b.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null);
-
+            
             DrawBodyHair(__instance, ___positionOffset, ___rotationAdjustment, ___baseTexture, animationFrame, sourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth);
 
             ///////////////////////////////
@@ -677,11 +648,6 @@ namespace DynamicBodies.Patches
             }
             shirtSleeveColor = Utility.MultiplyColor(shirtSleeveColor, clothes_color);
             pbe.paletteCache[2] = shirtSleeveColor.ToVector4();
-        }
-
-        internal static void ExecuteRecolorActionsReversePatch(FarmerRenderer __instance, Farmer who)
-        {
-            new NotImplementedException("It's a stub!");
         }
 
         private static void DrawBodyHair(FarmerRenderer __instance, Vector2 ___positionOffset, Vector2 ___rotationAdjustment, Texture2D ___baseTexture, FarmerSprite.AnimationFrame animationFrame, Rectangle sourceRect, SpriteBatch b, int facingDirection, Farmer who, Vector2 position, Vector2 origin, float scale, int currentFrame, float rotation, Color overrideColor, float layerDepth)

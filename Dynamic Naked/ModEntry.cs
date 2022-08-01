@@ -838,15 +838,6 @@ namespace DynamicBodies
 
     }
 
-    public class MultiplayerMessage
-    {
-        public string message { get; set; }
-        public MultiplayerMessage(string msg)
-        {
-            message = msg;
-        }
-    }
-
     public class ContentPackOption
     {
         public string name { get; set; }
