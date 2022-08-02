@@ -117,7 +117,7 @@ namespace DynamicBodies.UI
 			}
 			//Store settings for resetting
 			initEyeColor = who.newEyeColor.Value;
-			initHairColor = new Color((uint)who.hairColor);
+			initHairColor = who.hairstyleColor.Value;
 			settingsBefore["acc"] = who.accessory.ToString();
 			settingsBefore["DB." + pbe.body.name] = pbe.body.GetOptionModData(who);
 			settingsBefore["DB." + pbe.arm.name] = pbe.arm.GetOptionModData(who);
@@ -611,79 +611,104 @@ namespace DynamicBodies.UI
 		{
 			int change = 0;
             if (name.EndsWith("Left")) { change = -1; } else { 
-				change = name[name.Length-1] - '0';
+				change = int.Parse(name[^1..]);
 			}
 
-			if (name.StartsWith("Eye"))
+			if (change != 0)
 			{
-				//cycle through 3 swatches
-				eyeSwatch += change;
-				if (eyeSwatch > eyeSwatchColors.Length)
+				if (name.StartsWith("Eye"))
 				{
-					eyeSwatch -= eyeSwatchColors.Length;
-				}
-				if (eyeSwatch < 0)
-				{
-					eyeSwatch += eyeSwatchColors.Length;
-				}
-				if (eyeSwatch != 0)
-				{
-					who.changeEyeColor(eyeSwatchColors[eyeSwatch - 1]);
-				} else
-                {
-					who.changeEyeColor(initEyeColor);
-                }
-				
-				Game1.playSound("purchase");
-			}
+					//cycle through 3 swatches
 
-			if (name.StartsWith("Hair"))
-			{
-				//cycle through 3 swatches
-				hairSwatch += change;
-				if (hairSwatch > hairSwatchColors.Length)
-				{
-					hairSwatch -= hairSwatchColors.Length;
-				}
-				if (hairSwatch < 0)
-				{
-					hairSwatch += hairSwatchColors.Length;
-				}
-				if (hairSwatch != 0)
-				{
-					who.changeHairColor(hairSwatchColors[hairSwatch - 1]);
-					ModEntry.MakePlayerDirty();
-				}
-				else
-				{
-					who.changeHairColor(initHairColor);
+					//Special cases
+					if (eyeSwatch == 0 && change < 0)
+					{
+						eyeSwatch = eyeSwatchColors.Length;
+						change = 0;
+					}
+
+					if (eyeSwatch == eyeSwatchColors.Length && change > 0)
+					{
+						eyeSwatch = change - 1;
+						change = 0;
+					}
+
+					//Other cases
+					eyeSwatch += change;
+
+					if (eyeSwatch != 0)
+					{
+						who.changeEyeColor(eyeSwatchColors[eyeSwatch - 1]);
+					}
+					else
+					{
+						who.changeEyeColor(initEyeColor);
+					}
+
+					Game1.playSound("purchase");
 				}
 
-				Game1.playSound("purchase");
-			}
+				if (name.StartsWith("Hair"))
+				{
+					//Special cases
+					if (hairSwatch == 0 && change < 0)
+					{
+						hairSwatch = hairSwatchColors.Length;
+						change = 0;
+					}
 
-			if (name.StartsWith("DarkHair"))
-			{
-				//cycle through 3 swatches
-				hairDarkSwatch += change;
-				if (hairDarkSwatch > hairDarkSwatchColors.Length)
-				{
-					hairDarkSwatch -= hairDarkSwatchColors.Length;
-				}
-				if (hairDarkSwatch < 0)
-				{
-					hairDarkSwatch += hairDarkSwatchColors.Length;
-				}
-				if (hairDarkSwatch != 0)
-				{
-					pbe.SetModData(who, "DB.darkHair", hairDarkSwatchColors[hairDarkSwatch - 1].PackedValue.ToString());
-				}
-				else
-				{
-					pbe.SetModData(who, "DB.darkHair", settingsBefore["DB.darkHair"]);
+					if (hairSwatch == hairSwatchColors.Length && change > 0)
+					{
+						hairSwatch = change - 1;
+						change = 0;
+					}
+
+					//Other cases
+					hairSwatch += change;
+
+					if (hairSwatch != 0)
+					{
+						who.changeHairColor(hairSwatchColors[hairSwatch - 1]);
+						pbe.CheckHairTextures(who);
+					}
+					else
+					{
+						who.changeHairColor(initHairColor);
+						pbe.CheckHairTextures(who);
+					}
+
+					Game1.playSound("purchase");
 				}
 
-				Game1.playSound("purchase");
+				if (name.StartsWith("DarkHair"))
+				{
+					//Special cases
+					if (hairDarkSwatch == 0 && change < 0)
+					{
+						hairDarkSwatch = hairDarkSwatchColors.Length;
+						change = 0;
+					}
+
+					if (hairDarkSwatch == hairDarkSwatchColors.Length && change > 0)
+					{
+						hairDarkSwatch = change - 1;
+						change = 0;
+					}
+
+					//Other cases
+					hairDarkSwatch += change;
+
+					if (hairDarkSwatch != 0)
+					{
+						pbe.SetModData(who, "DB.darkHair", hairDarkSwatchColors[hairDarkSwatch - 1].PackedValue.ToString());
+					}
+					else
+					{
+						pbe.SetModData(who, "DB.darkHair", settingsBefore["DB.darkHair"]);
+					}
+
+					Game1.playSound("purchase");
+				}
 			}
 		}
 		//Handle gamepad pressed
@@ -924,10 +949,13 @@ namespace DynamicBodies.UI
 					if (c.containsPoint(x, y))
 					{
 						this.swatchClick(c.name);
-						if (c.scale != 0f)
+						if (!c.name.EndsWith("0"))
 						{
-							c.scale -= 0.25f;
-							c.scale = Math.Max(0.75f, c.scale);
+							if (c.scale != 0f)
+							{
+								c.scale -= 0.25f;
+								c.scale = Math.Max(0.75f, c.scale);
+							}
 						}
 					}
 				}
@@ -1111,13 +1139,16 @@ namespace DynamicBodies.UI
 
 			foreach (ClickableComponent swatch in this.swatches)
 			{
-				if (swatch.containsPoint(x, y))
+				if (!swatch.name.EndsWith("0"))
 				{
-					swatch.scale = Math.Min(swatch.scale + 0.02f, 1f + 0.1f);
-				}
-				else
-				{
-					swatch.scale = Math.Max(swatch.scale - 0.02f, 1f);
+					if (swatch.containsPoint(x, y))
+					{
+						swatch.scale = Math.Min(swatch.scale + 0.02f, 1f + 0.1f);
+					}
+					else
+					{
+						swatch.scale = Math.Max(swatch.scale - 0.02f, 1f);
+					}
 				}
 			}
 
@@ -1249,14 +1280,21 @@ namespace DynamicBodies.UI
 				if (swatch.name.EndsWith("Left"))
 				{
 					toDraw--;
-					if (toDraw < 0) { toDraw = cswatches.Length; }
 				}
 				else
 				{
-                    
-					toDraw += swatch.name[swatch.name.Length - 1] - '0';
-					if (toDraw > cswatches.Length) { toDraw -= cswatches.Length; }
+					if (toDraw == cswatches.Length)
+					{
+						toDraw = int.Parse(swatch.name[^1..]) - 1;
+					}
+					else
+					{
+						toDraw += int.Parse(swatch.name[^1..]);
+					}
 				}
+				if (toDraw > cswatches.Length) { toDraw -= cswatches.Length; }
+				if (toDraw < 0) { toDraw = cswatches.Length; }
+
 				if (toDraw > 0)
 				{
 

@@ -27,7 +27,7 @@ namespace DynamicBodies.Data
         public int shirtOverlayIndex = -1;
         public int pants { get; set; }
         public int shoes { get; set; }
-        public uint hair;
+        public Color hair;
         public uint dhair;
         //Draw rendering
         public string sleeveLength { get; set; }
@@ -85,7 +85,7 @@ namespace DynamicBodies.Data
             shirt = who.shirt.Value;
             pants = who.pants.Value;
             shoes = who.shoes.Value;
-            hair = (uint)who.hairColor;
+            hair = who.hairstyleColor.Value;
             dhair = 0;
             sleeveLength = "Normal";
             shoeStyle = "Normal";
@@ -356,9 +356,9 @@ namespace DynamicBodies.Data
         public void CheckHairTextures(Farmer who)
         {
             //Check for hair colour
-            if (hair != (uint)who.hairColor)
+            if (hair != who.hairstyleColor.Value)
             {
-                hair = (uint)who.hairColor;
+                hair = who.hairstyleColor.Value;
                 ResetHairTextures();
             }
 

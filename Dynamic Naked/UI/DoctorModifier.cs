@@ -73,14 +73,16 @@ namespace DynamicBodies.UI
 				rightNeighborID = -99998,
 				downNeighborID = -99998
 			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize + 4, top.Y + 12, swatchsize, swatchsize), "EyeSwatch0")
+			ClickableComponent eyeSwatchSelected = new ClickableComponent(new Rectangle(top.X + swatchsize + 4, top.Y + 12, swatchsize, swatchsize), "EyeSwatch0")
 			{
 				myID = region_eyeSwatch2,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
 				downNeighborID = -99998
-			});
+			};
+			eyeSwatchSelected.scale = 1.1f;
+			swatches.Add(eyeSwatchSelected);
 			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 2 + 8, top.Y + 12, swatchsize, swatchsize), "EyeSwatch1")
 			{
 				myID = region_eyeSwatch2,
@@ -115,14 +117,16 @@ namespace DynamicBodies.UI
 				rightNeighborID = -99998,
 				downNeighborID = -99998
 			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize + 4, top.Y + 12, swatchsize, swatchsize), "HairSwatch0")
+			ClickableComponent hairSwatchSelected = new ClickableComponent(new Rectangle(top.X + swatchsize + 4, top.Y + 12, swatchsize, swatchsize), "HairSwatch0")
 			{
 				myID = region_hairSwatch2,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
 				downNeighborID = -99998
-			});
+			};
+			hairSwatchSelected.scale = 1.1f;
+			swatches.Add(hairSwatchSelected);
 			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 2 + 8, top.Y + 12, swatchsize, swatchsize), "HairSwatch1")
 			{
 				myID = region_hairSwatch3,
@@ -156,14 +160,16 @@ namespace DynamicBodies.UI
 				rightNeighborID = -99998,
 				downNeighborID = -99998
 			});
-			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize + 4, top.Y + 12, swatchsize, swatchsize), "DarkHairSwatch0")
+			ClickableComponent darkHairSwatchSelected = new ClickableComponent(new Rectangle(top.X + swatchsize + 4, top.Y + 12, swatchsize, swatchsize), "DarkHairSwatch0")
 			{
 				myID = region_hairDarkSwatch2,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
 				downNeighborID = -99998
-			});
+			};
+			darkHairSwatchSelected.scale = 1.1f;
+			swatches.Add(darkHairSwatchSelected);
 			swatches.Add(new ClickableComponent(new Rectangle(top.X + swatchsize * 2 + 8, top.Y + 12, swatchsize, swatchsize), "DarkHairSwatch1")
 			{
 				myID = region_hairDarkSwatch3,
