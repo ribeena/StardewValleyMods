@@ -11,6 +11,8 @@ using System.Globalization;
 using System.Text;
 using System.Threading;
 
+using DynamicBodies.Patches;
+
 namespace DynamicBodies
 {
 
@@ -50,7 +52,7 @@ namespace DynamicBodies
 					//modEntry.Monitor.Log($"ContentManager Replacing farmer sprite base with cached of {assetName}.", LogLevel.Debug);
 					//Texture2D toReturn = ModEntry.GetFarmerBaseSprite(who, assetName);
 
-					Texture2D source_texture = ModEntry.GetFarmerBaseSprite(who, assetName);
+					Texture2D source_texture = FarmerRendererPatched.GetFarmerBaseSprite(who, assetName);
 					Texture2D toReturn = new Texture2D(Game1.graphics.GraphicsDevice, source_texture.Width, source_texture.Height);
 					Color[] data = new Color[source_texture.Width * source_texture.Height];
 					source_texture.GetData(data, 0, data.Length);

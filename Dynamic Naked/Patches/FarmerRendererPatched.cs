@@ -213,7 +213,7 @@ namespace DynamicBodies.Patches
             if(___baseTexture == null)
             {
                 ModEntry.debugmsg($"FarmerRenderer loaded a new sprite for {__instance.textureName}", LogLevel.Debug);
-                ___baseTexture = ModEntry.GetFarmerBaseSprite(who, __instance.textureName);
+                ___baseTexture = GetFarmerBaseSprite(who, __instance.textureName);
             }
 
             //Flat the positions to whole pixels
@@ -447,6 +447,177 @@ namespace DynamicBodies.Patches
                     Game1.graphics.GraphicsDevice.SetRenderTargets(currentRenderTargets);
                 }
             
+        public static Texture2D GetFarmerBaseSprite(Farmer who, string texture = "")
+        {
+            Texture2D bodyText2D = null;
+            bool returnNew = texture == "";
+            //Start modifying the base texture
+            IAssetDataForImage editor = null;
+
+            //Fix up the farmer base with options
+            if ((texture.Length > 0 && texture.StartsWith("Characters\\Farmer\\farmer_") || returnNew))
+            {
+                string gender = "";
+                if (!who.IsMale) { gender = "f_"; }
+
+                //monitor.Log($"Edit [{pbeKeyPair.Key}] {pbeKeyPair.Value.baseStyle} image through Edit<t>", LogLevel.Debug);
+                PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
+                if (pbe == null)
+                {
+                    pbe = new PlayerBaseExtended(who, texture);
+                    ModEntry.SetModDataDefaults(who);
+                    pbe.dirty = true;
+
+                    if (who.accessory.Value < 6 && who.accessory.Value > 0)
+                    {
+                        who.modData["DB.beard"] = "Vanilla's Accessory " + (who.accessory.Value + 1).ToString();
+                        who.accessory.Set(0);
+                    }
+                }
+
+                string bald = "";
+                if (who.IsBaldHairStyle(who.hair.Value))
+                {
+                    bald = "_bald";
+                }
+
+                //Base texture needs to be redone
+                if (pbe.dirtyLayers["baseTexture"])
+                {
+                    //Load the base texture from this mod
+                    if (pbe.body.option == "Default")
+                    {
+                        bodyText2D = ModEntry.context.Helper.ModContent.Load<Texture2D>($"assets\\Character\\{gender}farmer_base.png");
+                    }
+                    else
+                    {
+
+                        //Otherwise load it from a content pack
+                        bodyText2D = pbe.body.provider.ModContent.Load<Texture2D>($"assets\\bodies\\{gender}{pbe.body.file}.png");
+                    }
+
+                    editor = ModEntry.context.Helper.ModContent.GetPatchHelper(bodyText2D).AsImage();
+
+                    if (pbe.dirtyLayers["baseTexture"]) ModEntry.debugmsg("base was dirty", LogLevel.Debug);
+
+                    IRawTextureData faceText2D;
+                    if (pbe.face.option == "Default")
+                    {
+                        faceText2D = ModEntry.context.Helper.ModContent.Load<IRawTextureData>($"assets\\Character\\{gender}face{bald}.png");
+                    }
+                    else
+                    {
+                        faceText2D = pbe.face.provider.ModContent.Load<IRawTextureData>($"assets\\faces\\{pbe.face.file}{bald}.png");
+                    }
+                    editor.PatchImage(faceText2D, new Rectangle(0, 0, faceText2D.Width, faceText2D.Height), targetArea: new Rectangle(0, 0, faceText2D.Width, faceText2D.Height), PatchMode.Overlay);
+
+
+
+
+                    //Top arms
+                    //editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width, armsText2D.Height-96), targetArea: new Rectangle(96, 0, armsText2D.Width, armsText2D.Height-96), PatchMode.Replace);
+                    //Bottom arms
+                    //editor.PatchImage(armsText2D, new Rectangle(48, 576, armsText2D.Width-48, 96), targetArea: new Rectangle(144, 576, armsText2D.Width-48, 96), PatchMode.Replace);
+                    //Bath overlay
+                    //editor.PatchImage(armsText2D, new Rectangle(0, 576, 48, 96), targetArea: new Rectangle(0, 576, 48, 96), PatchMode.Overlay);
+
+
+                    //monitor.Log($"Edit sleeve image through Edit<t>", LogLevel.Debug);
+
+                    IRawTextureData shoes;
+                    if (pbe.shoeStyle == "None")
+                    {
+                        shoes = ModEntry.context.Helper.ModContent.Load<IRawTextureData>($"assets\\Character\\feet.png");
+                        ModEntry.debugmsg($"Drawing feet.", LogLevel.Debug);
+                    }
+                    else
+                    {
+                        Boots equippedBoots = (Boots)who.boots;
+                        if (equippedBoots == null)
+                        {
+                            shoes = ModEntry.context.Helper.ModContent.Load<IRawTextureData>($"assets\\Character\\feet.png");
+                            ModEntry.debugmsg($"Default feet as nothing equipped found.", LogLevel.Debug);
+                        }
+                        else
+                        {
+                            if (ModEntry.shoeOverrides.ContainsKey(equippedBoots.Name))
+                            {
+                                shoes = ModEntry.shoeOverrides[equippedBoots.Name].contentPack.ModContent.Load<IRawTextureData>(ModEntry.shoeOverrides[equippedBoots.Name].file);
+                                ModEntry.debugmsg($"Override specific shoe for [{equippedBoots.Name}].", LogLevel.Debug);
+                            }
+                            else
+                            {
+                                List<string> roughMatches = ModEntry.shoeOverrides.Keys.Where(key => equippedBoots.Name.StartsWith(key)).ToList();
+                                if (roughMatches.Count > 0)
+                                {
+                                    shoes = ModEntry.shoeOverrides[roughMatches[0]].contentPack.ModContent.Load<IRawTextureData>(ModEntry.shoeOverrides[roughMatches[0]].file);
+                                    ModEntry.debugmsg($"Override shoes group for [{equippedBoots.Name}].", LogLevel.Debug);
+                                }
+                                else
+                                {
+                                    shoes = ModEntry.context.Helper.ModContent.Load<IRawTextureData>($"assets\\Character\\shoes_Normal.png");
+                                    ModEntry.debugmsg($"Default shoes for [{equippedBoots.Name}].", LogLevel.Debug);
+                                }
+                            }
+                        }
+
+                    }
+
+                    editor.PatchImage(shoes, new Rectangle(0, 0, shoes.Width, shoes.Height), targetArea: new Rectangle(0, 0, shoes.Width, shoes.Height), PatchMode.Overlay);
+                }
+
+                if (pbe.dirtyLayers["arm"] || pbe.dirtyLayers["baseTexture"])
+                {
+                    if (editor == null)
+                    {
+                        editor = ModEntry.context.Helper.ModContent.GetPatchHelper(pbe.sourceImage).AsImage();
+                        pbe.dirtyLayers["sprite"] = true;
+                    }
+
+                    IRawTextureData armsText2D;
+                    if (pbe.arm.option == "Default")
+                    {
+                        armsText2D = ModEntry.context.Helper.ModContent.Load<IRawTextureData>($"assets\\Character\\{gender}arm_{pbe.sleeveLength}.png");
+                    }
+                    else
+                    {
+                        armsText2D = pbe.arm.provider.ModContent.Load<IRawTextureData>($"assets\\arms\\{pbe.arm.file}_{pbe.sleeveLength}.png");
+                    }
+                    //editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width, armsText2D.Height), targetArea: new Rectangle(96, 0, armsText2D.Width, armsText2D.Height), PatchMode.Replace);
+
+                    //Top row
+                    editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width - 32, 32), targetArea: new Rectangle(96, 0, armsText2D.Width - 32, 32), PatchMode.Replace);
+                    //remainder
+                    editor.PatchImage(armsText2D, new Rectangle(0, 32, armsText2D.Width, armsText2D.Height - 32), targetArea: new Rectangle(96, 32, armsText2D.Width, armsText2D.Height - 32), PatchMode.Replace);
+                }
+                //Needs redrawing
+                if (pbe.dirtyLayers["sprite"] || pbe.cacheImage == null)
+                {
+                    //Store the updated version
+                    pbe.cacheImage = null;
+
+                    pbe.cacheImage = new Texture2D(Game1.graphics.GraphicsDevice, bodyText2D.Width, bodyText2D.Height);
+                    Color[] data = new Color[bodyText2D.Width * bodyText2D.Height];
+                    bodyText2D.GetData(data, 0, data.Length);
+                    pbe.cacheImage.SetData(data);
+
+                    //Render any extended colours on the base
+                    //pbe.cacheImage = PlayerBaseExtended.ApplyExtendedSkinColor(who.skin.Value, pbe.cacheImage);
+
+                    pbe.dirtyLayers["sprite"] = false;
+                }
+
+                if (!returnNew)
+                {
+                    //Return the cached image
+                    return pbe.cacheImage;
+                }
+
+            }
+
+
+
+            return bodyText2D;
         }
 
         internal static void ExecuteRecolorActionsOnBaseSprite(PlayerBaseExtended pbe, Farmer who)
@@ -468,7 +639,7 @@ namespace DynamicBodies.Patches
 
 
                     //Replacement to farmerTextureManager.Load<Texture2D>
-                    pbe.sourceImage = ModEntry.GetFarmerBaseSprite(who);
+                    pbe.sourceImage = GetFarmerBaseSprite(who);
                     ModEntry.debugmsg($"Got a base texture: {pbe.sourceImage != null}", LogLevel.Debug);
                     Color[] source_pixel_data = new Color[pbe.sourceImage.Width * pbe.sourceImage.Height];
                     pbe.sourceImage.GetData(source_pixel_data);

@@ -170,6 +170,10 @@ namespace DynamicBodies.Data
             who.modData[key] = value;
             if (change)
             {
+                if (dirtyLayers.ContainsKey(key.Substring(3)))
+                {
+                    dirtyLayers[key.Substring(3)] = true;
+                }
                 UpdateTextures(who);
             }
         }
