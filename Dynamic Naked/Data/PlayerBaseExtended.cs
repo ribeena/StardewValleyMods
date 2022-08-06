@@ -29,6 +29,7 @@ namespace DynamicBodies.Data
         public int shoes { get; set; }
         public Color hair;
         public uint dhair;
+        public uint lash;
         //Draw rendering
         public string sleeveLength { get; set; }
         public string shoeStyle { get; set; }
@@ -88,6 +89,7 @@ namespace DynamicBodies.Data
             shoes = who.shoes.Value;
             hair = who.hairstyleColor.Value;
             dhair = 0;
+            lash = 0;
             sleeveLength = "Normal";
             shoeStyle = "Normal";
 
@@ -134,7 +136,7 @@ namespace DynamicBodies.Data
             for(int i = 0; i < 25; i++)
             {
                 basePalette[i] = defaultColors.Data[i].ToVector4();
-                ModEntry.debugmsg($"Added palette colour {basePalette[i].ToString()}", LogLevel.Debug);
+                //ModEntry.debugmsg($"Added palette colour {basePalette[i].ToString()}", LogLevel.Debug);
             }
             return basePalette;
         }
@@ -151,6 +153,8 @@ namespace DynamicBodies.Data
             bodyHair.SetDefault(who);
             nakedLower.SetDefault(who);
             nakedUpper.SetDefault(who);
+
+            who.modData["DB.lash"] = new Color(15, 10, 8).PackedValue.ToString();
         }
 
         public void SetModData(Farmer who, string key, string value)
@@ -227,6 +231,13 @@ namespace DynamicBodies.Data
             {
                 pbe.dirtyLayers["beard"] = true;
                 pbe.dirtyLayers["bodyHair"] = true;
+            }
+
+            if (who.modData.ContainsKey("DB.lash")){
+                if (who.modData["DB.lash"] != new Color(pbe.paletteCache[17]).PackedValue.ToString())
+                {
+                    pbe.dirtyLayers["eyes"] = true;
+                }
             }
 
             //Check for naked overlay

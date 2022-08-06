@@ -17,7 +17,7 @@ namespace DynamicBodies.UI
 {
 	internal class BodyModifier : IClickableMenu
 	{
-
+		public bool isPage = false;
 		public int cost = 0;
 		private bool isWizardSubmenu = false;
 
@@ -33,6 +33,7 @@ namespace DynamicBodies.UI
 		public const int region_eyeSwatch1 = 701, region_eyeSwatch2 = 702, region_eyeSwatch3 = 703, region_eyeSwatch4 = 704;
 		public const int region_hairSwatch1 = 705, region_hairSwatch2 = 706, region_hairSwatch3 = 707, region_hairSwatch4 = 708;
 		public const int region_hairDarkSwatch1 = 709, region_hairDarkSwatch2 = 710, region_hairDarkSwatch3 = 711, region_hairDarkSwatch4 = 712;
+		public const int region_lashSwatch1 = 713, region_lashSwatch2 = 714, region_lashSwatch3 = 715, region_lashSwatch4 = 716;
 
 		public const int region_nameBox = 536;
 
@@ -102,6 +103,8 @@ namespace DynamicBodies.UI
 		public Color[] hairSwatchColors;
 		private int hairDarkSwatch = 0;
 		public Color[] hairDarkSwatchColors;
+		private int lashSwatch = 0;
+		public Color[] lashSwatchColors;
 
 
 		public BodyModifier(int windowHeight, bool wizardSub = false)
@@ -133,6 +136,15 @@ namespace DynamicBodies.UI
 			else
 			{
 				settingsBefore["DB.darkHair"] = new Color(57, 57, 57).PackedValue.ToString();
+			}
+
+			if (who.modData.ContainsKey("DB.lash"))
+			{
+				settingsBefore["DB.lash"] = who.modData["DB.lash"];
+			}
+			else
+			{
+				settingsBefore["DB.lash"] = new Color(15, 10, 8).PackedValue.ToString();
 			}
 
 			this.accessoryOptions = new List<int> { 0, 1, 2, 3, 4, 5 };
@@ -381,7 +393,14 @@ namespace DynamicBodies.UI
 			}
 			else
 			{
-				this.exitThisMenu(false);
+				if (isPage)
+				{
+					Game1.exitActiveMenu();
+				}
+				else
+				{
+					this.exitThisMenu(false);
+				}
 				Game1.playSound("cancel");
 			}
 		}
@@ -414,7 +433,14 @@ namespace DynamicBodies.UI
 						else
 						{
 							who.Money -= cost;
-							this.exitThisMenu(false);
+							if (isPage)
+							{
+								Game1.exitActiveMenu();
+							}
+							else
+							{
+								this.exitThisMenu(false);
+							}
 							Game1.playSound("purchase");
 						}
 						break;
@@ -705,6 +731,36 @@ namespace DynamicBodies.UI
 					else
 					{
 						pbe.SetModData(who, "DB.darkHair", settingsBefore["DB.darkHair"]);
+					}
+
+					Game1.playSound("purchase");
+				}
+
+				if (name.StartsWith("Lash"))
+				{
+					//Special cases
+					if (lashSwatch == 0 && change < 0)
+					{
+						lashSwatch = lashSwatchColors.Length;
+						change = 0;
+					}
+
+					if (lashSwatch == lashSwatchColors.Length && change > 0)
+					{
+						lashSwatch = change - 1;
+						change = 0;
+					}
+
+					//Other cases
+					lashSwatch += change;
+
+					if (lashSwatch != 0)
+					{
+						pbe.SetModData(who, "DB.lash", lashSwatchColors[lashSwatch - 1].PackedValue.ToString());
+					}
+					else
+					{
+						pbe.SetModData(who, "DB.lash", settingsBefore["DB.lash"]);
 					}
 
 					Game1.playSound("purchase");
@@ -1220,9 +1276,12 @@ namespace DynamicBodies.UI
 		//Draw the menu and its various buttons
 		public override void draw(SpriteBatch b)
 		{
-			bool ignoreTitleSafe = true;
-			Game1.drawDialogueBox(base.xPositionOnScreen, base.yPositionOnScreen, base.width, base.height, speaker: false, drawOnlyBox: true, null, objectDialogueWithPortrait: false, ignoreTitleSafe);
-			//b.Draw(Game1.daybg, new Vector2(this.portraitBox.X, this.portraitBox.Y), Color.White);
+			if (!isPage)
+			{
+				bool ignoreTitleSafe = true;
+				Game1.drawDialogueBox(base.xPositionOnScreen, base.yPositionOnScreen, base.width, base.height, speaker: false, drawOnlyBox: true, null, objectDialogueWithPortrait: false, ignoreTitleSafe);
+				//b.Draw(Game1.daybg, new Vector2(this.portraitBox.X, this.portraitBox.Y), Color.White);
+			}
 			//Draw hospital back
 			b.Draw(UItexture, new Vector2(this.portraitBox.X, this.portraitBox.Y), CharacterBackgroundRect, Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.8f);
 			//Draw frame over
@@ -1275,6 +1334,11 @@ namespace DynamicBodies.UI
 				{
 					cswatches = hairDarkSwatchColors;
 					toDraw = hairDarkSwatch;
+				}
+				if (swatch.name.StartsWith("Lash"))
+				{
+					cswatches = lashSwatchColors;
+					toDraw = lashSwatch;
 				}
 
 				if (swatch.name.EndsWith("Left"))

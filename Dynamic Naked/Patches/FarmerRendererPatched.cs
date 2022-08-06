@@ -451,8 +451,10 @@ namespace DynamicBodies.Patches
 
         internal static void ExecuteRecolorActionsOnBaseSprite(PlayerBaseExtended pbe, Farmer who)
         {
+            bool updatePalette = false;
             if (pbe.dirtyLayers["sprite"])
             {
+                updatePalette = true;
                 pbe.dirtyLayers["sprite"] = false;
                 if (pbe.dirtyLayers["baseTexture"])
                 {
@@ -474,9 +476,11 @@ namespace DynamicBodies.Patches
                     pbe.dirtyLayers["baseTexture"] = false;
 
                 }
-
-                UpdatePalette(pbe, who);
             }
+
+            updatePalette = updatePalette || pbe.dirtyLayers["eyes"] || pbe.dirtyLayers["skin"] || pbe.dirtyLayers["shoes"] || pbe.dirtyLayers["shirt"];
+
+            if(updatePalette) UpdatePalette(pbe, who);
         }
 
         private static Color changeBrightness(Color c, Color amount, bool lighter = true)
@@ -536,6 +540,16 @@ namespace DynamicBodies.Patches
                 }
                 pbe.paletteCache[18] = lightest_s_color.ToVector4();
                 pbe.paletteCache[19] = darker_s_color.ToVector4();
+            }
+
+            //Allow for ash colours
+            Color lash_color = PlayerBaseExtended.GetColorSetting(who, "lash");
+            if (lash_color.Equals(Color.Transparent))
+            {
+                pbe.paletteCache[17] = new Color(15, 10, 8).ToVector4();
+            } else
+            {
+                pbe.paletteCache[17] = lash_color.ToVector4();
             }
 
         }
