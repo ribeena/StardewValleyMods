@@ -76,6 +76,7 @@ namespace DynamicBodies.Data
                 { "shirt",true },
                 { "face",true },
                 { "arm",true },
+                { "hair",true },
                 { "beard",true },
                 { "bodyHair",true },
                 { "nakedLower",true },
@@ -218,7 +219,14 @@ namespace DynamicBodies.Data
             if (!pbe.beard.OptionMatchesModData(who))
             {
                 pbe.beard.SetOptionFromModData(who, ModEntry.beardOptions);
+                pbe.dirtyLayers["beard"] = true;
                 pbe.dirty = true;
+            }
+
+            if (pbe.dirtyLayers["hair"])
+            {
+                pbe.dirtyLayers["beard"] = true;
+                pbe.dirtyLayers["bodyHair"] = true;
             }
 
             //Check for naked overlay

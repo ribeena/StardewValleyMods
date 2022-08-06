@@ -1,6 +1,8 @@
 ﻿{
 	"color_specialist":"Color Specialist",
 	"cosmetic_patient":"Cosmetic Patient",
+	"body": "Body",
+	"face": "Face",
 	"box_dye_user":"Box Dye User",
 	"cost":"Cost",
 	"free":"free",
