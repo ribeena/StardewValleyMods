@@ -295,8 +295,6 @@ namespace DynamicBodies.Patches
 
             AdjustedVanillaMethods.drawBase(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref pbe.cacheImage, b, animationFrame, currentFrame, ref sourceRect, ref position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
             
-            DrawBodyHair(__instance, ___positionOffset, ___rotationAdjustment, ___baseTexture, animationFrame, sourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth);
-
             ///////////////////////////////
             /// Setup a new overlay drawing for upper body
             //no shirt
@@ -392,61 +390,121 @@ namespace DynamicBodies.Patches
             return false;
         }
 
+
+        internal static void ExecuteRecolorActionsOnBaseSprite(PlayerBaseExtended pbe, Farmer who)
+        {
+            bool updatePalette = false;
+            if (pbe.dirtyLayers["sprite"])
+            {
+                updatePalette = true;
+                pbe.dirtyLayers["sprite"] = false;
+                if (pbe.dirtyLayers["baseTexture"])
+                {
+
+                    //this.textureChanged();
+                    pbe.dirtyLayers["eyes"] = true;
+                    pbe.dirtyLayers["shoes"] = true;
+                    //pbe.dirtyLayers["pants"] = true;//Pants aren't in the base sprite..?
+                    pbe.dirtyLayers["skin"] = true;
+                    pbe.dirtyLayers["shirt"] = true;
+
+
+                    //Replacement to farmerTextureManager.Load<Texture2D>
+                    pbe.sourceImage = GetFarmerBaseSprite(who);
+                    ModEntry.debugmsg($"Got a base texture: {pbe.sourceImage != null}", LogLevel.Debug);
+
+                    pbe.dirtyLayers["baseTexture"] = false;
+
+                }
+            }
+
+            updatePalette = updatePalette || pbe.dirtyLayers["eyes"] || pbe.dirtyLayers["skin"] || pbe.dirtyLayers["shoes"]
+                            || pbe.dirtyLayers["shirt"] || pbe.dirtyLayers["bodyHair"];
+
+            if (updatePalette) UpdatePalette(pbe, who);
+        }
+
         internal static void UpdatePalette(PlayerBaseExtended pbe, Farmer who)
         {
-            
-            
-                //Change the pixel colours on the cached image
-                foreach (String layer in pbe.dirtyLayers.Keys)
+            //Change the pixel colours on the cached image
+            foreach (String layer in pbe.dirtyLayers.Keys)
+            {
+                //Update the colour cache of each dirty layer
+                if (pbe.dirtyLayers[layer])
                 {
-                    //reset the cache of each dirty layer
-                    if (pbe.dirtyLayers[layer])
+                    switch (layer)
                     {
-                        switch (layer)
-                        {
-                            case "eyes":
-                                UpdateEyePalette(who, pbe);
-                                break;
-                            case "shoes":
-                                UpdateShoePalette(who, pbe);
-                                break;
-                            case "skin":
-                                UpdateSkinPalette(who, pbe);
-                                break;
-                            case "shirt":
-                                UpdateShirtPalette(who, pbe);
-                                break;
-                        }
-                        pbe.dirtyLayers[layer] = false;
+                        case "eyes":
+                            UpdateEyePalette(who, pbe);
+                            pbe.dirtyLayers[layer] = false;
+                            break;
+                        case "shoes":
+                            UpdateShoePalette(who, pbe);
+                            pbe.dirtyLayers[layer] = false;
+                            break;
+                        case "skin":
+                            UpdateSkinPalette(who, pbe);
+                            pbe.dirtyLayers[layer] = false;
+                            break;
+                        case "shirt":
+                            UpdateShirtPalette(who, pbe);
+                            pbe.dirtyLayers[layer] = false;
+                            break;
                     }
-                }
-
-                if (pbe.sourceImage != null)
-                {
-                    //Use a pixel shader to handle the recolouring
-                    //set up the palette render
-                    ModEntry.paletteSwap.Parameters["xTargetPalette"].SetValue(pbe.paletteCache);
-
-                    RenderTarget2D renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, pbe.sourceImage.Width, pbe.sourceImage.Height, false, Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.Depth24);
-                    //Store current render targets
-                    RenderTargetBinding[] currentRenderTargets = Game1.graphics.GraphicsDevice.GetRenderTargets();
-                    Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget);
-
-                    Game1.graphics.GraphicsDevice.Clear(Color.FromNonPremultiplied(0, 0, 0, 0));
-                    using (SpriteBatch sb = new SpriteBatch(renderTarget.GraphicsDevice))
-                    {
-                        sb.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, effect: ModEntry.paletteSwap);
-                        sb.Draw(pbe.sourceImage, new Rectangle(0, 0, pbe.sourceImage.Width, pbe.sourceImage.Height), Color.White);
-                        sb.End();
-                    }
-                    Color[] pixel_data = new Color[renderTarget.Width * renderTarget.Height];
-                    renderTarget.GetData(pixel_data);
-                    pbe.cacheImage.SetData(pixel_data);
                     
-                    //return current render targets
-                    Game1.graphics.GraphicsDevice.SetRenderTargets(currentRenderTargets);
                 }
+            }
+
+            if (pbe.sourceImage != null)
+            {
+                //Use a pixel shader to handle the recolouring
+                //set up the palette render
+                ModEntry.paletteSwap.Parameters["xTargetPalette"].SetValue(pbe.paletteCache);
+
+                RenderTarget2D renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, pbe.sourceImage.Width, pbe.sourceImage.Height, false, Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.Depth24);
+                //Store current render targets
+                RenderTargetBinding[] currentRenderTargets = Game1.graphics.GraphicsDevice.GetRenderTargets();
+                Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget);
+
+                Game1.graphics.GraphicsDevice.Clear(Color.FromNonPremultiplied(255, 0, 255, 0));
+                
+                using (SpriteBatch sb = new SpriteBatch(renderTarget.GraphicsDevice))
+                {
+                    sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, effect: ModEntry.paletteSwap);
+                    sb.Draw(pbe.sourceImage, new Rectangle(0, 0, pbe.sourceImage.Width, pbe.sourceImage.Height), Color.White);
+                    sb.End();
+                }
+
+                Color[] pixel_data = new Color[renderTarget.Width * renderTarget.Height];
+                renderTarget.GetData(pixel_data);
+                pbe.cacheImage.SetData(pixel_data);
+
+                //return current render targets
+                Game1.graphics.GraphicsDevice.SetRenderTargets(currentRenderTargets);
+
+
+                //Overlay the bodyhair onto the base skin
+                Texture2D bodyHairText = null;
+
+                if (pbe.bodyHair.option != "Default")
+                {
+                    bodyHairText = pbe.GetBodyHairTexture(who);
+                    pbe.dirtyLayers["bodyHair"] = false;
+                }
+
+                if (bodyHairText != null)
+                {
+                    ModEntry.debugmsg("UpdatePalette: Drawing bodyhair", LogLevel.Debug);
+                    IAssetDataForImage editor = ModEntry.context.Helper.ModContent.GetPatchHelper(pbe.cacheImage).AsImage();
+                    editor.PatchImage(bodyHairText, new Rectangle(0, 0, bodyHairText.Width, bodyHairText.Height), targetArea: new Rectangle(0, 0, bodyHairText.Width, bodyHairText.Height), PatchMode.Overlay);
+                }
+
+            }
+
             
+
+        }
+
         public static Texture2D GetFarmerBaseSprite(Farmer who, string texture = "")
         {
             Texture2D bodyText2D = null;
@@ -620,39 +678,6 @@ namespace DynamicBodies.Patches
             return bodyText2D;
         }
 
-        internal static void ExecuteRecolorActionsOnBaseSprite(PlayerBaseExtended pbe, Farmer who)
-        {
-            bool updatePalette = false;
-            if (pbe.dirtyLayers["sprite"])
-            {
-                updatePalette = true;
-                pbe.dirtyLayers["sprite"] = false;
-                if (pbe.dirtyLayers["baseTexture"])
-                {
-                    
-                    //this.textureChanged();
-                    pbe.dirtyLayers["eyes"] = true;
-                    pbe.dirtyLayers["shoes"] = true;
-                    //pbe.dirtyLayers["pants"] = true;//Pants aren't in the base sprite..?
-                    pbe.dirtyLayers["skin"] = true;
-                    pbe.dirtyLayers["shirt"] = true;
-
-
-                    //Replacement to farmerTextureManager.Load<Texture2D>
-                    pbe.sourceImage = GetFarmerBaseSprite(who);
-                    ModEntry.debugmsg($"Got a base texture: {pbe.sourceImage != null}", LogLevel.Debug);
-                    Color[] source_pixel_data = new Color[pbe.sourceImage.Width * pbe.sourceImage.Height];
-                    pbe.sourceImage.GetData(source_pixel_data);
-
-                    pbe.dirtyLayers["baseTexture"] = false;
-
-                }
-            }
-
-            updatePalette = updatePalette || pbe.dirtyLayers["eyes"] || pbe.dirtyLayers["skin"] || pbe.dirtyLayers["shoes"] || pbe.dirtyLayers["shirt"];
-
-            if(updatePalette) UpdatePalette(pbe, who);
-        }
 
         private static Color changeBrightness(Color c, Color amount, bool lighter = true)
         {
@@ -833,22 +858,6 @@ namespace DynamicBodies.Patches
             }
             shirtSleeveColor = Utility.MultiplyColor(shirtSleeveColor, clothes_color);
             pbe.paletteCache[2] = shirtSleeveColor.ToVector4();
-        }
-
-        private static void DrawBodyHair(FarmerRenderer __instance, Vector2 ___positionOffset, Vector2 ___rotationAdjustment, Texture2D ___baseTexture, FarmerSprite.AnimationFrame animationFrame, Rectangle sourceRect, SpriteBatch b, int facingDirection, Farmer who, Vector2 position, Vector2 origin, float scale, int currentFrame, float rotation, Color overrideColor, float layerDepth)
-        {
-            PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
-
-            if (!pbe.bodyHair.OptionMatchesModData(who))
-            {
-                pbe.bodyHair.SetOptionFromModData(who, ModEntry.bodyHairOptions);
-            }
-
-            if (pbe.bodyHair.option != "Default")
-            {
-                //Draw the body hair
-                b.Draw(pbe.GetBodyHairTexture(who), position + origin + ___positionOffset, sourceRect, Color.White, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + ((who.FarmerSprite.CurrentAnimationFrame.frame == 5) ? 0.00072f : 7.2E-08f));
-            }
         }
 
         private static void DrawLowerNaked(FarmerRenderer __instance, Vector2 ___positionOffset, Vector2 ___rotationAdjustment, Texture2D ___baseTexture, FarmerSprite.AnimationFrame animationFrame, Rectangle sourceRect, SpriteBatch b, int facingDirection, Farmer who, Vector2 position, Vector2 origin, float scale, int currentFrame, float rotation, Color overrideColor, float layerDepth, float layerOff1, float layeroff2)

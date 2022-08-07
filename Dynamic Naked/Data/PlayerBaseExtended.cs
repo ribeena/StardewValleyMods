@@ -231,6 +231,13 @@ namespace DynamicBodies.Data
                 pbe.dirty = true;
             }
 
+            //Check for bodyhair
+            if (!pbe.bodyHair.OptionMatchesModData(who))
+            {
+                pbe.bodyHair.SetOptionFromModData(who, ModEntry.bodyHairOptions);
+                pbe.dirtyLayers["bodyHair"] = true;
+            }
+
             if (pbe.dirtyLayers["hair"])
             {
                 pbe.dirtyLayers["beard"] = true;
@@ -275,17 +282,12 @@ namespace DynamicBodies.Data
 
         public Texture2D GetBodyHairTexture(Farmer who)
         {
-            CheckHairTextures(who); //Redraw if needed
+            CheckHairTextures(who); //Flag dirty because hair colour changed
 
-            if (bodyHair.texture == null)
+            if (bodyHair.texture == null || dirtyLayers["bodyHair"])
             {
                 Texture2D bodyHairText2D = bodyHair.provider.ModContent.Load<Texture2D>($"assets\\bodyhair\\{bodyHair.file}.png");
-                Rectangle rect = new Rectangle(0, 0, bodyHairText2D.Width, bodyHairText2D.Height);
-                bodyHair.texture = new Texture2D(Game1.graphics.GraphicsDevice, bodyHairText2D.Width, bodyHairText2D.Height);
-                Color[] data = new Color[bodyHairText2D.Width * bodyHairText2D.Height];
-                bodyHairText2D.GetData(data, 0, data.Length);
-                bodyHair.texture.SetData(data);
-                bodyHair.texture = RenderHair(who, bodyHair.texture, rect);
+                bodyHair.texture = RenderHair(who, bodyHairText2D, new Rectangle(0,0,bodyHairText2D.Width, bodyHairText2D.Height));
             }
             return bodyHair.texture;
         }
@@ -400,9 +402,10 @@ namespace DynamicBodies.Data
         {
             ModEntry.debugmsg($"Reset hair textures", LogLevel.Debug);
 
+            dirtyLayers["bodyHair"] = true;
+
             hairTextures.Clear();
             beard.Clear();
-            bodyHair.Clear();
         }
 
         public Texture2D GetNakedUpperTexture(int skin)
