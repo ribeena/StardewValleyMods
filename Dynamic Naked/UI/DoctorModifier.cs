@@ -17,7 +17,7 @@ namespace DynamicBodies.UI
 {
     internal class DoctorModifier : IClickableMenu
 	{
-		private const int windowHeight = 648;
+		private const int windowHeight = 512;
 		public const int doctor_cost = 250;
 		public bool isWizardSubmenu = false;
 
@@ -239,6 +239,9 @@ namespace DynamicBodies.UI
 
 		public void changeTab(int whichTab, bool playSound = true)
 		{
+			//Return clothing
+			(this.pages[currentTab] as BodyModifier).RevertClothing();
+			//Swap tab
 			this.currentTab = this.getTabNumberFromName(this.tabs[whichTab].name);
 
 			if (playSound)

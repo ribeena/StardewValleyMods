@@ -648,8 +648,32 @@ namespace DynamicBodies.Patches
                     //remainder
                     editor.PatchImage(armsText2D, new Rectangle(0, 32, armsText2D.Width, armsText2D.Height - 32), targetArea: new Rectangle(96, 32, armsText2D.Width, armsText2D.Height - 32), PatchMode.Replace);
                 }
+
+                if (pbe.dirtyLayers["baseTexture"] && pbe.nose.option != "Default")
+                {
+                    IRawTextureData noseText2D = pbe.nose.provider.ModContent.Load<IRawTextureData>($"assets\\nose\\{pbe.nose.file}.png");
+                    editor.PatchImage(noseText2D, new Rectangle(0, 0, noseText2D.Width, noseText2D.Height), targetArea: new Rectangle(0, 0, noseText2D.Width, noseText2D.Height), PatchMode.Overlay);
+                }
+
+                if (pbe.dirtyLayers["baseTexture"] && pbe.eyes.option != "Default")
+                {
+                    IRawTextureData eyesText2D = pbe.eyes.provider.ModContent.Load<IRawTextureData>($"assets\\eyes\\{pbe.eyes.file}.png");
+                    editor.PatchImage(eyesText2D, new Rectangle(0, 0, 96, eyesText2D.Height), targetArea: new Rectangle(0, 0, 96, eyesText2D.Height), PatchMode.Overlay);
+                    if (eyesText2D.Width > 96)
+                    {
+                        //Add custom blink frames
+                        editor.PatchImage(eyesText2D, new Rectangle(96, 0, 32, eyesText2D.Height), targetArea: new Rectangle(256, 0, 32, eyesText2D.Height), PatchMode.Overlay);
+                    }
+                }
+
+                if (pbe.dirtyLayers["baseTexture"] && pbe.ears.option != "Default")
+                {
+                    IRawTextureData earsText2D = pbe.ears.provider.ModContent.Load<IRawTextureData>($"assets\\ears\\{pbe.ears.file}.png");
+                    editor.PatchImage(earsText2D, new Rectangle(0, 0, earsText2D.Width, earsText2D.Height), targetArea: new Rectangle(0, 0, earsText2D.Width, earsText2D.Height), PatchMode.Overlay);
+                }
+
                 //Needs redrawing
-                if (pbe.dirtyLayers["sprite"] || pbe.cacheImage == null)
+                if (pbe.dirtyLayers["baseTexture"] || pbe.dirtyLayers["sprite"] || pbe.cacheImage == null)
                 {
                     //Store the updated version
                     pbe.cacheImage = null;

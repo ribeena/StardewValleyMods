@@ -23,6 +23,7 @@ namespace DynamicBodies.UI
 
 		public const int region_okbutton = 505, region_backbutton = 81114, region_accLeft = 516, region_accRight = 517, region_directionLeft = 520, region_directionRight = 521;
 		public const int region_hairLeft = 514, region_hairRight = 515, region_bodyLeft = 516, region_bodyRight = 517, region_faceLeft = 416, region_faceRight = 417;
+		public const int region_eyesLeft = 418, region_eyesRight = 419, region_earsLeft = 420, region_earsRight = 421, region_noseLeft = 422, region_noseRight = 423;
 		public const int region_armLeft = 518, region_armRight = 519, region_beardLeft = 520, region_beardRight = 521;
 		public const int region_bodyHairLeft = 531, region_bodyHairRight = 532, region_nakedLeft = 533, region_nakedRight = 534, region_nakedLeftU = 535, region_nakedRightU = 536;
 
@@ -67,6 +68,9 @@ namespace DynamicBodies.UI
 		public List<int> accessoryOptions;
 		public ClickableComponent bodyLabel;
 		public ClickableComponent faceLabel;
+		public ClickableComponent eyesLabel;
+		public ClickableComponent earsLabel;
+		public ClickableComponent noseLabel;
 		public ClickableComponent armLabel;
 		public ClickableComponent beardLabel;
 		public ClickableComponent bodyHairLabel;
@@ -153,11 +157,11 @@ namespace DynamicBodies.UI
 			clothingToggles["hat"] = new ClothingToggle() { offset = 16 };
 			clothingToggles["hat"].active = clothingToggles["hat"].showing = who.hat.Value != null;
 			clothingToggles["shirt"] = new ClothingToggle() { offset = 32 };
-			clothingToggles["shirt"].active = clothingToggles["shirt"].showing = who.shirtItem.Get() != null;
+			clothingToggles["shirt"].active = clothingToggles["shirt"].showing = who.shirtItem.Value != null;
 			clothingToggles["pants"] = new ClothingToggle() { offset = 48 };
-			clothingToggles["pants"].active = clothingToggles["pants"].showing = who.GetPantsIndex() != 14;
+			clothingToggles["pants"].active = clothingToggles["pants"].showing = who.pantsItem.Value != null;
 			clothingToggles["shoes"] = new ClothingToggle() { offset = 64 };
-			clothingToggles["shoes"].active = clothingToggles["shoes"].showing = who.shoes.Value != 12;
+			clothingToggles["shoes"].active = clothingToggles["shoes"].showing = who.boots.Value != null;
 
 			this._recolorEyesAction = delegate
 			{
@@ -317,25 +321,18 @@ namespace DynamicBodies.UI
 			pbe.dirty = true;
 		}
 
-		private void RevertClothing()
+		public void RevertClothing()
         {
 			if (!clothingToggles["pants"].showing)
 			{
-				if (clothingToggles["pants"].storeItem != null)
-				{
-					who.pantsItem.Set(clothingToggles["pants"].storeItem as Clothing);
-				} else
-                {
-					who.changePantStyle(clothingToggles["pants"].store);
-				}
+				who.pantsItem.Set(clothingToggles["pants"].storeItem as Clothing);
+
 				clothingToggles["pants"].showing = true;
 			}
 
 			if (!clothingToggles["shoes"].showing)
 			{
-
-				who.shoes.Set(clothingToggles["shoes"].store);
-				Game1.playSound("pickUpItem");
+				who.boots.Set(clothingToggles["shoes"].storeItem as Boots);
 
 				clothingToggles["shoes"].showing = true;
 			}
@@ -345,15 +342,13 @@ namespace DynamicBodies.UI
 				who.shirtItem.Set(clothingToggles["shirt"].storeItem as Clothing);
 
 				clothingToggles["shirt"].showing = true;
-
 			}
 
 			if (!clothingToggles["hat"].showing)
 			{
-
 				who.hat.Set(clothingToggles["hat"].storeItem as Hat);
-				clothingToggles["hat"].showing = true;
 
+				clothingToggles["hat"].showing = true;
 			}
 		}
 		public override void emergencyShutDown()
@@ -516,6 +511,60 @@ namespace DynamicBodies.UI
 						Game1.playSound("grassyStep");
 						break;
 					}
+				case "Eyes":
+					{
+						List<string> all_eyes = ModEntry.getContentPackOptions(ModEntry.eyesOptions, who.IsMale).ToList();
+						int current_index = all_eyes.IndexOf((who.modData.ContainsKey("DB.eyes")) ? who.modData["DB.eyes"] : "Default");
+						current_index += change;
+						if (current_index >= all_eyes.Count)
+						{
+							current_index = 0;
+						}
+						else if (current_index < 0)
+						{
+							current_index = all_eyes.Count() - 1;
+						}
+						pbe.SetModData(who, "DB.eyes", all_eyes[current_index]);
+
+						Game1.playSound("grassyStep");
+						break;
+					}
+				case "Nose":
+					{
+						List<string> all_noses = ModEntry.getContentPackOptions(ModEntry.noseOptions, who.IsMale).ToList();
+						int current_index = all_noses.IndexOf((who.modData.ContainsKey("DB.nose")) ? who.modData["DB.nose"] : "Default");
+						current_index += change;
+						if (current_index >= all_noses.Count)
+						{
+							current_index = 0;
+						}
+						else if (current_index < 0)
+						{
+							current_index = all_noses.Count() - 1;
+						}
+						pbe.SetModData(who, "DB.nose", all_noses[current_index]);
+
+						Game1.playSound("grassyStep");
+						break;
+					}
+				case "Ears":
+					{
+						List<string> all_ears = ModEntry.getContentPackOptions(ModEntry.earsOptions, who.IsMale).ToList();
+						int current_index = all_ears.IndexOf((who.modData.ContainsKey("DB.ears")) ? who.modData["DB.ears"] : "Default");
+						current_index += change;
+						if (current_index >= all_ears.Count)
+						{
+							current_index = 0;
+						}
+						else if (current_index < 0)
+						{
+							current_index = all_ears.Count() - 1;
+						}
+						pbe.SetModData(who, "DB.ears", all_ears[current_index]);
+
+						Game1.playSound("grassyStep");
+						break;
+					}
 				case "Arm":
 					{
 						List<string> all_arms = ModEntry.getContentPackOptions(ModEntry.armOptions, who.IsMale).ToList();
@@ -565,6 +614,7 @@ namespace DynamicBodies.UI
 						{
 							current_index = all_bh.Count() - 1;
 						}
+						ModEntry.debugmsg("Change bodyhair", LogLevel.Debug);
 						pbe.SetModData(who, "DB.bodyHair", all_bh[current_index]);
 						
 						Game1.playSound("grassyStep");
@@ -1051,28 +1101,13 @@ namespace DynamicBodies.UI
 			{
                 if (clothingToggles["pants"].showing)
                 {
-					if (who.pantsItem.Value != null)
-					{
-						clothingToggles["pants"].storeItem = who.pantsItem.Value as Item;
-						who.pantsItem.Set(null);
-					}
-					else
-					{
-						clothingToggles["pants"].store = who.GetPantsIndex();
-						who.changePantStyle(14, false);
-					}
+					clothingToggles["pants"].storeItem = who.pantsItem.Value as Item;
+					who.pantsItem.Set(null);
 					Game1.playSound("scissors");
 				}
                 else
                 {
-					if (clothingToggles["pants"].storeItem != null)
-					{
-						who.pantsItem.Set(clothingToggles["pants"].storeItem as Clothing);
-					}
-					else
-					{
-						who.changePantStyle(clothingToggles["pants"].store);
-					}
+					who.pantsItem.Set(clothingToggles["pants"].storeItem as Clothing);
 					Game1.playSound("pickUpItem");
 				}
 				clothingToggles["pants"].showing = !clothingToggles["pants"].showing;
@@ -1083,14 +1118,14 @@ namespace DynamicBodies.UI
 			{
 				if (clothingToggles["shoes"].showing)
 				{
-					clothingToggles["shoes"].store = who.shoes.Get();
-					who.shoes.Set(12);
+					clothingToggles["shoes"].storeItem = who.boots.Get() as Item;
+					who.boots.Set(null);
 			
 					Game1.playSound("scissors");
 				}
 				else
 				{
-					who.shoes.Set(clothingToggles["shoes"].store);
+					who.boots.Set(clothingToggles["shoes"].storeItem as Boots);
 					Game1.playSound("pickUpItem");
 				}
 				clothingToggles["shoes"].showing = !clothingToggles["shoes"].showing;
@@ -1419,6 +1454,21 @@ namespace DynamicBodies.UI
 				{
 					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
 					tiny_sub = (who.modData.ContainsKey("DB.face")) ? who.modData["DB.face"] : "Default";
+				}
+				else if (c3 == this.eyesLabel)
+				{
+					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
+					tiny_sub = (who.modData.ContainsKey("DB.eyes")) ? who.modData["DB.eyes"] : "Default";
+				}
+				else if (c3 == this.earsLabel)
+				{
+					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
+					tiny_sub = (who.modData.ContainsKey("DB.ears")) ? who.modData["DB.ears"] : "Default";
+				}
+				else if (c3 == this.noseLabel)
+				{
+					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
+					tiny_sub = (who.modData.ContainsKey("DB.nose")) ? who.modData["DB.nose"] : "Default";
 				}
 				else if (c3 == this.armLabel)
 				{

@@ -36,6 +36,9 @@ namespace DynamicBodies.Data
         public BodyPartStyle vanilla;
         public BodyPartStyle body;
         public BodyPartStyle face;
+        public BodyPartStyle eyes;
+        public BodyPartStyle ears;
+        public BodyPartStyle nose;
         public BodyPartStyle arm;
         public BodyPartStyle beard;
         public BodyPartStyle bodyHair;
@@ -54,6 +57,7 @@ namespace DynamicBodies.Data
         {
 
             paletteCache = GetBasePalette();
+            paletteCache[3] = Color.Transparent.ToVector4();
 
             body = new BodyPartStyle("body");
 
@@ -61,6 +65,9 @@ namespace DynamicBodies.Data
             SetVanillaFile(baseTexture);
 
             face = new BodyPartStyle("face");
+            eyes = new BodyPartStyle("eyes");
+            ears = new BodyPartStyle("ears");
+            nose = new BodyPartStyle("nose");
             arm = new BodyPartStyle("arm");
             beard = new BodyPartStyle("beard");
             bodyHair = new BodyPartStyle("bodyHair");
@@ -148,6 +155,9 @@ namespace DynamicBodies.Data
             body.file = vanilla.file;
 
             face.SetDefault(who);
+            eyes.SetDefault(who);
+            ears.SetDefault(who);
+            nose.SetDefault(who);
             arm.SetDefault(who);
             beard.SetDefault(who);
             bodyHair.SetDefault(who);
@@ -166,14 +176,31 @@ namespace DynamicBodies.Data
                 {
                     change = true;
                 }
+            } else
+            {
+                change = true;
             }
             who.modData[key] = value;
             if (change)
             {
                 if (dirtyLayers.ContainsKey(key.Substring(3)))
                 {
+                    ModEntry.debugmsg($"Change happened - {key.Substring(3)}", LogLevel.Debug);
                     dirtyLayers[key.Substring(3)] = true;
                 }
+                switch (key)
+                {
+                    case "DB.eyes":
+                    case "DB.nose":
+                    case "DB.ears":
+                        dirtyLayers["face"] = true;
+                        dirtyLayers["baseTexture"] = true;
+                        break;
+                    case "DB.body":
+                        dirtyLayers["baseTexture"] = true;
+                        break;
+                }
+                
                 UpdateTextures(who);
             }
         }
@@ -199,11 +226,14 @@ namespace DynamicBodies.Data
         {
             PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
 
+            //Set sprite dirty base 
+            pbe.dirtyLayers["sprite"] = pbe.dirtyLayers["baseTexture"] || pbe.dirtyLayers["face"];
+
             //Check for custom body
             if (!pbe.body.OptionMatchesModData(who))
             {
                 pbe.body.SetOptionFromModData(who, ModEntry.bodyOptions);
-                pbe.dirtyLayers["baseTexture"] = true;
+                pbe.dirtyLayers["sprite"] = true;
                 pbe.dirty = true;
             }
 
@@ -211,7 +241,31 @@ namespace DynamicBodies.Data
             if (!pbe.face.OptionMatchesModData(who))
             {
                 pbe.face.SetOptionFromModData(who, ModEntry.faceOptions);
-                pbe.dirtyLayers["baseTexture"] = true;
+                pbe.dirtyLayers["sprite"] = true;
+                pbe.dirty = true;
+            }
+
+            //Check for custom eyes
+            if (!pbe.eyes.OptionMatchesModData(who))
+            {
+                pbe.eyes.SetOptionFromModData(who, ModEntry.eyesOptions);
+                pbe.dirtyLayers["sprite"] = true;
+                pbe.dirty = true;
+            }
+
+            //Check for custom ears
+            if (!pbe.ears.OptionMatchesModData(who))
+            {
+                pbe.ears.SetOptionFromModData(who, ModEntry.earsOptions);
+                pbe.dirtyLayers["sprite"] = true;
+                pbe.dirty = true;
+            }
+
+            //Check for custom nose
+            if (!pbe.nose.OptionMatchesModData(who))
+            {
+                pbe.nose.SetOptionFromModData(who, ModEntry.noseOptions);
+                pbe.dirtyLayers["sprite"] = true;
                 pbe.dirty = true;
             }
 

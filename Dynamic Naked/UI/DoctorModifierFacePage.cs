@@ -211,40 +211,40 @@ namespace DynamicBodies.UI
 			//Next line
 			yOffset += 68;
 
-			//Body Style
-			/*leftSelectionButtons.Add(new ClickableTextureComponent("Body", new Rectangle(base.xPositionOnScreen + leftPadding + leftSelectionXOffset - arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
+			//Eyes Style
+			this.leftSelectionButtons.Add(new ClickableTextureComponent("Eyes", new Rectangle(base.xPositionOnScreen + leftPadding + leftSelectionXOffset - arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
 			{
-				myID = region_bodyLeft,
+				myID = region_eyesLeft,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
 				downNeighborID = -99998
 			});
-			bodyLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + leftPadding + (label_col1_width / 2) + (leftSelectionXOffset / 2), base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("body_style"));
-			this.labels.Add(bodyLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Body", new Rectangle(base.xPositionOnScreen + leftPadding + label_col1_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
+			this.labels.Add(eyesLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + leftPadding + (label_col1_width / 2) + (leftSelectionXOffset / 2), base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("eyes_style")));
+			this.rightSelectionButtons.Add(new ClickableTextureComponent("Eyes", new Rectangle(base.xPositionOnScreen + leftPadding + label_col1_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
 			{
-				myID = region_bodyRight,
+				myID = region_eyesRight,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
 				downNeighborID = -99998
 			});
 
-			//Arm Style
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Arm", new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
+
+			//Ears Style
+			this.leftSelectionButtons.Add(new ClickableTextureComponent("Ears", new Rectangle(label_col2_position, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
 			{
-				myID = region_armLeft,
+				myID = region_earsLeft,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
 				downNeighborID = -99998
 			});
-			armLabel = new ClickableComponent(new Rectangle(label_col2_position + arrow_size / 2 + label_col1_width / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("arm_style"));
-			this.labels.Add(armLabel);
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Arm", new Rectangle(label_col2_position + label_col1_width + arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
+			earsLabel = new ClickableComponent(new Rectangle(label_col2_position + arrow_size / 2 + label_col1_width / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("ears_style"));
+			this.labels.Add(earsLabel);
+			this.rightSelectionButtons.Add(new ClickableTextureComponent("Ears", new Rectangle(label_col2_position + label_col1_width + arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
 			{
-				myID = region_armRight,
+				myID = region_earsRight,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
@@ -253,8 +253,26 @@ namespace DynamicBodies.UI
 
 			//Next line
 			yOffset += 68;
-			*/
 			
+			//Nose Style
+			this.leftSelectionButtons.Add(new ClickableTextureComponent("Nose", new Rectangle(base.xPositionOnScreen + leftPadding + leftSelectionXOffset - arrow_size / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
+			{
+				myID = region_noseLeft,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			});
+			this.labels.Add(noseLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + leftPadding + (label_col1_width / 2) + (leftSelectionXOffset / 2), base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), T("nose_style")));
+			this.rightSelectionButtons.Add(new ClickableTextureComponent("Nose", new Rectangle(base.xPositionOnScreen + leftPadding + label_col1_width, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
+			{
+				myID = region_noseRight,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			});
+
 
 			if (Game1.options.snappyMenus && Game1.options.gamepadControls)
 			{

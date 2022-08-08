@@ -56,6 +56,9 @@ namespace DynamicBodies
         //Content pack options
         public static List<ContentPackOption> bodyOptions = new List<ContentPackOption>();
         public static List<ContentPackOption> faceOptions = new List<ContentPackOption>();
+        public static List<ContentPackOption> eyesOptions = new List<ContentPackOption>();
+        public static List<ContentPackOption> earsOptions = new List<ContentPackOption>();
+        public static List<ContentPackOption> noseOptions = new List<ContentPackOption>();
         public static List<ContentPackOption> armOptions = new List<ContentPackOption>();
         public static List<ContentPackOption> bodyHairOptions = new List<ContentPackOption>();
         public static List<ContentPackOption> beardOptions = new List<ContentPackOption>();
@@ -164,6 +167,21 @@ namespace DynamicBodies
                 else
                 {
                     context.Monitor.Log($"Sorry, please delete {context.Helper.DirectoryPath}\\debug_sprite.png.", LogLevel.Debug);
+                }
+            });
+
+            helper.ConsoleCommands.Add("db_bh", "Saves a png of the cached bodyhair in mod folder.", delegate (string command, string[] args) {
+                if (!File.Exists($"{context.Helper.DirectoryPath}\\debug_bh.png"))
+                {
+                    Stream stream = File.Create($"{context.Helper.DirectoryPath}\\debug_bh.png");
+                    Farmer who = Game1.player;
+                    PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
+                    pbe.bodyHair.texture.SaveAsPng(stream, pbe.bodyHair.texture.Width, pbe.bodyHair.texture.Height);
+                    context.Monitor.Log($"OK, saved {context.Helper.DirectoryPath}\\debug_bh.png.", LogLevel.Debug);
+                }
+                else
+                {
+                    context.Monitor.Log($"Sorry, please delete {context.Helper.DirectoryPath}\\debug_bh.png.", LogLevel.Debug);
                 }
             });
 
@@ -588,6 +606,9 @@ namespace DynamicBodies
                     ContentPack data = contentPack.ReadJsonFile<ContentPack>("content.json");
                     bodyOptions.AddRange(data.GetOptions(contentPack, "bodyStyles"));
                     faceOptions.AddRange(data.GetOptions(contentPack, "faces"));
+                    eyesOptions.AddRange(data.GetOptions(contentPack, "eyes"));
+                    earsOptions.AddRange(data.GetOptions(contentPack, "ears"));
+                    noseOptions.AddRange(data.GetOptions(contentPack, "nose"));
                     armOptions.AddRange(data.GetOptions(contentPack, "arms"));
                     bodyHairOptions.AddRange(data.GetOptions(contentPack, "bodyHair"));
                     beardOptions.AddRange(data.GetOptions(contentPack, "beards"));
