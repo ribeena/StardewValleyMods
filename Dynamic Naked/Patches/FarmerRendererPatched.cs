@@ -21,7 +21,11 @@ namespace DynamicBodies.Patches
 {
     public class FarmerRendererPatched
     {
-		public FarmerRendererPatched(Harmony harmony)
+
+        public static RenderTarget2D renderTarget;
+        public static RenderTarget2D _cachedRenderer;
+
+        public FarmerRendererPatched(Harmony harmony)
 		{
 
 			//Intervene with the loading process so we can store separate textures per user
@@ -455,6 +459,56 @@ namespace DynamicBodies.Patches
                 }
             }
 
+            /*
+             //https://github.com/Floogen/DynamicReflections/blob/development/DynamicReflections/Framework/Utilities/SpriteBatchToolkit.cs
+
+            SpriteBatchToolkit.StartRendering(DynamicReflections.playerWaterReflectionRender);
+
+                var currentRenderer = Game1.graphics.GraphicsDevice.GetRenderTargets();
+                if (currentRenderer is not null && currentRenderer.Length > 0 && currentRenderer[0].RenderTarget is not null)
+                {
+                    _cachedRenderer = currentRenderer[0].RenderTarget as RenderTarget2D;
+                }
+
+                Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget2D);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+            DrawReflectionViaMatrix();
+
+            // Drop the render target
+            SpriteBatchToolkit.StopRendering();
+                Game1.graphics.GraphicsDevice.SetRenderTarget(_cachedRenderer);
+                _cachedRenderer = null;
+
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+
+
+            if (renderTarget2D is not null)
+            {
+                renderTarget2D.Dispose();
+            }
+
+            var height = Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight;
+            var width = Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth;
+            if (shouldUseScreenDimensions is true && Game1.game1 is not null && Game1.game1.screen is not null)
+            {
+                height = Game1.game1.screen.Height;
+                width = Game1.game1.screen.Width;
+            }
+
+            renderTarget2D = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                width,
+                height,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+
+            */
+
+
             if (pbe.sourceImage != null)
             {
                 //Use a pixel shader to handle the recolouring
@@ -464,6 +518,12 @@ namespace DynamicBodies.Patches
                 RenderTarget2D renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, pbe.sourceImage.Width, pbe.sourceImage.Height, false, Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.Depth24);
                 //Store current render targets
                 RenderTargetBinding[] currentRenderTargets = Game1.graphics.GraphicsDevice.GetRenderTargets();
+
+                if (currentRenderTargets is not null && currentRenderTargets.Length > 0 && currentRenderTargets[0].RenderTarget is not null)
+                {
+                    _cachedRenderer = currentRenderTargets[0].RenderTarget as RenderTarget2D;
+                }
+
                 Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget);
 
                 Game1.graphics.GraphicsDevice.Clear(Color.FromNonPremultiplied(255, 0, 255, 0));
@@ -479,8 +539,13 @@ namespace DynamicBodies.Patches
                 renderTarget.GetData(pixel_data);
                 pbe.cacheImage.SetData(pixel_data);
 
-                //return current render targets
-                Game1.graphics.GraphicsDevice.SetRenderTargets(currentRenderTargets);
+                if (renderTarget is not null)
+                {
+                    renderTarget.Dispose();
+                }
+                //return current render target
+                Game1.graphics.GraphicsDevice.SetRenderTarget(_cachedRenderer);
+                _cachedRenderer = null;
 
 
                 //Overlay the bodyhair onto the base skin

@@ -412,24 +412,40 @@ namespace DynamicBodies.Data
             ModEntry.hairRamp.Parameters["xColor"].SetValue(who.hairstyleColor.Value.ToVector4());
             ModEntry.hairRamp.Parameters["xDarkColor"].SetValue(hairdark.ToVector4());
 
-            RenderTarget2D renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, hairText2D.Width, hairText2D.Height, false, Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.Depth24);
+            FarmerRendererPatched.renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, hairText2D.Width, hairText2D.Height, false, Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.Depth24);
             //Store current render targets
             RenderTargetBinding[] currentRenderTargets = Game1.graphics.GraphicsDevice.GetRenderTargets();
-            Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget);
+            Game1.graphics.GraphicsDevice.SetRenderTarget(FarmerRendererPatched.renderTarget);
 
-            Game1.graphics.GraphicsDevice.Clear(Color.FromNonPremultiplied(0, 0, 0, 0));
-            using (SpriteBatch sb = new SpriteBatch(renderTarget.GraphicsDevice))
+            if (currentRenderTargets is not null && currentRenderTargets.Length > 0 && currentRenderTargets[0].RenderTarget is not null)
+            {
+                FarmerRendererPatched._cachedRenderer = currentRenderTargets[0].RenderTarget as RenderTarget2D;
+            }
+
+            Game1.graphics.GraphicsDevice.SetRenderTarget(FarmerRendererPatched.renderTarget);
+
+            Game1.graphics.GraphicsDevice.Clear(Color.FromNonPremultiplied(255, 0, 255, 0));
+
+            using (SpriteBatch sb = new SpriteBatch(FarmerRendererPatched.renderTarget.GraphicsDevice))
             {
                 sb.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, effect: ModEntry.hairRamp);
                 sb.Draw(hairText2D, new Rectangle(0, 0, hairText2D.Width, hairText2D.Height), Color.White);
                 sb.End();
             }
-            Color[] pixel_data = new Color[renderTarget.Width * renderTarget.Height];
-            renderTarget.GetData(pixel_data);
+
+            Color[] pixel_data = new Color[FarmerRendererPatched.renderTarget.Width * FarmerRendererPatched.renderTarget.Height];
+            FarmerRendererPatched.renderTarget.GetData(pixel_data);
             texture.SetData(pixel_data);
 
-            //return current render targets
-            Game1.graphics.GraphicsDevice.SetRenderTargets(currentRenderTargets);
+
+            if (FarmerRendererPatched.renderTarget is not null)
+            {
+                FarmerRendererPatched.renderTarget.Dispose();
+            }
+
+            //return current render target
+            Game1.graphics.GraphicsDevice.SetRenderTarget(FarmerRendererPatched._cachedRenderer);
+            FarmerRendererPatched._cachedRenderer = null;
 
             return texture;
         }
@@ -525,6 +541,12 @@ namespace DynamicBodies.Data
             RenderTarget2D renderTarget = new RenderTarget2D(Game1.graphics.GraphicsDevice, source_texture.Width, source_texture.Height, false, Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat, DepthFormat.Depth24);
             //Store current render targets
             RenderTargetBinding[] currentRenderTargets = Game1.graphics.GraphicsDevice.GetRenderTargets();
+
+            if (currentRenderTargets is not null && currentRenderTargets.Length > 0 && currentRenderTargets[0].RenderTarget is not null)
+            {
+                FarmerRendererPatched._cachedRenderer = currentRenderTargets[0].RenderTarget as RenderTarget2D;
+            }
+
             Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget);
 
             Game1.graphics.GraphicsDevice.Clear(Color.FromNonPremultiplied(0, 0, 0, 0));
@@ -538,8 +560,14 @@ namespace DynamicBodies.Data
             renderTarget.GetData(pixel_data);
             texture.SetData(pixel_data);
 
+            if (FarmerRendererPatched.renderTarget is not null)
+            {
+                FarmerRendererPatched.renderTarget.Dispose();
+            }
             //return current render targets
-            Game1.graphics.GraphicsDevice.SetRenderTargets(currentRenderTargets);
+            //return current render target
+            Game1.graphics.GraphicsDevice.SetRenderTarget(FarmerRendererPatched._cachedRenderer);
+            FarmerRendererPatched._cachedRenderer = null;
 
             return texture;
         }
