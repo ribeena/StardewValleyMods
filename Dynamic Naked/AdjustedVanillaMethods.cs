@@ -258,8 +258,8 @@ namespace DynamicBodies
 		}
 		public static void drawEyes(FarmerRenderer farmerRenderer, ref Vector2 _rotationAdjustment, ref Vector2 _positionOffset, ref Texture2D _baseTexture, SpriteBatch b, FarmerSprite.AnimationFrame animationFrame, int currentFrame, Rectangle sourceRect, Vector2 position, Vector2 origin, float layerDepth, int facingDirection, Color overrideColor, float rotation, float scale, Farmer who)
 		{
-			//sourceRect.Offset(288, 0); //Source rect isn't used 
-			if (who.currentEyes != 0 && //open
+            //sourceRect.Offset(288, 0); //Source rect isn't used
+			if ((who.currentEyes != 0 || facingDirection == 3) && //dont draw over when open or do when open but looking left
                 facingDirection != 0 && //looking up
                 (Game1.timeOfDay < 2600 || (who.isInBed.Value && who.timeWentToBed.Value != 0)) &&//2am pass out
                 ((!who.FarmerSprite.PauseForSingleAnimation && !who.UsingTool) || (who.UsingTool && who.CurrentTool is FishingRod)) && //Fishing is ignored?
@@ -282,11 +282,12 @@ namespace DynamicBodies
                 //Drawing from the top left frame (0) - not sure what this part is for..? A hacky draw over eyes with skin color?
                 //b.Draw(_baseTexture, position + origin + _positionOffset + new Vector2(x_adjustment, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + ((who.IsMale && who.FacingDirection != 2) ? 36 : 40)),
                 //    new Rectangle(5, 16, (facingDirection == 2) ? 6 : 2, 2), overrideColor, 0f, origin, 4f * scale, SpriteEffects.None, layerDepth + 5E-08f);
-
-                //Draw over eyes with skin colour, new frame location
-                b.Draw(_baseTexture, position + origin + _positionOffset + new Vector2(x_adjustment, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + ((who.IsMale && who.FacingDirection != 2) ? 36 : 44)),
-                    new Rectangle(258, 2, (facingDirection == 2) ? 6 : 2, 2), overrideColor, 0f, origin, 4f * scale, SpriteEffects.None, layerDepth + 5E-08f);
-
+                if (who.currentEyes != 0)
+                {
+                    //Draw over eyes with skin colour, new frame location
+                    b.Draw(_baseTexture, position + origin + _positionOffset + new Vector2(x_adjustment, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + ((who.IsMale && who.FacingDirection != 2) ? 36 : 44)),
+                        new Rectangle(258, 2, (facingDirection == 2) ? 6 : 2, 2), overrideColor, 0f, origin, 4f * scale, SpriteEffects.None, layerDepth + 5E-08f);
+                }
                 //Drawing from the animation frames
                 Vector2 offsetFrame = new Vector2(x_adjustment, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + 44);
                 if(facingDirection == 1 || facingDirection == 3)
@@ -300,8 +301,16 @@ namespace DynamicBodies
                 {
                     offsetFrame.Y += 4;
                 }
+
+                int pixel_y = 2 + (who.currentEyes - 1) * 2;
+
+                if (facingDirection == 3 && who.currentEyes == 0)
+                {
+                    pixel_y = 6;//open eye
+                }
+
                 b.Draw(_baseTexture, position + origin + _positionOffset + offsetFrame,
-                    new Rectangle(264 + ((facingDirection == 3) ? 4 : 0), 2 + (who.currentEyes - 1) * 2, (facingDirection == 2) ? 6 : 2, 2), overrideColor, 0f, origin, 4f * scale, SpriteEffects.None, layerDepth + 1.2E-07f);
+                    new Rectangle(264 + ((facingDirection == 3) ? 4 : 0), pixel_y, (facingDirection == 2) ? 6 : 2, 2), overrideColor, 0f, origin, 4f * scale, SpriteEffects.None, layerDepth + 1.2E-07f);
 			}
 		}
 

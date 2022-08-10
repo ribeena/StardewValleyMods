@@ -4,6 +4,7 @@
 	"body": "Body",
 	"face": "Face",
 	"lash_color":"Lash color",
+	"sclera_color":"Sclera color",
 	"eyes_style": "Eyes Style",
 	"ears_style": "Ears Style",
 	"nose_style": "Nose Style",

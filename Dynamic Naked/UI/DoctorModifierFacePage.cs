@@ -111,6 +111,15 @@ namespace DynamicBodies.UI
 				downNeighborID = -99998
 			});
 
+			eyeToggleButton = new ClickableComponent(new Rectangle(top.X + swatchsize * 4 + 16, top.Y + 12+4, 16*2, 16*2), "EyeToggle")
+			{
+				myID = region_eyeToggle,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			};
+
 			//Next line
 			yOffset += 58;
 

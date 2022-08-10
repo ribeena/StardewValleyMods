@@ -705,7 +705,7 @@ namespace DynamicBodies.Patches
 
         private static Color changeBrightness(Color c, Color amount, bool lighter = true)
         {
-            int adjust = lighter ? -1 : 1;
+            int adjust = lighter ? 1 : -1;
             c.R = (byte)Math.Min(255, Math.Max(0, c.R + amount.R * adjust));
             c.G = (byte)Math.Min(255, Math.Max(0, c.G + amount.G * adjust));
             c.B = (byte)Math.Min(255, Math.Max(0, c.B + amount.B * adjust));
@@ -751,7 +751,7 @@ namespace DynamicBodies.Patches
             if (!lightest_s_color.Equals(Color.Transparent))
             {
                 //Difference in the white/grey colour
-                darken = new Color(49, 62, 77);
+                darken = new Color(65, 85, 84);
 
                 Color darker_s_color = changeBrightness(lightest_s_color, darken, false);
                 if (lightest_s_color.Equals(darker_s_color))

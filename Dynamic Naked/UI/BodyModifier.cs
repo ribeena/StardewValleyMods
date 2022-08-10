@@ -21,15 +21,22 @@ namespace DynamicBodies.UI
 		public int cost = 0;
 		private bool isWizardSubmenu = false;
 
+		public int eyeToggleState = 0;
+
 		public const int region_okbutton = 505, region_backbutton = 81114, region_accLeft = 516, region_accRight = 517, region_directionLeft = 520, region_directionRight = 521;
 		public const int region_hairLeft = 514, region_hairRight = 515, region_bodyLeft = 516, region_bodyRight = 517, region_faceLeft = 416, region_faceRight = 417;
 		public const int region_eyesLeft = 418, region_eyesRight = 419, region_earsLeft = 420, region_earsRight = 421, region_noseLeft = 422, region_noseRight = 423;
 		public const int region_armLeft = 518, region_armRight = 519, region_beardLeft = 520, region_beardRight = 521;
 		public const int region_bodyHairLeft = 531, region_bodyHairRight = 532, region_nakedLeft = 533, region_nakedRight = 534, region_nakedLeftU = 535, region_nakedRightU = 536;
 
-		public const int region_colorPicker1 = 522, region_colorPicker2 = 523, region_colorPicker3 = 524;
-		public const int region_colorPicker4 = 525, region_colorPicker5 = 526, region_colorPicker6 = 527;
-		public const int region_colorPicker7 = 528, region_colorPicker8 = 529, region_colorPicker9 = 530;
+		public const int region_colorPicker1 = 522, region_colorPicker2 = 523, region_colorPicker3 = 524;//eye
+		public const int region_colorPicker4 = 525, region_colorPicker5 = 526, region_colorPicker6 = 527;//hair
+		public const int region_colorPicker7 = 528, region_colorPicker8 = 529, region_colorPicker9 = 530;//dark hair
+
+		public const int region_colorPicker10 = 650, region_colorPicker11 = 651, region_colorPicker12 = 652;//lashes
+		public const int region_colorPicker13 = 653, region_colorPicker14 = 654, region_colorPicker15 = 655;//sclera
+
+		public const int region_eyeToggle = 600;
 
 		public const int region_eyeSwatch1 = 701, region_eyeSwatch2 = 702, region_eyeSwatch3 = 703, region_eyeSwatch4 = 704;
 		public const int region_hairSwatch1 = 705, region_hairSwatch2 = 706, region_hairSwatch3 = 707, region_hairSwatch4 = 708;
@@ -52,6 +59,8 @@ namespace DynamicBodies.UI
 		public ClickableComponent shirtButton;
 		public ClickableComponent pantsButton;
 		public ClickableComponent shoesButton;
+
+		public ClickableComponent eyeToggleButton;
 
 		public List<ClickableComponent> labels = new List<ClickableComponent>();
 		public List<ClickableComponent> swatches = new List<ClickableComponent>();
@@ -87,6 +96,10 @@ namespace DynamicBodies.UI
 		private readonly Action _recolorHairAction;
 		public ColorPicker eyeColorPicker;
 		private readonly Action _recolorEyesAction;
+		public ColorPicker lashColorPicker;
+		private readonly Action _recolorLashAction;
+		public ColorPicker scleraColorPicker;
+		private readonly Action _recolorScleraAction;
 		private int colorPickerTimer;
 		private ColorPicker _sliderOpTarget;
 		private ColorPicker lastHeldColorPicker;
@@ -100,7 +113,7 @@ namespace DynamicBodies.UI
 		protected Farmer _displayFarmer;
 		public Rectangle portraitBox;
 
-		Texture2D UItexture;
+		protected Texture2D UItexture;
 		private int eyeSwatch = 0;
 		public Color[] eyeSwatchColors;
 		private int hairSwatch = 0;
@@ -142,6 +155,15 @@ namespace DynamicBodies.UI
 				settingsBefore["DB.darkHair"] = new Color(57, 57, 57).PackedValue.ToString();
 			}
 
+			if (who.modData.ContainsKey("DB.eyeColorR"))
+			{
+				settingsBefore["DB.eyeColorR"] = who.modData["DB.eyeColorR"];
+			} else
+            {
+				settingsBefore["DB.eyeColorR"] = who.newEyeColor.Value.PackedValue.ToString();
+				who.modData["DB.eyeColorR"] = settingsBefore["DB.eyeColorR"];
+			}
+
 			if (who.modData.ContainsKey("DB.lash"))
 			{
 				settingsBefore["DB.lash"] = who.modData["DB.lash"];
@@ -150,6 +172,8 @@ namespace DynamicBodies.UI
 			{
 				settingsBefore["DB.lash"] = new Color(15, 10, 8).PackedValue.ToString();
 			}
+
+			eyeToggleState = 0;
 
 			this.accessoryOptions = new List<int> { 0, 1, 2, 3, 4, 5 };
 			this.UItexture = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Interface/ui.png");
@@ -165,13 +189,28 @@ namespace DynamicBodies.UI
 
 			this._recolorEyesAction = delegate
 			{
-				who.changeEyeColor(this.eyeColorPicker.getSelectedColor());
+				if(eyeToggleState == 0 || eyeToggleState == 2)
+                {
+					pbe.SetModData(who, "DB.eyeColorR", this.eyeColorPicker.getSelectedColor().PackedValue.ToString());
+				}
+				if (eyeToggleState == 0 || eyeToggleState == 1)
+				{
+					who.changeEyeColor(this.eyeColorPicker.getSelectedColor());
+				}
 			};
 			this._recolorHairAction = delegate
 			{
 				who.changeHairColor(this.hairColorPicker.getSelectedColor());
 				who.modData["DB.darkHair"] = this.hairDarkColorPicker.getSelectedColor().PackedValue.ToString();
 				ModEntry.MakePlayerDirty();
+			};
+			this._recolorLashAction = delegate
+			{
+				pbe.SetModData(who, "DB.lash", this.lashColorPicker.getSelectedColor().PackedValue.ToString());
+			};
+			this._recolorScleraAction = delegate
+			{
+				pbe.SetModData(who, "DB.eyeColorS", this.scleraColorPicker.getSelectedColor().PackedValue.ToString());
 			};
 			this._displayFarmer = this.GetOrCreateDisplayFarmer();
 
@@ -188,6 +227,22 @@ namespace DynamicBodies.UI
 		public override void update(GameTime time)
 		{
 			base.update(time);
+
+			if (this._sliderOpTarget != null)
+			{
+				Color col = this._sliderOpTarget.getSelectedColor();
+				if (this._sliderOpTarget.Dirty && this._sliderOpTarget.LastColor == col)
+				{
+					this._sliderAction();
+					this._sliderOpTarget.LastColor = this._sliderOpTarget.getSelectedColor();
+					this._sliderOpTarget.Dirty = false;
+					this._sliderOpTarget = null;
+				}
+				else
+				{
+					this._sliderOpTarget.LastColor = col;
+				}
+			}
 		}
 		//farmer for rendering
 		public Farmer GetOrCreateDisplayFarmer()
@@ -318,6 +373,7 @@ namespace DynamicBodies.UI
 			who.modData["DB." + pbe.bodyHair.name] = settingsBefore["DB." + pbe.bodyHair.name];
 			who.modData["DB." + pbe.nakedLower.name] = settingsBefore["DB." + pbe.nakedLower.name];
 			who.modData["DB." + pbe.nakedUpper.name] = settingsBefore["DB." + pbe.nakedUpper.name];
+			who.modData["DB.eyeColorR"] = settingsBefore["DB.eyeColorR"];
 			pbe.dirty = true;
 		}
 
@@ -714,11 +770,29 @@ namespace DynamicBodies.UI
 
 					if (eyeSwatch != 0)
 					{
-						who.changeEyeColor(eyeSwatchColors[eyeSwatch - 1]);
+						if (eyeToggleState == 0 || eyeToggleState == 2)
+						{
+							pbe.SetModData(who, "DB.eyeColorR", eyeSwatchColors[eyeSwatch - 1].PackedValue.ToString());
+						}
+						if (eyeToggleState == 0 || eyeToggleState == 1)
+						{
+							who.changeEyeColor(eyeSwatchColors[eyeSwatch - 1]);
+						}
+
+						
 					}
 					else
 					{
-						who.changeEyeColor(initEyeColor);
+						if (eyeToggleState == 0 || eyeToggleState == 2)
+						{
+							pbe.SetModData(who, "DB.eyeColorR", settingsBefore["DB.eyeColorR"]);
+						}
+						if (eyeToggleState == 0 || eyeToggleState == 1)
+						{
+							who.changeEyeColor(initEyeColor);
+						}
+
+						
 					}
 
 					Game1.playSound("purchase");
@@ -894,6 +968,48 @@ namespace DynamicBodies.UI
 							this._sliderOpTarget = this.hairDarkColorPicker;
 							this._sliderAction = this._recolorHairAction;
 							break;
+						case region_colorPicker10:
+							this.lashColorPicker.LastColor = this.lashColorPicker.getSelectedColor();
+							this.lashColorPicker.changeHue(1);
+							this.lashColorPicker.Dirty = true;
+							this._sliderOpTarget = this.lashColorPicker;
+							this._sliderAction = this._recolorLashAction;
+							break;
+						case region_colorPicker11:
+							this.lashColorPicker.LastColor = this.lashColorPicker.getSelectedColor();
+							this.lashColorPicker.changeSaturation(1);
+							this.lashColorPicker.Dirty = true;
+							this._sliderOpTarget = this.lashColorPicker;
+							this._sliderAction = this._recolorLashAction;
+							break;
+						case region_colorPicker12:
+							this.lashColorPicker.LastColor = this.lashColorPicker.getSelectedColor();
+							this.lashColorPicker.changeValue(1);
+							this.lashColorPicker.Dirty = true;
+							this._sliderOpTarget = this.lashColorPicker;
+							this._sliderAction = this._recolorLashAction;
+							break;
+						case region_colorPicker13:
+							this.scleraColorPicker.LastColor = this.scleraColorPicker.getSelectedColor();
+							this.scleraColorPicker.changeHue(1);
+							this.scleraColorPicker.Dirty = true;
+							this._sliderOpTarget = this.scleraColorPicker;
+							this._sliderAction = this._recolorScleraAction;
+							break;
+						case region_colorPicker14:
+							this.scleraColorPicker.LastColor = this.scleraColorPicker.getSelectedColor();
+							this.scleraColorPicker.changeSaturation(1);
+							this.scleraColorPicker.Dirty = true;
+							this._sliderOpTarget = this.scleraColorPicker;
+							this._sliderAction = this._recolorScleraAction;
+							break;
+						case region_colorPicker15:
+							this.scleraColorPicker.LastColor = this.scleraColorPicker.getSelectedColor();
+							this.scleraColorPicker.changeValue(1);
+							this.scleraColorPicker.Dirty = true;
+							this._sliderOpTarget = this.scleraColorPicker;
+							this._sliderAction = this._recolorScleraAction;
+							break;
 					}
 					break;
 				case Buttons.DPadLeft:
@@ -962,6 +1078,48 @@ namespace DynamicBodies.UI
 							this.hairDarkColorPicker.Dirty = true;
 							this._sliderOpTarget = this.hairDarkColorPicker;
 							this._sliderAction = this._recolorHairAction;
+							break;
+						case region_colorPicker10:
+							this.lashColorPicker.LastColor = this.lashColorPicker.getSelectedColor();
+							this.lashColorPicker.changeHue(-1);
+							this.lashColorPicker.Dirty = true;
+							this._sliderOpTarget = this.lashColorPicker;
+							this._sliderAction = this._recolorLashAction;
+							break;
+						case region_colorPicker11:
+							this.lashColorPicker.LastColor = this.lashColorPicker.getSelectedColor();
+							this.lashColorPicker.changeSaturation(-1);
+							this.lashColorPicker.Dirty = true;
+							this._sliderOpTarget = this.lashColorPicker;
+							this._sliderAction = this._recolorLashAction;
+							break;
+						case region_colorPicker12:
+							this.lashColorPicker.LastColor = this.lashColorPicker.getSelectedColor();
+							this.lashColorPicker.changeValue(-1);
+							this.lashColorPicker.Dirty = true;
+							this._sliderOpTarget = this.lashColorPicker;
+							this._sliderAction = this._recolorLashAction;
+							break;
+						case region_colorPicker13:
+							this.scleraColorPicker.LastColor = this.scleraColorPicker.getSelectedColor();
+							this.scleraColorPicker.changeHue(-1);
+							this.scleraColorPicker.Dirty = true;
+							this._sliderOpTarget = this.scleraColorPicker;
+							this._sliderAction = this._recolorScleraAction;
+							break;
+						case region_colorPicker14:
+							this.scleraColorPicker.LastColor = this.scleraColorPicker.getSelectedColor();
+							this.scleraColorPicker.changeSaturation(-1);
+							this.scleraColorPicker.Dirty = true;
+							this._sliderOpTarget = this.scleraColorPicker;
+							this._sliderAction = this._recolorScleraAction;
+							break;
+						case region_colorPicker15:
+							this.scleraColorPicker.LastColor = this.scleraColorPicker.getSelectedColor();
+							this.scleraColorPicker.changeValue(-1);
+							this.scleraColorPicker.Dirty = true;
+							this._sliderOpTarget = this.scleraColorPicker;
+							this._sliderAction = this._recolorScleraAction;
 							break;
 					}
 					break;
@@ -1067,6 +1225,27 @@ namespace DynamicBodies.UI
 				}
 			}
 
+			if (eyeToggleButton != null)
+			{
+				if (this.eyeToggleButton.containsPoint(x, y))
+				{
+					Game1.playSound("slimeHit");
+					eyeToggleState = (eyeToggleState + 1) % 3;
+					if(eyeColorPicker != null)
+                    {
+						if(eyeToggleState == 0 || eyeToggleState == 1)
+                        {
+							eyeColorPicker.setColor(who.newEyeColor.Value);
+						} else
+                        {
+							eyeColorPicker.setColor(new Color(uint.Parse(who.modData["DB.eyeColorR"])));
+                        }
+                    }
+					this.eyeToggleButton.scale -= 0.25f;
+					this.eyeToggleButton.scale = Math.Max(0.75f, this.eyeToggleButton.scale);
+				}
+			}
+
 			if (this.okButton.containsPoint(x, y) && canPay())
 			{
 				this.optionButtonClick(this.okButton.name);
@@ -1093,8 +1272,28 @@ namespace DynamicBodies.UI
 				this.lastHeldColorPicker = this.hairDarkColorPicker;
 			} else if (this.eyeColorPicker != null && this.eyeColorPicker.containsPoint(x, y))
 			{
-				who.changeEyeColor(this.eyeColorPicker.click(x, y));
+				if (eyeToggleState == 0 || eyeToggleState == 2)
+				{
+					pbe.SetModData(who, "DB.eyeColorR", this.eyeColorPicker.click(x, y).PackedValue.ToString());
+				}
+				if (eyeToggleState == 0 || eyeToggleState == 1)
+				{
+					who.changeEyeColor(this.eyeColorPicker.click(x, y));
+				}
+
 				this.lastHeldColorPicker = this.eyeColorPicker;
+			}
+			else if (this.lashColorPicker != null && this.lashColorPicker.containsPoint(x, y))
+			{
+				Color color2 = this.lashColorPicker.click(x, y);
+				pbe.SetModData(who, "DB.lash", color2.PackedValue.ToString());
+				this.lastHeldColorPicker = this.lashColorPicker;
+			}
+			else if (this.scleraColorPicker != null && this.scleraColorPicker.containsPoint(x, y))
+			{
+				Color color2 = this.scleraColorPicker.click(x, y);
+				pbe.SetModData(who, "DB.eyeColorS", color2.PackedValue.ToString());
+				this.lastHeldColorPicker = this.scleraColorPicker;
 			}
 
 			if (clothingToggles["pants"].active && clothingToggles["pants"].clickable.containsPoint(x, y))
@@ -1196,7 +1395,26 @@ namespace DynamicBodies.UI
 
 				if (this.lastHeldColorPicker.Equals(this.eyeColorPicker))
 				{
-					who.changeEyeColor(this.eyeColorPicker.clickHeld(x, y));
+					if (eyeToggleState == 0 || eyeToggleState == 2)
+					{
+						pbe.SetModData(who, "DB.eyeColorR", this.eyeColorPicker.click(x, y).PackedValue.ToString());
+					}
+					if (eyeToggleState == 0 || eyeToggleState == 1)
+					{
+						who.changeEyeColor(this.eyeColorPicker.click(x, y));
+					}
+				}
+
+				if (this.lastHeldColorPicker.Equals(this.lashColorPicker))
+				{
+					Color color2 = this.lashColorPicker.clickHeld(x, y);
+					pbe.SetModData(who, "DB.lash", color2.PackedValue.ToString());
+				}
+
+				if (this.lastHeldColorPicker.Equals(this.scleraColorPicker))
+				{
+					Color color2 = this.scleraColorPicker.clickHeld(x, y);
+					pbe.SetModData(who, "DB.eyeColorS", color2.PackedValue.ToString());
 				}
 			}
 			this.colorPickerTimer = 100;
@@ -1218,6 +1436,16 @@ namespace DynamicBodies.UI
 			if (this.eyeColorPicker != null)
 			{
 				this.eyeColorPicker.releaseClick();
+			}
+
+			if (this.lashColorPicker != null)
+			{
+				this.lashColorPicker.releaseClick();
+			}
+
+			if (this.scleraColorPicker != null)
+			{
+				this.scleraColorPicker.releaseClick();
 			}
 			this.lastHeldColorPicker = null;
 		}
@@ -1267,6 +1495,18 @@ namespace DynamicBodies.UI
 				}
 			}
 
+			if (eyeToggleButton != null)
+			{
+				if (this.eyeToggleButton.containsPoint(x, y))
+				{
+					this.eyeToggleButton.scale = Math.Min(this.eyeToggleButton.scale + 0.02f, 1.1f);
+				}
+				else
+				{
+					this.eyeToggleButton.scale = Math.Max(this.eyeToggleButton.scale - 0.02f, 1f);
+				}
+			}
+
 			if (this.okButton.containsPoint(x, y) && this.canPay())
 			{
 				this.okButton.scale = Math.Min(this.okButton.scale + 0.02f, this.okButton.baseScale + 0.1f);
@@ -1287,7 +1527,9 @@ namespace DynamicBodies.UI
 
 			if ((this.hairColorPicker != null && this.hairColorPicker.containsPoint(x, y))
 				|| (this.hairDarkColorPicker != null && this.hairDarkColorPicker.containsPoint(x, y))
-				|| (this.eyeColorPicker != null && this.eyeColorPicker.containsPoint(x, y)))
+				|| (this.eyeColorPicker != null && this.eyeColorPicker.containsPoint(x, y))
+				|| (this.scleraColorPicker != null && this.scleraColorPicker.containsPoint(x, y))
+				|| (this.lashColorPicker != null && this.lashColorPicker.containsPoint(x, y)))
 			{
 				Game1.SetFreeCursorDrag();
 			}
@@ -1549,6 +1791,26 @@ namespace DynamicBodies.UI
 			if (this.eyeColorPicker != null)
 			{
 				this.eyeColorPicker.draw(b);
+			}
+
+			if (this.lashColorPicker != null)
+			{
+				this.lashColorPicker.draw(b);
+			}
+
+			if (this.scleraColorPicker != null)
+			{
+				this.scleraColorPicker.draw(b);
+			}
+
+
+			if (this.eyeToggleButton != null)
+			{
+				b.Draw(UItexture, new Vector2(eyeToggleButton.bounds.X + 16*(1f - eyeToggleButton.scale), eyeToggleButton.bounds.Y + 16*(1f - eyeToggleButton.scale)), new Rectangle(0, 0, 16, 16), Color.White, 0f, Vector2.Zero, 2f*eyeToggleButton.scale, SpriteEffects.None, 1f);
+
+				if(eyeToggleState == 0 || eyeToggleState == 1)	b.Draw(UItexture, new Vector2(eyeToggleButton.bounds.X, eyeToggleButton.bounds.Y), new Rectangle(80, 0, 16, 16), Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 1f);
+				if (eyeToggleState == 0 || eyeToggleState == 2) b.Draw(UItexture, new Vector2(eyeToggleButton.bounds.X, eyeToggleButton.bounds.Y), new Rectangle(80, 16, 16, 16), Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 1f);
+
 			}
 
 			b.End();

@@ -191,6 +191,8 @@ namespace DynamicBodies.Data
                 switch (key)
                 {
                     case "DB.eyes":
+                    case "DB.eyeColorS":
+                    case "DB.eyeColorR":
                     case "DB.nose":
                     case "DB.ears":
                         dirtyLayers["face"] = true;
