@@ -44,6 +44,7 @@ namespace DynamicBodies.Data
         public BodyPartStyle bodyHair;
         public BodyPartStyle nakedUpper;
         public BodyPartStyle nakedLower;
+        public BodyPartStyle hairStyle;
 
         //Overlays/Accessories rendering
         public Dictionary<int, Texture2D> hairTextures = new Dictionary<int, Texture2D>();
@@ -73,6 +74,7 @@ namespace DynamicBodies.Data
             bodyHair = new BodyPartStyle("bodyHair");
             nakedLower = new BodyPartStyle("nakedLower");
             nakedUpper = new BodyPartStyle("nakedUpper");
+            hairStyle = new BodyPartStyle("hairStyle");
 
             dirtyLayers = new Dictionary<string, bool>() {
                 { "sprite",true },
@@ -163,6 +165,7 @@ namespace DynamicBodies.Data
             bodyHair.SetDefault(who);
             nakedLower.SetDefault(who);
             nakedUpper.SetDefault(who);
+            hairStyle.SetDefault(who);
 
             who.modData["DB.lash"] = new Color(15, 10, 8).PackedValue.ToString();
         }
@@ -200,6 +203,9 @@ namespace DynamicBodies.Data
                         break;
                     case "DB.body":
                         dirtyLayers["baseTexture"] = true;
+                        break;
+                    case "DB.hairStyle":
+                        dirtyLayers["hair"] = true;
                         break;
                 }
                 
@@ -292,6 +298,20 @@ namespace DynamicBodies.Data
             {
                 pbe.bodyHair.SetOptionFromModData(who, ModEntry.bodyHairOptions);
                 pbe.dirtyLayers["bodyHair"] = true;
+            }
+
+            //Check for hairStyle
+            if (!pbe.hairStyle.OptionMatchesModData(who))
+            {
+                pbe.hairStyle.SetOptionFromModData(who, ModEntry.hairOptions);
+                pbe.dirtyLayers["hair"] = true;
+            }
+            if (pbe.hairStyle.option == "Default")
+            {
+                //Copy the value from farmer sprite 
+                pbe.hairStyle.option = "Vanilla's " + who.hair.Value;
+                pbe.hairStyle.file = who.hair.Value.ToString();
+                who.modData["DB." + pbe.hairStyle.name] = pbe.hairStyle.option;
             }
 
             if (pbe.dirtyLayers["hair"])
@@ -623,7 +643,7 @@ namespace DynamicBodies.Data
             }
             else
             {
-                ContentPackOption choice = ModEntry.getContentPack(options, who.modData["DB." + name]);
+                ContentPackOption choice = ModEntry.getContentPack(options, who.modData["DB." + name], who.IsMale);
                 if (choice == null)
                 {
                     //Option not installed

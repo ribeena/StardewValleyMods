@@ -632,8 +632,12 @@ namespace DynamicBodies.Patches
                     {
                         faceText2D = pbe.face.provider.ModContent.Load<IRawTextureData>($"assets\\faces\\{pbe.face.file}{bald}.png");
                     }
-                    editor.PatchImage(faceText2D, new Rectangle(0, 0, faceText2D.Width, faceText2D.Height), targetArea: new Rectangle(0, 0, faceText2D.Width, faceText2D.Height), PatchMode.Overlay);
-
+                    editor.PatchImage(faceText2D, new Rectangle(0, 0, 96, faceText2D.Height), targetArea: new Rectangle(0, 0, 96, faceText2D.Height), PatchMode.Overlay);
+                    if(faceText2D.Width > 96)
+                    {
+                        //Add custom blink frames
+                        editor.PatchImage(faceText2D, new Rectangle(96, 0, 32, 24), targetArea: new Rectangle(256, 0, 32, 24), PatchMode.Replace);
+                    }
 
 
 
@@ -727,7 +731,7 @@ namespace DynamicBodies.Patches
                     if (eyesText2D.Width > 96)
                     {
                         //Add custom blink frames
-                        editor.PatchImage(eyesText2D, new Rectangle(96, 0, 32, eyesText2D.Height), targetArea: new Rectangle(256, 0, 32, eyesText2D.Height), PatchMode.Overlay);
+                        editor.PatchImage(eyesText2D, new Rectangle(96, 0, 32, 24), targetArea: new Rectangle(256, 0, 32, 24), PatchMode.Replace);
                     }
                 }
 
@@ -1124,30 +1128,46 @@ namespace DynamicBodies.Patches
                 }
 
                 ///////////////////////////////
-                /// Setup overlay for rendering new two tone hair
+                /// Setup overlay for rendering new two tone 43
                 /// 
                 int hair_style = who.getHair(); // (ignore_hat: true);
                 HairStyleMetadata hair_metadata = Farmer.GetHairStyleMetadata(who.hair.Value);
-                if (who != null && who.hat.Value != null && who.hat.Value.hairDrawType.Value == 1 && hair_metadata != null && hair_metadata.coveredIndex != -1)
+                if (pbe.hairStyle.option.StartsWith("Vanilla"))
                 {
-                    hair_style = hair_metadata.coveredIndex;
+                    //Use the modData version
+                    hair_style = int.Parse(pbe.hairStyle.file);
                     hair_metadata = Farmer.GetHairStyleMetadata(hair_style);
                 }
-                Rectangle hairstyleSourceOriginalRect = new Rectangle(hair_style * 16 % FarmerRenderer.hairStylesTexture.Width, hair_style * 16 / FarmerRenderer.hairStylesTexture.Width * 96, 16, 32 * 3);
 
-                Texture2D hair_texture;
-                if (hair_metadata != null)
+                Texture2D hair_texture = null;
+
+                if (pbe.hairStyle.option == "Default" || pbe.hairStyle.option.StartsWith("Vanilla"))
                 {
-                    hairstyleSourceOriginalRect = new Rectangle(hair_metadata.tileX * 16, hair_metadata.tileY * 16, 16, 32);
-                    if (hair_metadata.usesUniqueLeftSprite)
+                    if (who != null && who.hat.Value != null && who.hat.Value.hairDrawType.Value == 1 && hair_metadata != null && hair_metadata.coveredIndex != -1)
                     {
-                        hairstyleSourceOriginalRect.Height = 32 * 4;
+                        hair_style = hair_metadata.coveredIndex;
+                        hair_metadata = Farmer.GetHairStyleMetadata(hair_style);
                     }
-                    hair_texture = pbe.GetHairTexture(who, hair_style, hair_metadata.texture, hairstyleSourceOriginalRect);
+                    Rectangle hairstyleSourceOriginalRect = new Rectangle(hair_style * 16 % FarmerRenderer.hairStylesTexture.Width, hair_style * 16 / FarmerRenderer.hairStylesTexture.Width * 96, 16, 32 * 3);
+
+                    
+                    if (hair_metadata != null)
+                    {
+                        hairstyleSourceOriginalRect = new Rectangle(hair_metadata.tileX * 16, hair_metadata.tileY * 16, 16, 32);
+                        if (hair_metadata.usesUniqueLeftSprite)
+                        {
+                            hairstyleSourceOriginalRect.Height = 32 * 4;
+                        }
+                        hair_texture = pbe.GetHairTexture(who, hair_style, hair_metadata.texture, hairstyleSourceOriginalRect);
+                    }
+                    else
+                    {
+                        hair_texture = pbe.GetHairTexture(who, hair_style, FarmerRenderer.hairStylesTexture, hairstyleSourceOriginalRect);
+                    }
                 }
                 else
                 {
-                    hair_texture = pbe.GetHairTexture(who, hair_style, FarmerRenderer.hairStylesTexture, hairstyleSourceOriginalRect);
+                    //Custom hair rendering to come
                 }
 
                 //Cached and recoloured hair only has the one version
@@ -1166,34 +1186,37 @@ namespace DynamicBodies.Patches
 
                 }
 
-                bool flip = false;
-                switch (facingDirection)
+                if (hair_texture != null)
                 {
-                    case 0:
-                        hairstyleSourceRect.Offset(0, 64);
-                        b.Draw(hair_texture, position + origin + ___positionOffset + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + 4 + ((who.IsMale && hair_style >= 16) ? (-4) : ((!who.IsMale && hair_style < 16) ? 4 : 0))), hairstyleSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth + hair_draw_layer * (float)sort_direction);
-                        break;
-                    case 1:
-                        hairstyleSourceRect.Offset(0, 32);
-                        b.Draw(hair_texture, position + origin + ___positionOffset + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + ((who.IsMale && (int)who.hair.Value >= 16) ? (-4) : ((!who.IsMale && (int)who.hair.Value < 16) ? 4 : 0))), hairstyleSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth + hair_draw_layer * (float)sort_direction);
-
-                        break;
-                    case 2:
-                        b.Draw(hair_texture, position + origin + ___positionOffset + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + ((who.IsMale && (int)who.hair.Value >= 16) ? (-4) : ((!who.IsMale && (int)who.hair.Value < 16) ? 4 : 0))), hairstyleSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth + hair_draw_layer * (float)sort_direction);
-                        break;
-                    case 3:
-                        flip = true;
-                        if (hair_metadata != null && hair_metadata.usesUniqueLeftSprite)
-                        {
-                            flip = false;
-                            hairstyleSourceRect.Offset(0, 96);
-                        }
-                        else
-                        {
+                    bool flip = false;
+                    switch (facingDirection)
+                    {
+                        case 0:
+                            hairstyleSourceRect.Offset(0, 64);
+                            b.Draw(hair_texture, position + origin + ___positionOffset + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + 4 + ((who.IsMale && hair_style >= 16) ? (-4) : ((!who.IsMale && hair_style < 16) ? 4 : 0))), hairstyleSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth + hair_draw_layer * (float)sort_direction);
+                            break;
+                        case 1:
                             hairstyleSourceRect.Offset(0, 32);
-                        }
-                        b.Draw(hair_texture, position + origin + ___positionOffset + new Vector2(-FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + ((who.IsMale && (int)who.hair.Value >= 16) ? (-4) : ((!who.IsMale && (int)who.hair.Value < 16) ? 4 : 0))), hairstyleSourceRect, Color.White, rotation, origin, 4f * scale, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + hair_draw_layer * (float)sort_direction);
-                        break;
+                            b.Draw(hair_texture, position + origin + ___positionOffset + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + ((who.IsMale && (int)who.hair.Value >= 16) ? (-4) : ((!who.IsMale && (int)who.hair.Value < 16) ? 4 : 0))), hairstyleSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth + hair_draw_layer * (float)sort_direction);
+
+                            break;
+                        case 2:
+                            b.Draw(hair_texture, position + origin + ___positionOffset + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + ((who.IsMale && (int)who.hair.Value >= 16) ? (-4) : ((!who.IsMale && (int)who.hair.Value < 16) ? 4 : 0))), hairstyleSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth + hair_draw_layer * (float)sort_direction);
+                            break;
+                        case 3:
+                            flip = true;
+                            if (hair_metadata != null && hair_metadata.usesUniqueLeftSprite)
+                            {
+                                flip = false;
+                                hairstyleSourceRect.Offset(0, 96);
+                            }
+                            else
+                            {
+                                hairstyleSourceRect.Offset(0, 32);
+                            }
+                            b.Draw(hair_texture, position + origin + ___positionOffset + new Vector2(-FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + ((who.IsMale && (int)who.hair.Value >= 16) ? (-4) : ((!who.IsMale && (int)who.hair.Value < 16) ? 4 : 0))), hairstyleSourceRect, Color.White, rotation, origin, 4f * scale, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + hair_draw_layer * (float)sort_direction);
+                            break;
+                    }
                 }
 
                 //Draw naked

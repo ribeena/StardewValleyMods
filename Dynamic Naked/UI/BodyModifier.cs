@@ -142,7 +142,8 @@ namespace DynamicBodies.UI
 			settingsBefore["DB." + pbe.body.name] = pbe.body.GetOptionModData(who);
 			settingsBefore["DB." + pbe.arm.name] = pbe.arm.GetOptionModData(who);
 			settingsBefore["DB." + pbe.beard.name] = pbe.beard.GetOptionModData(who);
-			
+			settingsBefore["DB." + pbe.hairStyle.name] = pbe.hairStyle.GetOptionModData(who);
+
 			settingsBefore["DB." + pbe.bodyHair.name] = pbe.bodyHair.GetOptionModData(who);
 			settingsBefore["DB." + pbe.nakedLower.name] = pbe.nakedLower.GetOptionModData(who);
 			settingsBefore["DB." + pbe.nakedUpper.name] = pbe.nakedUpper.GetOptionModData(who);
@@ -370,6 +371,7 @@ namespace DynamicBodies.UI
 			who.modData["DB." + pbe.body.name] = settingsBefore["DB." + pbe.body.name];
 			who.modData["DB." + pbe.arm.name] = settingsBefore["DB." + pbe.arm.name];
 			who.modData["DB." + pbe.beard.name] = settingsBefore["DB." + pbe.beard.name];
+			who.modData["DB." + pbe.hairStyle.name] = settingsBefore["DB." + pbe.hairStyle.name];
 			who.modData["DB." + pbe.bodyHair.name] = settingsBefore["DB." + pbe.bodyHair.name];
 			who.modData["DB." + pbe.nakedLower.name] = settingsBefore["DB." + pbe.nakedLower.name];
 			who.modData["DB." + pbe.nakedUpper.name] = settingsBefore["DB." + pbe.nakedUpper.name];
@@ -513,8 +515,8 @@ namespace DynamicBodies.UI
 			{
 				case "Hair":
 					{
-						List<int> all_hairs = Farmer.GetAllHairstyleIndices();
-						int current_index = all_hairs.IndexOf(who.hair.Value);
+						List<string> all_hairs = ModEntry.getContentPackOptions(ModEntry.hairOptions).ToList();
+						int current_index = all_hairs.IndexOf((who.modData.ContainsKey("DB.hairStyle")) ? who.modData["DB.hairStyle"] : "Default");
 						current_index += change;
 						if (current_index >= all_hairs.Count)
 						{
@@ -524,9 +526,25 @@ namespace DynamicBodies.UI
 						{
 							current_index = all_hairs.Count() - 1;
 						}
-						who.changeHairStyle(all_hairs[current_index]);
-						//Update the base file recording as needed
-						pbe.SetVanillaFile(who.getTexture());
+						pbe.SetModData(who, "DB.hairStyle", all_hairs[current_index]);
+                        if (pbe.hairStyle.option.StartsWith("Vanilla"))
+                        {
+							who.changeHairStyle(int.Parse(pbe.hairStyle.file));
+							//Update the base file recording as needed
+							pbe.SetVanillaFile(who.getTexture());
+						} else
+                        {
+							ExtendedHair.ContentPackHairOption option = ModEntry.hairOptions[current_index] as ExtendedHair.ContentPackHairOption;
+							if (option.settings.isBaldStyle)
+							{
+								pbe.SetVanillaFile("farmer_base_bald");
+							}
+							else
+							{
+								pbe.SetVanillaFile("farmer_base");
+							}
+						}
+						
 						ModEntry.MakePlayerDirty();
 						Game1.playSound("grassyStep");
 						break;
@@ -1673,10 +1691,7 @@ namespace DynamicBodies.UI
 				if (c3 == this.hairLabel)
 				{
 					offset = 21f - Game1.smallFont.MeasureString(c3.name).X / 2f;
-					if (c3 == this.hairLabel)
-					{
-						sub = (Farmer.GetAllHairstyleIndices().IndexOf(who.hair.Value) + 1).ToString() ?? "";
-					}
+					tiny_sub = (who.modData.ContainsKey("DB.hairStyle")) ? who.modData["DB.hairStyle"] : "Default";
 				}
 				else if (c3 == this.accLabel)
 				{

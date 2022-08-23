@@ -64,6 +64,7 @@ namespace DynamicBodies
         public static List<ContentPackOption> beardOptions = new List<ContentPackOption>();
         public static List<ContentPackOption> nudeLOptions = new List<ContentPackOption>();
         public static List<ContentPackOption> nudeUOptions = new List<ContentPackOption>();
+        public static List<ContentPackOption> hairOptions = new List<ContentPackOption>();
         public static Dictionary<string, ContentPackOption> shoeOverrides = new Dictionary<string, ContentPackOption>();
         public static List<ShirtOverlay> shirtOverlays = new List<ShirtOverlay>();
 
@@ -540,8 +541,17 @@ namespace DynamicBodies
 
         }
 
-        
 
+        public static string[] getContentPackOptions(List<ContentPackOption> options)
+        {
+            List<string> toReturn = new List<string>();
+            
+            foreach (ContentPackOption option in options)
+            {
+                toReturn.Add(option.author + "'s " + option.name);   
+            }
+            return toReturn.ToArray();
+        }
         public static string[] getContentPackOptions(List<ContentPackOption> options, bool male = true)
         {
             List<string> toReturn = new List<string>();
@@ -560,13 +570,14 @@ namespace DynamicBodies
             return toReturn.ToArray();
         }
 
-        public static ContentPackOption getContentPack(List<ContentPackOption> options, string find)
+        public static ContentPackOption getContentPack(List<ContentPackOption> options, string find, bool isMale)
         {
             foreach (ContentPackOption option in options)
             {
                 if(option.author+"'s "+option.name == find)
                 {
-                    return option;
+                    if (option.male == isMale) return option;
+                    if (option.female != isMale) return option;
                 }
             }
             return null;
@@ -592,6 +603,11 @@ namespace DynamicBodies
             beardOptions.Add(new ContentPackOption("Accessory 5", "4", "Vanilla", null));
             beardOptions.Add(new ContentPackOption("Accessory 6", "5", "Vanilla", null));
 
+            //Add vanilla options to the hair
+            hairOptions = ExtendedHair.GetDefaultHairStyles();
+            //Make a temporary list of new hairstyles to add at the end
+            List<ContentPackOption> newHair = new List<ContentPackOption>();
+
             debugmsg($"Checking content packs for {context.Helper.ContentPacks.ModID}, {context.Helper.ContentPacks.GetOwned().Count()}", LogLevel.Debug);
 
             //
@@ -614,6 +630,16 @@ namespace DynamicBodies
                     beardOptions.AddRange(data.GetOptions(contentPack, "beards"));
                     nudeLOptions.AddRange(data.GetOptions(contentPack, "nakedLowers"));
                     nudeUOptions.AddRange(data.GetOptions(contentPack, "nakedUppers"));
+                }
+
+                //Animated hair styles
+                if (contentPack.HasFile("Hair\\hair.json"))
+                {
+                    debugmsg($"Loading new hair and overrides pack: {contentPack.Manifest.Name}", LogLevel.Debug);
+
+                    ExtendedHair data = contentPack.ReadJsonFile<ExtendedHair>("Hair\\hair.json");
+                    data.OverrideDefaultHairStyles(ref hairOptions, contentPack);
+                    newHair.AddRange(data.GetNewHairStyles(contentPack));
                 }
 
                 //Animated boot styles
@@ -649,6 +675,11 @@ namespace DynamicBodies
                     debugmsg($"{contentPack.Manifest.Name} added shirt overlays.", LogLevel.Debug);
                     shirtOverlays.Add(data);
                 }
+            }
+            //Add the new hairstyles
+            if(newHair.Count > 0)
+            {
+                hairOptions.AddRange(newHair);
             }
 
             //Check for British spelling
