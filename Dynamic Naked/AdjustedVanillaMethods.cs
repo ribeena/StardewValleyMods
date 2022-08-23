@@ -265,7 +265,7 @@ namespace DynamicBodies
                 ((!who.FarmerSprite.PauseForSingleAnimation && !who.UsingTool) || (who.UsingTool && who.CurrentTool is FishingRod)) && //Fishing is ignored?
                 (!who.UsingTool || !(who.CurrentTool is FishingRod fishing_rod) || fishing_rod.isFishing))
 			{
-				int x_adjustment = 5;//5 pixel in from the left of the frame
+				int x_adjustment = 4;//5 pixel in from the left of the frame originally
                 //adjustments for a single eye
 				x_adjustment = (animationFrame.flip ? (x_adjustment - FarmerRenderer.featureXOffsetPerFrame[currentFrame]) : (x_adjustment + FarmerRenderer.featureXOffsetPerFrame[currentFrame]));
                 switch (facingDirection)
@@ -285,11 +285,12 @@ namespace DynamicBodies
                 if (who.currentEyes != 0)
                 {
                     //Draw over eyes with skin colour, new frame location
-                    b.Draw(_baseTexture, position + origin + _positionOffset + new Vector2(x_adjustment, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + ((who.IsMale && who.FacingDirection != 2) ? 36 : 44)),
-                        new Rectangle(258, 2, (facingDirection == 2) ? 6 : 2, 2), overrideColor, 0f, origin, 4f * scale, SpriteEffects.None, layerDepth + 5E-08f);
+                    b.Draw(_baseTexture, position + origin + _positionOffset + new Vector2(x_adjustment, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + ((who.IsMale && who.FacingDirection != 2) ? 36 : 44) - 8),
+                        new Rectangle(256, 2, (facingDirection == 2) ? 8 : 4, 4), overrideColor, 0f, origin, 4f * scale, SpriteEffects.None, layerDepth + 5E-08f);
                 }
                 //Drawing from the animation frames
                 Vector2 offsetFrame = new Vector2(x_adjustment, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + 44);
+                offsetFrame.Y -= 4;//for larger eye animations
                 if(facingDirection == 1 || facingDirection == 3)
                 {
                     offsetFrame.Y -= 4;//side views are up one pixel
@@ -299,18 +300,18 @@ namespace DynamicBodies
                     offsetFrame.Y -= 4;//males eyes are a bit higher
                 } else
                 {
-                    offsetFrame.Y += 4;
+                    offsetFrame.Y += 4;//female eyes are a bit lower
                 }
 
-                int pixel_y = 2 + (who.currentEyes - 1) * 2;
+                int pixel_y = 2 + (who.currentEyes - 1) * 4;
 
                 if (facingDirection == 3 && who.currentEyes == 0)
                 {
-                    pixel_y = 6;//open eye
+                    pixel_y = 10;//open eye
                 }
 
                 b.Draw(_baseTexture, position + origin + _positionOffset + offsetFrame,
-                    new Rectangle(264 + ((facingDirection == 3) ? 4 : 0), pixel_y, (facingDirection == 2) ? 6 : 2, 2), overrideColor, 0f, origin, 4f * scale, SpriteEffects.None, layerDepth + 1.2E-07f);
+                    new Rectangle(264 + ((facingDirection == 3) ? 4 : 0), pixel_y, (facingDirection == 2) ? 8 : 4, 4), overrideColor, 0f, origin, 4f * scale, SpriteEffects.None, layerDepth + 1.2E-07f);
 			}
 		}
 
