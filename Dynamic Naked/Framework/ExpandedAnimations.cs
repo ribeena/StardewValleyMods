@@ -20,62 +20,92 @@ namespace DynamicBodies.Framework
 {
     internal class ExpandedAnimations
     {
-        public static Rectangle getFrameRectangle(Farmer who, ExtendedHair.hairSettings settings, bool doesFlipped = true)
+        public static Rectangle getFrameRectangle(Farmer who, ExtendedHair.hairSettings settings, int height = 32, int width = 16)
         {
-            Rectangle frameRectangle = new Rectangle(0, 0, 16, 32);
+            Rectangle frameRectangle = new Rectangle(0, 0, width, height);
 
             FarmerSprite sprite = who.FarmerSprite;
 
-            string anim_name = "standing";
+            string anim_name = "Standing";
+            string anim_group = "Standing";
+
+            //down run 0, walk 1
+            //left right, run 6, walk 7
+            //up run 12, walk 13
+
             switch (sprite.CurrentSingleAnimation)
             {
-                case FarmerSprite.carryWalkUp:
-                case FarmerSprite.walkUp:
+                case 1:
                     anim_name = "WalkUp";
+                    anim_group = "Walk";
                     break;
-                case FarmerSprite.carryWalkDown:
-                case FarmerSprite.walkDown:
+                case 13:
                     anim_name = "WalkDown";
+                    anim_group = "Walk";
                     break;
-                case FarmerSprite.carryWalkRight:
-                case FarmerSprite.walkRight:
-                    anim_name = "WalkRight";
+                case 7:
+                    if (who.FacingDirection == 1)
+                    {
+                        anim_name = "WalkRight";
+                    } else
+                    {
+                        anim_name = "WalkLeft";
+                    }
+                    anim_group = "Walk";
                     break;
-                case FarmerSprite.carryWalkLeft:
-                case FarmerSprite.walkLeft:
-                    anim_name = "WalkLeft";
-                    break;
-                case FarmerSprite.carryRunDown:
-                case FarmerSprite.runDown:
+                case 0:
                     anim_name = "RunDown";
+                    anim_group = "Run";
                     break;
-                case FarmerSprite.carryRunUp:
-                case FarmerSprite.runUp:
+                case 12:
                     anim_name = "RunUp";
+                    anim_group = "Run";
                     break;
-                case FarmerSprite.carryRunRight:
-                case FarmerSprite.runRight:
-                    anim_name = "RunRight";
+                case 6:
+                    if (who.FacingDirection == 1)
+                    {
+                        anim_name = "RunRight";
+                    }
+                    else
+                    {
+                        anim_name = "RunLeft";
+                    }
+                    anim_group = "Run";
                     break;
-                case FarmerSprite.carryRunLeft:
-                case FarmerSprite.runLeft:
-                    anim_name = "RunLeft";
+                case 107:
+                    anim_name = "RideDown";
+                    anim_group = "Ride";
+                    break;
+                case 113:
+                    anim_name = "RideUp";
+                    anim_group = "Ride";
+                    break;
+                case 106:
+                    if (who.FacingDirection == 1)
+                    {
+                        anim_name = "RideRight";
+                    }
+                    else
+                    {
+                        anim_name = "RideLeft";
+                    }
+                    anim_group = "Ride";
                     break;
             }
 
             if(who.FacingDirection == 1 || who.FacingDirection == 3)
             {
-                frameRectangle.Y = 32;
+                frameRectangle.Y = height;
             }
 
-            if(who.FacingDirection == 2)
+            if(who.FacingDirection == 0)
             {
-                frameRectangle.Y = 64;
+                frameRectangle.Y = height*2;
             }
 
-            if(!doesFlipped && who.FacingDirection == 3)
+            if(settings.usesUniqueLeftSprite && who.FacingDirection == 3)
             {
-                frameRectangle.Y = 96;
+                frameRectangle.Y = height*3;
             }
 
             bool moving = false;
@@ -84,16 +114,42 @@ namespace DynamicBodies.Framework
                 moving = true;
             }
 
+            //Handle run/walk/ride aniamtions
             if (moving)
             {
                 int totalAnimationFrames = sprite.currentAnimation.Count;
+                int index = sprite.currentAnimationIndex;
 
-                if (settings.anim_frames[anim_name].frameMatch.Count == totalAnimationFrames)
+                if (anim_name.StartsWith("Ride") && who.mount != null)
                 {
-                    frameRectangle.X = settings.anim_frames[anim_name].frameMatch[sprite.currentFrame] * 16;
+                    totalAnimationFrames = who.mount.Sprite.currentAnimation.Count;
+                    index = who.mount.Sprite.currentAnimationIndex;
+                }
+
+                if (settings.anim_frames.ContainsKey(anim_name))
+                {
+
+                    if (settings.anim_frames[anim_name].Count == totalAnimationFrames)
+                    {
+                        frameRectangle.X = settings.anim_frames[anim_name][index] * width;
+                    }
+                    else
+                    {
+                        ModEntry.debugmsg($"The hair animation expected [{totalAnimationFrames}] for '{anim_name}'", LogLevel.Debug);
+                    }
+                } else if (settings.anim_frames.ContainsKey(anim_group))
+                {
+                    if (settings.anim_frames[anim_group].Count == totalAnimationFrames)
+                    {
+                        frameRectangle.X = settings.anim_frames[anim_group][index] * width;
+                    }
+                    else
+                    {
+                        ModEntry.debugmsg($"The hair animation expected [{totalAnimationFrames}] for '{anim_group}'", LogLevel.Debug);
+                    }
                 } else
                 {
-                    ModEntry.debugmsg($"The hair animation expected [{totalAnimationFrames}] for '{anim_name}'", LogLevel.Debug);
+                    ModEntry.debugmsg($"The hair animation didn't find frame matches for '{anim_name}' or '{anim_group}'", LogLevel.Debug);
                 }
             }
 

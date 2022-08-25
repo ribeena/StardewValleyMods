@@ -12,15 +12,14 @@ namespace DynamicBodies.Data
     public class ExtendedHair
     {
 
-        public struct animationFrames
-        {
-            public Dictionary<int, int> frameMatch { get; set; }
-        }
+        
         public struct hairSettings
         {
-            public Dictionary<string, animationFrames> anim_frames;
+            public Dictionary<string, Dictionary<int, int>> anim_frames;
             public bool usesUniqueLeftSprite;
             public bool isBaldStyle;
+            public int yOffset;
+            public int extraWidth;
 
 
             /*	The standard hair data is...
@@ -80,15 +79,22 @@ namespace DynamicBodies.Data
             List<int> defaultHairStyles = Farmer.GetAllHairstyleIndices();
             foreach (int i in defaultHairStyles)
             {
-                string id = defaultHairStyles[i].ToString();
+                string id = i.ToString();
                 if (hairStyles.ContainsKey(id))
                 {
                     //Find the element to replace in the current options list
                     int optionId = options.FindIndex(x => x.name.Equals(id));
                     if (optionId >= 0)
                     {
-                        //Replace the element with a new content pack option
-                        options[i] = new ContentPackHairOption(id, id, contentPack.Manifest.Author, contentPack, hairStyles[id]);
+                        if (contentPack.HasFile($"Hair\\{id}.png"))
+                        {
+                            //Replace the element with a new content pack option
+                            options[optionId] = new ContentPackHairOption(id, id, contentPack.Manifest.Author, contentPack, hairStyles[id]);
+                            ModEntry.monitor.Log($"{contentPack.Manifest.Name}-{id} offset hair is '{hairStyles[id].yOffset}'", LogLevel.Debug);
+                        } else
+                        {
+                            ModEntry.monitor.Log($"{contentPack.Manifest.Name} is missing a override hair file for '{id}.png'", LogLevel.Debug);
+                        }
                     }
                 }
             }
@@ -110,7 +116,14 @@ namespace DynamicBodies.Data
                 }
                 else
                 {
-                    options.Add(new ContentPackHairOption(kvp.Key, kvp.Key, contentPack.Manifest.Author, contentPack, kvp.Value));
+                    if (contentPack.HasFile($"Hair\\{kvp.Key}.png")) {
+                        options.Add(new ContentPackHairOption(kvp.Key, kvp.Key, contentPack.Manifest.Author, contentPack, kvp.Value));
+                    }
+                    else
+                    {
+                        ModEntry.monitor.Log($"{contentPack.Manifest.Name} is missing a override hair file for '{kvp.Key}.png'", LogLevel.Debug);
+                    }
+                    
                 }
             }
             return options;

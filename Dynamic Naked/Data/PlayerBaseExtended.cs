@@ -400,6 +400,18 @@ namespace DynamicBodies.Data
             return beard.textures[beard.option];
         }
 
+        public Texture2D GetHairStyleTexture(Farmer who)
+        {
+            CheckHairTextures(who); //Redraw if needed
+
+            if (hairStyle.texture == null || dirtyLayers["hair"])
+            {
+                Texture2D hairText2D = hairStyle.provider.ModContent.Load<Texture2D>($"Hair\\{hairStyle.file}.png");
+                hairStyle.texture = RenderHair(who, hairText2D, new Rectangle(0, 0, hairText2D.Width, hairText2D.Height));
+            }
+            return hairStyle.texture;
+        }
+
         public Texture2D RenderHair(Farmer who, Texture2D source_texture, Rectangle rect)
         {
 
