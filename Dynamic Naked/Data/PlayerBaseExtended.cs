@@ -400,16 +400,28 @@ namespace DynamicBodies.Data
             return beard.textures[beard.option];
         }
 
-        public Texture2D GetHairStyleTexture(Farmer who)
+        public Texture2D GetHairStyleTexture(Farmer who, string type = "")
         {
             CheckHairTextures(who); //Redraw if needed
 
-            if (hairStyle.texture == null || dirtyLayers["hair"])
+            if (type == "")
             {
-                Texture2D hairText2D = hairStyle.provider.ModContent.Load<Texture2D>($"Hair\\{hairStyle.file}.png");
-                hairStyle.texture = RenderHair(who, hairText2D, new Rectangle(0, 0, hairText2D.Width, hairText2D.Height));
+                if (hairStyle.texture == null || dirtyLayers["hair"])
+                {
+                    Texture2D hairText2D = hairStyle.provider.ModContent.Load<Texture2D>($"Hair\\{hairStyle.file}.png");
+                    hairStyle.texture = RenderHair(who, hairText2D, new Rectangle(0, 0, hairText2D.Width, hairText2D.Height));
+                }
+                return hairStyle.texture;
+            } else
+            {
+                if (!hairStyle.textures.ContainsKey(type) && hairStyle.option != "Default")
+                {
+                    //Build a new one
+                    Texture2D hairText2D = hairStyle.provider.ModContent.Load<Texture2D>($"Hair\\{hairStyle.file}_{type}.png");
+                    hairStyle.textures[type] = RenderHair(who, hairText2D, new Rectangle(0, 0, hairText2D.Width, hairText2D.Height));
+                }
+                return hairStyle.textures[type];
             }
-            return hairStyle.texture;
         }
 
         public Texture2D RenderHair(Farmer who, Texture2D source_texture, Rectangle rect)

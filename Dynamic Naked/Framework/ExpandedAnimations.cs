@@ -20,9 +20,14 @@ namespace DynamicBodies.Framework
 {
     internal class ExpandedAnimations
     {
-        public static Rectangle getFrameRectangle(Farmer who, ExtendedHair.hairSettings settings, int height = 32, int width = 16)
+        public static Rectangle getFrameRectangle(Farmer who, ExtendedHair.hairSettings settings, int height = 32, int width = 16, int facingDirection = -1)
         {
             Rectangle frameRectangle = new Rectangle(0, 0, width, height);
+
+            if(facingDirection < 0)
+            {
+                facingDirection = who.FacingDirection;
+            }
 
             FarmerSprite sprite = who.FarmerSprite;
 
@@ -93,17 +98,17 @@ namespace DynamicBodies.Framework
                     break;
             }
 
-            if(who.FacingDirection == 1 || who.FacingDirection == 3)
+            if(facingDirection == 1 || facingDirection == 3)
             {
                 frameRectangle.Y = height;
             }
 
-            if(who.FacingDirection == 0)
+            if(facingDirection == 0)
             {
                 frameRectangle.Y = height*2;
             }
 
-            if(settings.usesUniqueLeftSprite && who.FacingDirection == 3)
+            if(settings.usesUniqueLeftSprite && facingDirection == 3)
             {
                 frameRectangle.Y = height*3;
             }

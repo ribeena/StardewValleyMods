@@ -38,6 +38,8 @@ namespace DynamicBodies.Data
         {
 
             public hairSettings settings;
+            public bool hasHatTexture = false;
+            public bool hasBackTexture = false;
             public ContentPackHairOption(string name, string file, string author, IContentPack contentPack, hairSettings settings)
                 : base(name, file, author, contentPack)
             {
@@ -89,8 +91,14 @@ namespace DynamicBodies.Data
                         if (contentPack.HasFile($"Hair\\{id}.png"))
                         {
                             //Replace the element with a new content pack option
-                            options[optionId] = new ContentPackHairOption(id, id, contentPack.Manifest.Author, contentPack, hairStyles[id]);
-                            ModEntry.monitor.Log($"{contentPack.Manifest.Name}-{id} offset hair is '{hairStyles[id].yOffset}'", LogLevel.Debug);
+                            ContentPackHairOption option = new ContentPackHairOption(id, id, contentPack.Manifest.Author, contentPack, hairStyles[id]);
+                            if (contentPack.HasFile($"Hair\\{id}_back.png")) option.hasBackTexture = true;
+                            if (contentPack.HasFile($"Hair\\{id}_hat.png")) option.hasHatTexture = true;
+                            if (option.hasHatTexture && option.hasBackTexture && !contentPack.HasFile($"Hair\\{id}_back_hat.png"))
+                            {
+                                ModEntry.monitor.Log($"{contentPack.Manifest.Name} is missing a hair file for '{id}_back_hat.png'", LogLevel.Debug);
+                            }
+                            options[optionId] = option;
                         } else
                         {
                             ModEntry.monitor.Log($"{contentPack.Manifest.Name} is missing a override hair file for '{id}.png'", LogLevel.Debug);
@@ -117,11 +125,18 @@ namespace DynamicBodies.Data
                 else
                 {
                     if (contentPack.HasFile($"Hair\\{kvp.Key}.png")) {
-                        options.Add(new ContentPackHairOption(kvp.Key, kvp.Key, contentPack.Manifest.Author, contentPack, kvp.Value));
+                        ContentPackHairOption option = new ContentPackHairOption(kvp.Key, kvp.Key, contentPack.Manifest.Author, contentPack, kvp.Value);
+                        if (contentPack.HasFile($"Hair\\{kvp.Key}_back.png")) option.hasBackTexture = true;
+                        if (contentPack.HasFile($"Hair\\{kvp.Key}_hat.png")) option.hasHatTexture = true;
+                        if(option.hasHatTexture && option.hasBackTexture && !contentPack.HasFile($"Hair\\{kvp.Key}_back_hat.png"))
+                        {
+                            ModEntry.monitor.Log($"{contentPack.Manifest.Name} is missing a hair file for '{kvp.Key}_back_hat.png'", LogLevel.Debug);
+                        }
+                        options.Add(option);
                     }
                     else
                     {
-                        ModEntry.monitor.Log($"{contentPack.Manifest.Name} is missing a override hair file for '{kvp.Key}.png'", LogLevel.Debug);
+                        ModEntry.monitor.Log($"{contentPack.Manifest.Name} is missing a hair file for '{kvp.Key}.png'", LogLevel.Debug);
                     }
                     
                 }
