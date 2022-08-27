@@ -15,10 +15,15 @@
     <None Remove="assets\shirts.psd" />
     <None Remove="assets\ui.psd" />
     <None Remove="Effects\paletteSwap.fx" />
+    <None Remove="Effects\greyRamp.fx" />
     <None Remove="pants.psd" />
+    <None Remove="docs\*" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="docs\*">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
     <None Update="Effects\paletteSwap.fx">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
