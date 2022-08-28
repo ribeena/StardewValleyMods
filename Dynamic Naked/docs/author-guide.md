@@ -88,7 +88,7 @@ folder with customisation options for all posibilities will generally look like:
          ...
 ```
 
-Have a look at the existing examples on the mod page. This guide goes into more detail below.
+Have a look at the [existing examples on the mod page](https://www.nexusmods.com/stardewvalley/mods/12893?tab=files#file-container-optional-files). This guide goes into more detail below.
 
 ## Get started
 To start a new content pack for Dynamic Bodies;
@@ -195,11 +195,12 @@ In each of the gender profiles, there are options for you to create a body part,
 can be Unisex or tied to a gender if you choose, others must be either for male/female height.
 
 <!-- See the [`Body Parts` documentation](author-guide/body-parts.md) for more info. -->
-More to come.
+More details to come - documentation takes awhile! :)
 
 ### Hair
-You do not need to do anything special to get dual colors etc running with hair. This
-feature allows you to create some basic animation to the hair, whether its an override
+You do not need to do anything special to get dual colors etc running with hair,
+but [there are some tips to get the best results](author-guide/hair.md#recoloring-notes). This
+hair feature allows you to create some basic animation to the hair, whether its an override
 of a vanilla hairstyle, or a completely new one.
 
 Under the `[DB] YourModName\Hair` folder create a `hair.json` file which may look like;
@@ -236,55 +237,32 @@ The hair textures need to be structured like vanilla, facing foward is the top r
 the second row, and facing up is the third row. If you have set `"usesUniqueLeftSprite": true` then the
 fourth row is looking left.
 
-#### Animation Frames when walking, running or riding
-The `anim_frames` is a set of number which matches the sprite in the row to a particular frame
-of animation. For example `"Walk": { 0: 0, 1:1, 2:0, 3:2 },` - the walking animations have 4 frames,
-and this hair has 3 different drawings horizontally showing, so on the;
-1.  first frame (0) it will show the first sprite (hair down)
-2.  second frame (1) it will show the second sprite (hair flick to the left)
-3.  third frame (2) it will show the first sprite again
-4.  fourth frame (3) it will show the third sprite (hair flick to the right)
-
-Running has 8 frames, so you can double up if you aren't doing a lot of animating. Riding unforutnately
-uses 5 frames (that's how the horse is animated), so it needs some creative license.
-
-You can also define the animations for each direction, `"WalkLeft"`/`"WalkUp"`/`"WalkRight"`/`"WalkDown"`,
-make sure to do this for all 4 directions.
-
-#### Bigger hair!
-You can make your hair a bit bigger by using a few extra options;
-```
-﻿{
-  "hairStyles": {
-    "8": {
-      "usesUniqueLeftSprite": true,
-      "isBaldStyle": false,
-      "yOffset": -16,
-      "anim_frames": {
-        "Walk": { 0: 0, 1:1, 2:2, 3:1 },
-        "Run": { 0: 0, 1:0, 2:1, 3:1, 4:2, 5:2, 6:1, 7:1 },
-        "Ride": { 0: 1, 1:0, 2:1, 3:2, 4:1, 5:0 },
-      }
-    },
-    "24": {
-      "usesUniqueLeftSprite": false,
-      "isBaldStyle": false,
-      "extraWidth": 16,
-      "anim_frames": {
-        "Walk": { 0: 0, 1:2, 2:4, 3:6 },
-        "Run": { 0: 0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7 },
-        "Ride": { 0:0, 1:1, 2:2, 3:4, 4:5, 5:6 },
-      }
-    },
-  }
-}
-```
-`yOffset` allows you to move the hair up if needed, and `extraWidth` let's DynmicBodies know that
-your hair spirte is bigger than 16pixels, eg `"extraWidth": 8` would mean you have a 24 pixel width
-hair. It will always centre it though!
+[`Hair` documentation](author-guide/hair.md) for more info.
 
 ### Shoes
-More to come! Check the sample packs to help.
+This shoe (boots? SDV seems to use both!) feature allows you to create graphics that cover
+the feet of the character and load when a pair of boots is equipped. you can use the
+[feet.png](../assets/Character/feet.png) file of this mod as your base on how many
+pixels are needed.
+
+Once you have your image, under the `[DB] YourModName\Boots` folder create a `boots.json` file which may look like;
+
+```
+{
+	"overrides": {
+		"small": ["Firewalker Boots", "Genie Shoes", "Leprechaun Shoes",
+			"Cinderclown Shoes", "Crystal Shoes", "Socks"],
+		"hightops": ["Vonnies"],
+		"sneakers": ["Sneakers"],
+		"smallblack": ["Work Boots", "Dark Boots", "Cowboy Boots"]
+	}
+}
+```
+This is relatively simple, `small` (left) indicates the name of the file (`small.png`) in the Boots folder.
+The next part is a fuzzy-find for when the boots are equipped - it could be a full name, or just the
+start of the name. In the about example, 'Sneakers' will match to "Sneakers - Yellow".
+
+[`Shoes` documentation](author-guide/shoes.md) for more info.
 
 ### Shirt Overlays
 More to come! Check the sample packs to help. 
