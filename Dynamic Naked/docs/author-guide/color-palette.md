@@ -7,7 +7,7 @@
 ## Introduction
 Dynamic Bodies uses a shader to fastly swap 25 colors to use selections. In order to make this
 simpler, rather than loading those colors from the Farmer Sprite, these are standardised. You
-can use the [palette image](../../asset/Character/palette_skin.png) to help you get the colors right.
+can use the [palette image](../../assets/Character/palette_skin.png) to help you get the colors right.
 
 ## The Colors
 Here are all 25 colors and a brief explanation of what they are for.
