@@ -23,7 +23,7 @@ images need to be specific to a gender (can only have an entry under `male` or `
 
 The images are 128x672, and are mostly the same structure as the Vanilla Farmer Sprite image. The
 last 32 pixel column has the new [Eyes](#eyes) system images included, so make sure to draw the
-different stages of blinking and looking different ways. The image uses the [Color Palette](/color-palette.md)
+different stages of blinking and looking different ways. The image uses the [Color Palette](color-palette.md)
 which means you can include 5 shades of skin etc.
 
 Once you've made your image, you'll need an entry in the content.json;
@@ -68,7 +68,7 @@ last 32 pixel column includes a new slightly larger system for the eye blinks, g
 * partially blinked
 * shocked
 
-The image uses the [Color Palette](/color-palette.md), if you don't follow
+The image uses the [Color Palette](color-palette.md), if you don't follow
 these colors the eyelash, dual eye color, customisable sclera won't work. Make
 sure to check you have the colors right as they aren't exactly the same as
 Vanilla to avoid conflicts.
@@ -105,7 +105,7 @@ and shorter for 'female' these
 images need to be specific to a gender (can only have an entry under `male` or `female`).
 
 The images are 96x672, and the same structure as the Vanilla Farmer Sprite image. 
-The image uses the [Color Palette](/color-palette.md), the extra skin colors
+The image uses the [Color Palette](color-palette.md), the extra skin colors
 can help create more definition, and more importantly the magenta color
 can help hide pixels from the base image.
 
@@ -144,7 +144,7 @@ images need to be specific to a gender (can only have an entry under `male` or `
 
 The images are anything from 96x672 to 288x672, and the same structure as the Vanilla Farmer Sprite image. 
 By using wider images, and drawing the ears in the arms section, your ears will appear over
-the hair. The image uses the [Color Palette](/color-palette.md), the extra skin colors
+the hair. The image uses the [Color Palette](color-palette.md), the extra skin colors
 can help create more definition.
 
 Once you've made your image, you'll need an entry in the content.json;
