@@ -32,7 +32,7 @@ it renders hair using two colors to better match the NPCs of the game.
 There's plenty of options, [check the mod page for more](https://www.nexusmods.com/stardewvalley/mods/12893),
 but why not just use Fashion Sense? I actually started trying out Fashion Sense by making some some shoes
 and struggled, matching the animation frame timings to the character, it started to be easier to reanimate
-the whole legs, but then that caused other problems - so this mod aimed to make some simpler adustments easier.
+the whole legs, but then that caused other problems - so this mod aimed to make some simpler adjustments easier.
 Fashion Sense is quite different - highly customisable visual mod, not aimed at following the 'rules of SDV',
 so great if you want to make your game look more like an Anime, turn your character into an animal etc that's what you might want!
 In these ways, Fashion Sense is a sister mod - same family but with different name and interests, but alas
@@ -194,8 +194,11 @@ won't work without custom graphics.
 In each of the gender profiles, there are options for you to create a body part, some
 can be Unisex or tied to a gender if you choose, others must be either for male/female height.
 
-<!-- See the [`Body Parts` documentation](author-guide/body-parts.md) for more info. -->
-More details to come - documentation takes awhile! :)
+More specific details about each body-part feature below;
+*   [Face, Eyes, Ears and Nose](author-guide/face-and-parts.md)
+*   [Bodies and Naked Overlays](author-guide/bodies.md)
+*   [Arms (and shirt sleeve lengths)](author-guide/arms.md)
+*   [The color palette](author-guide/color-palette.md)
 
 ### Hair
 You do not need to do anything special to get dual colors etc running with hair,
@@ -241,7 +244,7 @@ fourth row is looking left.
 
 ### Shoes
 This shoe (boots? SDV seems to use both!) feature allows you to create graphics that cover
-the feet of the character and load when a pair of boots is equipped. you can use the
+the feet of the character and load when a pair of boots is equipped. You can use the
 [feet.png](../assets/Character/feet.png) file of this mod as your base on how many
 pixels are needed.
 
@@ -265,7 +268,61 @@ start of the name. In the about example, 'Sneakers' will match to "Sneakers - Ye
 [`Shoes` documentation](author-guide/shoes.md) for more info.
 
 ### Shirt Overlays
-More to come! Check the sample packs to help. 
+The vanilla outfits are already done for the shirts-overalls color overlay, you can see the vanilla
+version with the [shirts_overlay.png](../assets/Character/shirts_overlay.png) file. When adding more
+shirts using JSONAssets you need to provide it a name, that name can be used to add a new overlay.
+
+Create your black and white image and under the `[DB] YourModName\Shirts` folder create a `shirts.json` file which may look like;
+
+```
+{
+	"overlays": {
+		"Hanging Overalls": ["hangingoveralls_male.png"],
+		"High Waisted Belt": ["highbelt_male.png"],
+	}
+}
+```
+On the left `Hanging Overalls` is the name of the shirt for JSONAssets, and on the right is the 8x32 pixel image
+to overlay onto it. Dynamic Bodies will handle the rest.
+
 
 ## Working with other mods
-More to come! Check the sample packs to help. 
+With SMAPI's new content pipeline this mod has been made with that in mind. You can use [Content Patcher](https://www.nexusmods.com/stardewvalley/mods/1915)
+to easily adjust any of the default graphics. This means if you want to make a farmer sprite
+overhaul mod, you can without changing any of the files, or just want to make it work
+with your favourite UI mod.
+
+To modify any file, find it in the [assets folder](../assets) and take note of the name and folders, you
+can then modify it using a Content Patcher mod like below;
+
+```
+{
+	"Format": "1.27.0",
+
+
+	"Changes": [
+		{
+		"Action": "EditImage",
+		"PatchMode": "Overlay",
+		"Target": "Mods/ribeena.dynamicbodies/assets/Interface/ui.png",
+		"FromFile": "assets/ui_DustBeauty.png",
+		"FromArea": { "X": 0, "Y": 0, "Width": 160, "Height": 80 },
+		"ToArea": { "X": 0, "Y": 0, "Width": 160, "Height": 80 },
+		"When": {
+			"HasMod": "Hesper.RusticCountrysideTownInterior",
+			},
+		},
+    ]
+}
+```
+
+It follows `Target` being `Mods/ribeena.dynamicbodies/` followed by the name and folders.
+It's recommended you use the `HasMod` condition to make the mod only apply when needed.
+
+### Translations
+There are no translations, however Dynamic Bodies is set up for translations - use the [default.json](../i18n/default.json)
+file as a reference to translate from US English. Follow the [SMAPI guide](https://stardewcommunitywiki.com/Modding:Translations)
+for more help on how to translate this mod.
+
+Using the unofficial [British English](https://www.nexusmods.com/stardewvalley/mods/7183) mod,
+there are already [translations](../assets/i18n/en-gb.json) that happen automatically.

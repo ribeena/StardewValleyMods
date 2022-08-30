@@ -1,8 +1,5 @@
 ﻿← [author guide](../author-guide.md)
 
-A patch with **`"Action": "EditData"`** edits fields and entries inside a data asset. Any number of
-content packs can edit the same asset.
-
 ## Contents
 * [Introduction](#introduction)
 * [How recoloring works](#recoloring-notes)
@@ -13,7 +10,7 @@ content packs can edit the same asset.
 After creating your [Hair folder and JSON file](../author-guide.md#hair), that's really all you need to
 do for creating a replacement or new hair style.
 
-## Recolouring Notes
+## Recoloring Notes
 If you want your dual hair colours to recolor well, there are some color choices to consider. Make sure that;
 *   You use only grey colors (if RGB aren't the same value, the pixel won't recolor)
 *   Transparent hair Alpha is more solid than 99 (or 39%)

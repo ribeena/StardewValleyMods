@@ -1,8 +1,5 @@
 ﻿← [author guide](../author-guide.md)
 
-A patch with **`"Action": "EditData"`** edits fields and entries inside a data asset. Any number of
-content packs can edit the same asset.
-
 ## Contents
 * [Introduction](#introduction)
 * [Icons changing colors](#icons-changing-colors)
@@ -30,6 +27,6 @@ new color palette you add will work automatically with the stainer.
 Refer to the [boots sprite](../../assets/Interface/springobjects_boots.png) of
 this mod and create your icon using those 5 colors and it should work fine.
 
-### WHat about JSONAssets successor Dynamic Game Assets
+### What about JSONAssets successor Dynamic Game Assets
 This feature doesn't currently work with [Dynamic Game Assets](https://www.nexusmods.com/stardewvalley/mods/9365)
 because Dynamic Bodies is unable to access the boots icon that is shown.
