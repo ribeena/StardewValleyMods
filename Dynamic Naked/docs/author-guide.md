@@ -11,7 +11,7 @@ This document helps mod authors create a content pack for Dynamic Bodies.
 * [Get started](#get-started)
 * [Features](#features)
   * [Body Parts](#body-parts)
-  * [Hair](#hair)
+  * [Hair and Beards](#hair)
   * [Shoes](#shoes)
   * [Shirt Overlays](#shirt-overlays)
 * [Working with other mods](#working-with-other-mods)
@@ -269,10 +269,11 @@ start of the name. In the about example, 'Sneakers' will match to "Sneakers - Ye
 
 ### Shirt Overlays
 The vanilla outfits are already done for the shirts-overalls color overlay, you can see the vanilla
-version with the [shirts_overlay.png](../assets/Character/shirts_overlay.png) file. When adding more
-shirts using JSONAssets you need to provide it a name, that name can be used to add a new overlay.
+version with the [shirts_overlay.png](../assets/Character/shirts_overlay.png) file.
 
-Create your black and white image and under the `[DB] YourModName\Shirts` folder create a `shirts.json` file which may look like;
+When adding more shirts using JSONAssets you need to provide it a name, that name can be used to add
+a new overlay. Create your black and white image and under the `[DB] YourModName\Shirts` folder create
+a `shirts.json` file which may look like;
 
 ```
 {
@@ -283,7 +284,8 @@ Create your black and white image and under the `[DB] YourModName\Shirts` folder
 }
 ```
 On the left `Hanging Overalls` is the name of the shirt for JSONAssets, and on the right is the 8x32 pixel image
-to overlay onto it. Dynamic Bodies will handle the rest.
+to overlay onto it, simply add `"Metadata": "DB.PantsOverlay"` in your JSONAssets file to flag the added
+shirt as a Dynamic Bodies shirt with an overlay from the pant color.
 
 
 ## Working with other mods
