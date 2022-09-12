@@ -15,7 +15,7 @@ using DynamicBodies.Data;
 
 namespace DynamicBodies.UI
 {
-    internal class WizardCharacterCharacterCustomization : CharacterCustomization
+    internal class WizardCharacterCharacterCustomization : WizardCustomiser
     {
         public const int region_opendoctors = 701, region_openleahs = 702, region_openpams = 703;
 
@@ -24,7 +24,7 @@ namespace DynamicBodies.UI
         public ClickableTextureComponent pamsButton;
 
         private Texture2D UItexture;
-        public WizardCharacterCharacterCustomization() : base(CharacterCustomization.Source.Wizard)
+        public WizardCharacterCharacterCustomization() : base()
         {
             
             UItexture = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Interface/ui.png");
@@ -132,7 +132,7 @@ namespace DynamicBodies.UI
                 }
             }
 
-            if (base.genderButtons.Count > 0)
+            /*if (base.genderButtons.Count > 0)
             {
                 foreach (ClickableComponent c6 in base.genderButtons)
                 {
@@ -142,7 +142,7 @@ namespace DynamicBodies.UI
                         PlayerBaseExtended.Get(Game1.player).DefaultOptions(Game1.player);
                     }
                 }
-            }
+            }*/
 
             foreach (ClickableComponent rbutt in base.rightSelectionButtons)
             {

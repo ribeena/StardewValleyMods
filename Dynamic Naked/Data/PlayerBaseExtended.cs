@@ -368,6 +368,7 @@ namespace DynamicBodies.Data
             return bodyHair.texture;
         }
 
+        //Used for vanilla scenarios
         public Texture2D GetBeardTexture(Farmer who, int beard_style, Texture2D source_texture, Rectangle rect)
         {
             CheckHairTextures(who); //Redraw if needed
@@ -382,6 +383,7 @@ namespace DynamicBodies.Data
             return beard.textures[beard_style.ToString()];
         }
 
+        //Content pack scenarios
         public Texture2D GetBeardTexture(Farmer who)
         {
             CheckHairTextures(who); //Redraw if needed
@@ -414,7 +416,7 @@ namespace DynamicBodies.Data
                 return hairStyle.texture;
             } else
             {
-                if (!hairStyle.textures.ContainsKey(type) && hairStyle.option != "Default")
+                if (!hairStyle.textures.ContainsKey(type) && hairStyle.option != "Default" || dirtyLayers["hair"])
                 {
                     //Build a new one
                     Texture2D hairText2D = hairStyle.provider.ModContent.Load<Texture2D>($"Hair\\{hairStyle.file}_{type}.png");
@@ -524,7 +526,7 @@ namespace DynamicBodies.Data
             beard.Clear();
         }
 
-        public Texture2D GetNakedUpperTexture(int skin)
+        public Texture2D GetNakedUpperTexture()
         {
             if (dirty)
             {
@@ -534,8 +536,11 @@ namespace DynamicBodies.Data
             if (nakedUpper.texture == null && nakedUpper.option != "Default")
             {
                 Texture2D texture = nakedUpper.provider.ModContent.Load<Texture2D>($"assets\\nakedUpper\\{nakedUpper.file}.png");
-                //recalculate the skin colours on the overlay
-                nakedUpper.texture = ApplyPaletteColors(texture);
+                if (texture != null)
+                {
+                    //recalculate the skin colours on the overlay
+                    nakedUpper.texture = ApplyPaletteColors(texture);
+                }
             }
             if (nakedUpper.option == "Default")
             {
@@ -544,7 +549,7 @@ namespace DynamicBodies.Data
             return nakedUpper.texture;
         }
 
-        public Texture2D GetNakedLowerTexture(int skin)
+        public Texture2D GetNakedLowerTexture()
         {
             if (dirty)
             {
@@ -694,6 +699,7 @@ namespace DynamicBodies.Data
         public void SetDefault(Farmer who)
         {
             who.modData["DB." + name] = "Default";
+            option = "Default";
             provider = null;
             file = null;
         }

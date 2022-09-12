@@ -315,7 +315,7 @@ namespace DynamicBodies.Patches
                 }
             }
 
-            Texture2D nakedUpperTexture = pbe.GetNakedUpperTexture(who.skin.Value);
+            Texture2D nakedUpperTexture = pbe.GetNakedUpperTexture();
             if (drawNakedOverlay)
             {
                 if (nakedUpperTexture != null)
@@ -372,7 +372,7 @@ namespace DynamicBodies.Patches
 
 
             bool drawPants = true;
-            Texture2D nakedLowerTexture = pbe.GetNakedLowerTexture(who.skin.Value);
+            Texture2D nakedLowerTexture = pbe.GetNakedLowerTexture();
             if (who.GetPantsIndex() == 14 || who.pantsItem.Value == null)
             {
                 
@@ -618,9 +618,15 @@ namespace DynamicBodies.Patches
                     }
                     else
                     {
-
-                        //Otherwise load it from a content pack
-                        bodyText2D = pbe.body.provider.ModContent.Load<Texture2D>($"assets\\bodies\\{gender}{pbe.body.file}.png");
+                        try
+                        {
+                            //Otherwise load it from a content pack
+                            bodyText2D = pbe.body.provider.ModContent.Load<Texture2D>($"assets\\bodies\\{gender}{pbe.body.file}.png");
+                        } catch (NullReferenceException e)
+                        {
+                            //Fallback
+                            bodyText2D = ModEntry.context.Helper.ModContent.Load<Texture2D>($"assets\\Character\\{gender}farmer_base.png");
+                        }
                     }
 
                     editor = ModEntry.context.Helper.ModContent.GetPatchHelper(bodyText2D).AsImage();
@@ -712,7 +718,15 @@ namespace DynamicBodies.Patches
                     }
                     else
                     {
-                        armsText2D = pbe.arm.provider.ModContent.Load<IRawTextureData>($"assets\\arms\\{pbe.arm.file}_{pbe.sleeveLength}.png");
+                        try
+                        {
+                            armsText2D = pbe.arm.provider.ModContent.Load<IRawTextureData>($"assets\\arms\\{pbe.arm.file}_{pbe.sleeveLength}.png");
+                        }
+                        catch (NullReferenceException e)
+                        {
+                            //Fallback
+                            armsText2D = ModEntry.context.Helper.ModContent.Load<IRawTextureData>($"assets\\Character\\{gender}arm_{pbe.sleeveLength}.png");
+                        }
                     }
                     //editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width, armsText2D.Height), targetArea: new Rectangle(96, 0, armsText2D.Width, armsText2D.Height), PatchMode.Replace);
 
@@ -975,7 +989,7 @@ namespace DynamicBodies.Patches
 
             if (drawNakedOverlay)
             {
-                Texture2D nakedOverlayTexture = pbe.GetNakedLowerTexture(who.skin.Value);
+                Texture2D nakedOverlayTexture = pbe.GetNakedLowerTexture();
 
                 if (nakedOverlayTexture != null)
                 {
