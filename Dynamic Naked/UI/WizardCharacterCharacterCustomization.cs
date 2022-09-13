@@ -11,6 +11,7 @@ using StardewValley.Characters;
 using StardewValley.Menus;
 
 using DynamicBodies.Data;
+using DynamicBodies.Patches;
 
 namespace DynamicBodies.UI
 {
@@ -70,7 +71,7 @@ namespace DynamicBodies.UI
 
 		private int timesRandom;
 
-
+		List<string> randomSounds = new List<string>(){ "drumkit1", "dirtyHit", "axchop", "hoeHit", "fishSlap", "drumkit6", "drumkit5", "drumkit6", "junimoMeep1", "coin", "axe", "hammer", "drumkit2", "drumkit4", "drumkit3" };
 
 
 		public WizardCharacterCharacterCustomization()
@@ -555,73 +556,176 @@ namespace DynamicBodies.UI
 				Game1.playSound("shwip");
 			}
 
-			if (!this.randomButton.containsPoint(x, y))
+			if (this.randomButton.containsPoint(x, y))
 			{
-				return;
-			}
-			string sound = "drumkit6";
-			if (this.timesRandom > 0)
-			{
-				switch (Game1.random.Next(15))
+				string sound = "drumkit6";
+				if (this.timesRandom > 0)
 				{
-					case 0:
-						sound = "drumkit1";
-						break;
-					case 1:
-						sound = "dirtyHit";
-						break;
-					case 2:
-						sound = "axchop";
-						break;
-					case 3:
-						sound = "hoeHit";
-						break;
-					case 4:
-						sound = "fishSlap";
-						break;
-					case 5:
-						sound = "drumkit6";
-						break;
-					case 6:
-						sound = "drumkit5";
-						break;
-					case 7:
-						sound = "drumkit6";
-						break;
-					case 8:
-						sound = "junimoMeep1";
-						break;
-					case 9:
-						sound = "coin";
-						break;
-					case 10:
-						sound = "axe";
-						break;
-					case 11:
-						sound = "hammer";
-						break;
-					case 12:
-						sound = "drumkit2";
-						break;
-					case 13:
-						sound = "drumkit4";
-						break;
-					case 14:
-						sound = "drumkit3";
-						break;
+					sound = randomSounds[Game1.random.Next(randomSounds.Count)];
+				}
+				Game1.playSound(sound);
+				this.timesRandom++;
+				this.randomButton.scale = 3.5f;
+
+				RandomiseCharacter();
+			}
+		}
+
+		public static void RandomiseCharacter()
+		{
+			Farmer who = Game1.player;
+
+			PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
+			//Skin colour
+			Game1.player.changeSkinColor(Game1.random.Next(6));
+			if (Game1.random.NextDouble() < 0.25)
+			{
+				Game1.player.changeSkinColor(Game1.random.Next(24));
+			}
+
+			//Hair Colour
+			Color hairC = RandomColor();
+			who.changeHairColor(hairC);
+			pbe.SetModData(who, "DB.darkHair", FarmerRendererPatched.changeBrightness(hairC, Color.DarkGray, false).PackedValue.ToString());
+
+			//Hair style
+			List<string> all_hairs = ModEntry.getContentPackOptions(ModEntry.hairOptions).ToList();
+
+			int selection = Game1.random.Next(all_hairs.Count);
+			pbe.SetModData(who, "DB.hairStyle", all_hairs[selection]);
+			if (pbe.hairStyle.option.StartsWith("Vanilla"))
+			{
+				who.changeHairStyle(int.Parse(pbe.hairStyle.file));
+				//Update the base file recording as needed
+				pbe.SetVanillaFile(who.getTexture());
+			}
+			else
+			{
+				ExtendedHair.ContentPackHairOption option = ModEntry.hairOptions[selection] as ExtendedHair.ContentPackHairOption;
+				if (option.settings.isBaldStyle)
+				{
+					pbe.SetVanillaFile("farmer_base_bald");
+				}
+				else
+				{
+					pbe.SetVanillaFile("farmer_base");
 				}
 			}
-			Game1.playSound(sound);
-			this.timesRandom++;
-			if (this.skinLabel != null && this.skinLabel.visible)
+
+			//Body
+			List<string> all_bodys = ModEntry.getContentPackOptions(ModEntry.bodyOptions, who.IsMale).ToList();
+			if (all_bodys.Count > 0)
 			{
-				Game1.player.changeSkinColor(Game1.random.Next(6));
-				if (Game1.random.NextDouble() < 0.25)
-				{
-					Game1.player.changeSkinColor(Game1.random.Next(24));
-				}
+				pbe.SetModData(who, "DB.body", all_bodys[Game1.random.Next(all_bodys.Count)]);
 			}
-			this.randomButton.scale = 3.5f;
+
+			//Face
+			List<string> all_faces = ModEntry.getContentPackOptions(ModEntry.faceOptions, who.IsMale).ToList();
+			if (all_faces.Count > 0)
+			{
+				pbe.SetModData(who, "DB.face", all_faces[Game1.random.Next(all_faces.Count)]);
+			}
+
+			//Eyes
+			List<string> all_eyes = ModEntry.getContentPackOptions(ModEntry.eyesOptions, who.IsMale).ToList();
+			if (all_eyes.Count > 0)
+			{
+				pbe.SetModData(who, "DB.eyes", all_eyes[Game1.random.Next(all_eyes.Count)]);
+			}
+
+			//Eyes Colour
+			Color eyeC = RandomColor();
+			who.changeEyeColor(eyeC);
+			if (Game1.random.NextDouble() < 0.25)
+			{
+				pbe.SetModData(who, "DB.eyeColorR", RandomColor().PackedValue.ToString());
+			}
+			else
+			{
+				pbe.SetModData(who, "DB.eyeColorR", eyeC.PackedValue.ToString());
+			}
+
+			//Lash colour
+			if (Game1.random.NextDouble() < 0.25)
+			{
+				pbe.SetModData(who, "DB.lash", RandomColor().PackedValue.ToString());
+			}
+			else
+			{
+				pbe.SetModData(who, "DB.lash", Color.Black.PackedValue.ToString());
+			}
+
+			//Nose
+			List<string> all_noses = ModEntry.getContentPackOptions(ModEntry.noseOptions, who.IsMale).ToList();
+			if (all_noses.Count > 0)
+			{
+				pbe.SetModData(who, "DB.nose", all_noses[Game1.random.Next(all_noses.Count)]);
+			}
+
+			//Ears
+			List<string> all_ears = ModEntry.getContentPackOptions(ModEntry.earsOptions, who.IsMale).ToList();
+			if (all_ears.Count > 0)
+			{
+				pbe.SetModData(who, "DB.ears", all_ears[Game1.random.Next(all_ears.Count)]);
+			}
+			//Arm
+			List<string> all_arms = ModEntry.getContentPackOptions(ModEntry.armOptions, who.IsMale).ToList();
+			if (all_arms.Count > 0)
+			{
+				pbe.SetModData(who, "DB.arm", all_arms[Game1.random.Next(all_arms.Count)]);
+			}
+
+			//Beard
+			List<string> all_beards = ModEntry.getContentPackOptions(ModEntry.beardOptions, who.IsMale).ToList();
+			if (all_beards.Count > 0)
+			{
+				pbe.SetModData(who, "DB.beard", all_beards[Game1.random.Next(all_beards.Count)]);
+			}
+
+			//BodyHair
+			List<string> all_bh = ModEntry.getContentPackOptions(ModEntry.bodyHairOptions, who.IsMale).ToList();
+			if (all_bh.Count > 0)
+			{
+				pbe.SetModData(who, "DB.bodyHair", all_bh[Game1.random.Next(all_bh.Count)]);
+			}
+
+			//Naked
+			List<string> all_no = ModEntry.getContentPackOptions(ModEntry.nudeLOptions, who.IsMale).ToList();
+			if (all_no.Count > 0)
+			{
+				pbe.SetModData(who, "DB.nakedLower", all_no[Game1.random.Next(all_no.Count)]);
+			}
+
+			//NakedU
+			List<string> all_nou = ModEntry.getContentPackOptions(ModEntry.nudeUOptions, who.IsMale).ToList();
+			if (all_nou.Count > 0)
+			{
+				pbe.SetModData(who, "DB.nakedUpper", all_nou[Game1.random.Next(all_nou.Count)]);
+			}
+		}
+
+		public static Color RandomColor()
+        {
+			Color c = new Color(Game1.random.Next(25, 254), Game1.random.Next(25, 254), Game1.random.Next(25, 254));
+			if (Game1.random.NextDouble() < 0.5)
+			{
+				c.R /= 2;
+				c.G /= 2;
+				c.B /= 2;
+			}
+			if (Game1.random.NextDouble() < 0.5)
+			{
+				c.R = (byte)Game1.random.Next(15, 50);
+			}
+			if (Game1.random.NextDouble() < 0.5)
+			{
+				c.G = (byte)Game1.random.Next(15, 50);
+			}
+			if (Game1.random.NextDouble() < 0.5)
+			{
+				c.B = (byte)Game1.random.Next(15, 50);
+			}
+			return c;
 		}
 
 		public override void leftClickHeld(int x, int y)

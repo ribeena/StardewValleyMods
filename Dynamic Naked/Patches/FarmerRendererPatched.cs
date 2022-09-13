@@ -790,7 +790,7 @@ namespace DynamicBodies.Patches
         }
 
 
-        private static Color changeBrightness(Color c, Color amount, bool lighter = true)
+        public static Color changeBrightness(Color c, Color amount, bool lighter = true)
         {
             int adjust = lighter ? 1 : -1;
             c.R = (byte)Math.Min(255, Math.Max(0, c.R + amount.R * adjust));
