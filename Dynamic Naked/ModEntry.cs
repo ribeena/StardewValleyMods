@@ -33,6 +33,8 @@ namespace DynamicBodies
 
         public static ModConfig Config;
 
+        public static Multiplayer multiplayer;
+
         public static bool british_spelling = false;
         public static BritishStrings engb;
 
@@ -87,6 +89,9 @@ namespace DynamicBodies
             FS_pantslayer = 0.009E-05f;
 
             context = this;
+
+            //get the multiplayer instance to be able to send messages
+            multiplayer = this.Helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
 
             //fallback fix
             context.Helper.Events.Content.AssetRequested += OnRequestAsset;

@@ -36,7 +36,7 @@ namespace DynamicBodies.UI
         {
 
             //Move some displays
-            if (this.petPortraitBox.HasValue)
+            /*if (this.petPortraitBox.HasValue)
             {
                 Pet pet = Game1.getCharacterFromName<Pet>(Game1.player.getPetName(), mustBeVillager: false);
 
@@ -84,6 +84,7 @@ namespace DynamicBodies.UI
                 base.populateClickableComponentList();
                 base.snapToDefaultClickableComponent();
             }
+            */
         }
 
         public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
@@ -94,7 +95,7 @@ namespace DynamicBodies.UI
 
         public override void receiveLeftClick(int x, int y, bool playSound = true)
         {
-            if (doctorsButton.containsPoint(x, y))
+            /*if (doctorsButton.containsPoint(x, y))
             {
                 Game1.activeClickableMenu = new DoctorModifier(true);
                 doctorsButton.scale -= 0.25f;
@@ -114,23 +115,21 @@ namespace DynamicBodies.UI
                 pamsButton.scale -= 0.25f;
                 pamsButton.scale = Math.Max(0.75f * doctorsButton.baseScale, pamsButton.scale);
                 Game1.playSound("shwip");
-            }
+            }*/
 
             //Fix rendering
-            PlayerBaseExtended pbe = PlayerBaseExtended.Get(Game1.player);
+            /*PlayerBaseExtended pbe = PlayerBaseExtended.Get(Game1.player);
             foreach (ClickableComponent lbutt in base.leftSelectionButtons)
             {
                 switch (lbutt.name)
                 {
                     case "Skin":
-                        pbe.nakedLower.texture = null;
-                        pbe.nakedUpper.texture = null;
-                        break;
+                        
                     case "Hair":
                         pbe.dirty = true;
                         break;
                 }
-            }
+            }*/
 
             /*if (base.genderButtons.Count > 0)
             {
@@ -144,7 +143,7 @@ namespace DynamicBodies.UI
                 }
             }*/
 
-            foreach (ClickableComponent rbutt in base.rightSelectionButtons)
+            /*foreach (ClickableComponent rbutt in base.rightSelectionButtons)
             {
                 switch (rbutt.name)
                 {
@@ -158,17 +157,19 @@ namespace DynamicBodies.UI
                 }
             }
             Color HairCur = Game1.player.hairstyleColor.Value;
-            //run default
-            base.receiveLeftClick(x,y, playSound);
+            
             if (!HairCur.Equals(Game1.player.hairstyleColor.Value))
             {
                 pbe.dirty = true;
-            }
+            }*/
+
+            //run default
+            base.receiveLeftClick(x, y, playSound);
         }
 
         public override void performHoverAction(int x, int y)
         {
-            if (doctorsButton.containsPoint(x, y))
+            /*if (doctorsButton.containsPoint(x, y))
             {
                 doctorsButton.scale = Math.Min(doctorsButton.scale + 0.02f, doctorsButton.baseScale * 1.1f);
             }
@@ -193,7 +194,7 @@ namespace DynamicBodies.UI
             else
             {
                 pamsButton.scale = Math.Max(pamsButton.scale - 0.02f, pamsButton.baseScale);
-            }
+            }*/
 
             base.performHoverAction(x, y);
         }
@@ -205,10 +206,10 @@ namespace DynamicBodies.UI
         public override void draw(SpriteBatch b)
         {
             base.draw(b);
-            //Draw the new buttons
+            /*//Draw the new buttons
             doctorsButton.draw(b);
             leahsButton.draw(b);
-            pamsButton.draw(b);
+            pamsButton.draw(b);*/
             //Redraw the mouse so it is over the buttons
             base.drawMouse(b);
         }

@@ -24,11 +24,15 @@ namespace DynamicBodies.UI
 		public const int region_skinLeft = 518, region_skinRight = 519;
 		public const int region_directionLeft = 520, region_directionRight = 521;
 
-		public const int region_nameBox = 536;
-		public const int region_farmNameBox = 537;
-		public const int region_favThingBox = 538;
+		public const int region_nameBox = 536, region_favThingBox = 538;
 
-		private int currentPet;
+		public const int region_opendoctors = 701, region_openleahs = 702, region_openpams = 703;
+
+		public ClickableTextureComponent doctorsButton;
+		public ClickableTextureComponent leahsButton;
+		public ClickableTextureComponent pamsButton;
+
+		private Texture2D UItexture;
 
 
 		public List<ClickableComponent> labels = new List<ClickableComponent>();
@@ -42,12 +46,10 @@ namespace DynamicBodies.UI
 		public ClickableTextureComponent randomButton;
 
 		private TextBox nameBox;
-		private TextBox farmnameBox;
 		private TextBox favThingBox;
 
 		public bool isModifyingExistingPet;
 
-		private Vector2 helpStringSize;
 		private string hoverText;
 		private string hoverTitle;
 
@@ -71,20 +73,19 @@ namespace DynamicBodies.UI
 
 		private int timesRandom;
 
-		Multiplayer multiplayer;
+		
 
 
 		public WizardCustomiser()
-			: base(Game1.uiViewport.Width / 2 - (632 + IClickableMenu.borderWidth * 2) / 2, Game1.uiViewport.Height / 2 - (648 + IClickableMenu.borderWidth * 2) / 2 - 64, 632 + IClickableMenu.borderWidth * 2, 648 + IClickableMenu.borderWidth * 2 + 64)
+			: base(Game1.uiViewport.Width / 2 - (632 + IClickableMenu.borderWidth * 2) / 2, Game1.uiViewport.Height / 2 - (528 + IClickableMenu.borderWidth * 2) / 2 - 64, 632 + IClickableMenu.borderWidth * 2, 528 + IClickableMenu.borderWidth * 2 + 64)
 		{
+			UItexture = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Interface/ui.png");
 
 			this.oldName = Game1.player.Name;
 			this.setUpPositions();
 
 			this._displayFarmer = Game1.player;
-
-			//get the multiplayer instance to be able to send messages
-			multiplayer = ModEntry.context.Helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
+			_displayFarmer.faceDirection(2);//look down
 		}
 
 		public override void gameWindowSizeChanged(Rectangle oldBounds, Rectangle newBounds)
@@ -107,7 +108,7 @@ namespace DynamicBodies.UI
 
 			this.okButton = new ClickableTextureComponent("OK", new Rectangle(base.xPositionOnScreen + base.width - IClickableMenu.borderWidth - IClickableMenu.spaceToClearSideBorder - 64, base.yPositionOnScreen + base.height - IClickableMenu.borderWidth - IClickableMenu.spaceToClearTopBorder + 16, 64, 64), null, null, Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 46), 1f)
 			{
-				myID = 505,
+				myID = region_okbutton,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
@@ -121,143 +122,147 @@ namespace DynamicBodies.UI
 				rightNeighborID = -99998,
 				downNeighborID = -99998
 			};
+
+			this.portraitBox = new Rectangle(base.xPositionOnScreen + 64 + 42 - 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 16, 128, 192);
+
+			this.leftSelectionButtons.Add(new ClickableTextureComponent("Direction", new Rectangle(this.portraitBox.X - 32, this.portraitBox.Y + 144, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
+			{
+				myID = region_directionLeft,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				leftNeighborImmutable = true,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			});
+			this.rightSelectionButtons.Add(new ClickableTextureComponent("Direction", new Rectangle(this.portraitBox.Right - 32, this.portraitBox.Y + 144, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
+			{
+				myID = region_directionRight,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			});
+
+			this.randomButton = new ClickableTextureComponent(new Rectangle(base.xPositionOnScreen + 48, base.yPositionOnScreen + 64 + 56, 40, 40), Game1.mouseCursors, new Rectangle(381, 361, 10, 10), 4f)
+			{
+				myID = region_randomButton,
+				upNeighborID = -99998,
+				leftNeighborImmutable = true,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			};
+
+
+			//Start along side portrait
+			Point currentPosition = new Point(base.xPositionOnScreen + 64 + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 256,
+				base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 16);
+
+			int textBoxLabelsXOffset = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ru || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.es || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.pt) ? (-4) : 0);
+
 			this.nameBox = new TextBox(Game1.content.Load<Texture2D>("LooseSprites\\textBox"), null, Game1.smallFont, Game1.textColor)
 			{
-				X = base.xPositionOnScreen + 64 + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 256,
-				Y = base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 16,
+				X = currentPosition.X,
+				Y = currentPosition.Y,
 				Text = Game1.player.Name
 			};
-			this.nameBoxCC = new ClickableComponent(new Rectangle(base.xPositionOnScreen + 64 + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 256, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 16, 192, 48), "")
+
+			this.nameBoxCC = new ClickableComponent(new Rectangle(currentPosition.X, currentPosition.Y, 192, 48), "")
 			{
-				myID = 536,
+				myID = region_nameBox,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
 				downNeighborID = -99998
 			};
-			int textBoxLabelsXOffset = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ru || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.es || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.pt) ? (-4) : 0);
-			this.labels.Add(this.nameLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + textBoxLabelsXOffset + 16 + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 192 + 4, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 8, 1, 1), Game1.content.LoadString("Strings\\UI:Character_Name")));
 
+			this.labels.Add(this.nameLabel = new ClickableComponent(new Rectangle(currentPosition.X - 112 + textBoxLabelsXOffset, currentPosition.Y + 8, 1, 1), Game1.content.LoadString("Strings\\UI:Character_Name")));
+
+			//Next line
+			currentPosition.Y += 64;
 
 			int favThingBoxXoffset = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ko) ? 48 : 0);
 			this.favThingBox = new TextBox(Game1.content.Load<Texture2D>("LooseSprites\\textBox"), null, Game1.smallFont, Game1.textColor)
 			{
-				X = base.xPositionOnScreen + 64 + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 256 + favThingBoxXoffset,
-				Y = base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 16 + 64,
+				X = currentPosition.X + favThingBoxXoffset,
+				Y = currentPosition.Y,
 				Text = Game1.player.favoriteThing
 			};
-			this.favThingBoxCC = new ClickableComponent(new Rectangle(base.xPositionOnScreen + 64 + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 256, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 16 + 64, 192, 48), "")
+
+			this.favThingBoxCC = new ClickableComponent(new Rectangle(currentPosition.X, currentPosition.Y, 192, 48), "")
 			{
-				myID = 538,
+				myID = region_favThingBox,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
 				downNeighborID = -99998
 			};
 
-			this.labels.Add(this.favoriteLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + textBoxLabelsXOffset + 16 + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 192 + 4, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 16 + 64, 1, 1), Game1.content.LoadString("Strings\\UI:Character_FavoriteThing")));
-			this.randomButton = new ClickableTextureComponent(new Rectangle(base.xPositionOnScreen + 48, base.yPositionOnScreen + 64 + 56, 40, 40), Game1.mouseCursors, new Rectangle(381, 361, 10, 10), 4f)
-			{
-				myID = 507,
-				upNeighborID = -99998,
-				leftNeighborImmutable = true,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			};
-			this.portraitBox = new Rectangle(base.xPositionOnScreen + 64 + 42 - 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder - 16, 128, 192);
+			this.labels.Add(this.favoriteLabel = new ClickableComponent(new Rectangle(currentPosition.X - 112 + textBoxLabelsXOffset, currentPosition.Y + 8, 1, 1), Game1.content.LoadString("Strings\\UI:Character_FavoriteThing")));
 
-			int yOffset = 128;
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Direction", new Rectangle(this.portraitBox.X - 32, this.portraitBox.Y + 144, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
+			//Next line
+			currentPosition.Y += 72;
+
+			this.genderButtons.Add(new ClickableTextureComponent("Male", new Rectangle(currentPosition.X+8, currentPosition.Y, 64, 64), null, "Male", Game1.mouseCursors, new Rectangle(128, 192, 16, 16), 4f)
 			{
-				myID = 520,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				leftNeighborImmutable = true,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Direction", new Rectangle(this.portraitBox.Right - 32, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = 521,
+				myID = region_male,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
 				downNeighborID = -99998
 			});
-			int leftSelectionXOffset = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ru || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.es || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.pt) ? (-20) : 0);
+			this.genderButtons.Add(new ClickableTextureComponent("Female", new Rectangle(currentPosition.X +8+ 80, currentPosition.Y, 64, 64), null, "Female", Game1.mouseCursors, new Rectangle(144, 192, 16, 16), 4f)
+			{
+				myID = region_female,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			});
+
+			//Below portrait
+			int leftSelectionXOffset = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ru || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.es || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.pt || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.fr) ? (-20) : 0);
+
+			currentPosition.X = base.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 16;
+			currentPosition.Y = portraitBox.Y + portraitBox.Height + 16;
+
+			this.leftSelectionButtons.Add(new ClickableTextureComponent("Skin", new Rectangle(currentPosition.X + leftSelectionXOffset, currentPosition.Y, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
+			{
+				myID = region_skinLeft,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			});
+			this.labels.Add(this.skinLabel = new ClickableComponent(new Rectangle(currentPosition.X + 64 + 8 + leftSelectionXOffset / 2, currentPosition.Y + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_Skin")));
+			this.rightSelectionButtons.Add(new ClickableTextureComponent("Skin", new Rectangle(currentPosition.X + 128, currentPosition.Y, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
+			{
+				myID = region_skinRight,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			});
+
+			//Second column
+			currentPosition.X += 224;
 
 			this.isModifyingExistingPet = false;
-
-
-			this.genderButtons.Add(new ClickableTextureComponent("Male", new Rectangle(base.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 32 + 8, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 192, 64, 64), null, "Male", Game1.mouseCursors, new Rectangle(128, 192, 16, 16), 4f)
-			{
-				myID = 508,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.genderButtons.Add(new ClickableTextureComponent("Female", new Rectangle(base.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 32 + 64 + 24, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 192, 64, 64), null, "Female", Game1.mouseCursors, new Rectangle(144, 192, 16, 16), 4f)
-			{
-				myID = 509,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			int start_x = base.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 320 + 16;
-			int start_y = base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + 64 + 48;
-			for (int i = 0; i < this.genderButtons.Count; i++)
-			{
-				this.genderButtons[i].bounds.X = start_x + 80 * i;
-				this.genderButtons[i].bounds.Y = start_y;
-			}
-
-			yOffset = 192;
-			leftSelectionXOffset = ((LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.ru || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.es || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.pt || LocalizedContentManager.CurrentLanguageCode == LocalizedContentManager.LanguageCode.fr) ? (-20) : 0);
-			this.leftSelectionButtons.Add(new ClickableTextureComponent("Skin", new Rectangle(base.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 16 + leftSelectionXOffset, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
-			{
-				myID = 518,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-			this.labels.Add(this.skinLabel = new ClickableComponent(new Rectangle(base.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 16 + 64 + 8 + leftSelectionXOffset / 2, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), Game1.content.LoadString("Strings\\UI:Character_Skin")));
-			this.rightSelectionButtons.Add(new ClickableTextureComponent("Skin", new Rectangle(base.xPositionOnScreen + 16 + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 128, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
-			{
-				myID = 519,
-				upNeighborID = -99998,
-				leftNeighborID = -99998,
-				rightNeighborID = -99998,
-				downNeighborID = -99998
-			});
-
-			Point top = new Point(base.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + 320 + 48 + IClickableMenu.borderWidth, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-			int label_position = base.xPositionOnScreen + 16 + IClickableMenu.spaceToClearSideBorder + IClickableMenu.borderWidth + 192 + 8;
-
-			top = new Point(base.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + 320 + 48 + IClickableMenu.borderWidth, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-
 			Pet pet = Game1.getCharacterFromName<Pet>(Game1.player.getPetName(), mustBeVillager: false);
 			if (pet != null)
 			{
 				Game1.player.whichPetBreed = pet.whichBreed;
 				Game1.player.catPerson = pet is Cat;
 				this.isModifyingExistingPet = true;
-				yOffset += 60;
-				this.labels.Add(new ClickableComponent(new Rectangle((int)((float)(base.xPositionOnScreen + base.width / 2) - Game1.smallFont.MeasureString(pet.name).X / 2f), base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset + 16, 1, 1), pet.Name));
-				top = new Point(base.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + 320 + 48 + IClickableMenu.borderWidth, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-				top.X = base.xPositionOnScreen + base.width - IClickableMenu.spaceToClearSideBorder - IClickableMenu.borderWidth - 128;
-				yOffset += 42;
-				top = new Point(base.xPositionOnScreen + IClickableMenu.spaceToClearSideBorder + 320 + 48 + IClickableMenu.borderWidth, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset);
-				top.X = base.xPositionOnScreen + base.width - IClickableMenu.spaceToClearSideBorder - IClickableMenu.borderWidth - 128;
-				this.petPortraitBox = new Rectangle(base.xPositionOnScreen + base.width / 2 - 32, base.yPositionOnScreen + IClickableMenu.borderWidth + IClickableMenu.spaceToClearTopBorder + yOffset, 64, 64);
+
+				this.labels.Add(new ClickableComponent(new Rectangle(currentPosition.X + 300/2 - (int)(Game1.smallFont.MeasureString(pet.Name).X / 2f), currentPosition.Y, 1, 1), pet.Name));
+				
+				this.petPortraitBox = new Rectangle(currentPosition.X + 300/2 - 32, currentPosition.Y + 32, 64, 64);
 
 
 				this.leftSelectionButtons.Add(new ClickableTextureComponent("Pet", new Rectangle(this.petPortraitBox.Value.Left - 64, this.petPortraitBox.Value.Top, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44), 1f)
 				{
-					myID = 511,
+					myID = region_cat,
 					upNeighborID = -99998,
 					leftNeighborID = -99998,
 					rightNeighborID = -99998,
@@ -265,13 +270,43 @@ namespace DynamicBodies.UI
 				});
 				this.rightSelectionButtons.Add(new ClickableTextureComponent("Pet", new Rectangle(this.petPortraitBox.Value.Left + 64, this.petPortraitBox.Value.Top, 64, 64), null, "", Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 33), 1f)
 				{
-					myID = 510,
+					myID = region_dog,
 					upNeighborID = -99998,
 					leftNeighborID = -99998,
 					rightNeighborID = -99998,
 					downNeighborID = -99998
 				});
 			}
+
+			//First column
+			currentPosition.X -= 224;
+			//Next line
+			currentPosition.Y += 96;
+
+			doctorsButton = new ClickableTextureComponent("Surgery", new Rectangle(currentPosition.X, currentPosition.Y, 128, 64), null, null, UItexture, new Rectangle(128, 32, 32, 16), 4f)
+			{
+				myID = region_opendoctors,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = CharacterCustomization.region_okbutton
+			};
+			leahsButton = new ClickableTextureComponent("Colorist", new Rectangle(currentPosition.X + (32 + 2) * 4, currentPosition.Y, 128, 64), null, null, UItexture, new Rectangle(128, 48, 32, 16), 4f)
+			{
+				myID = region_openleahs,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			};
+			pamsButton = new ClickableTextureComponent("Sink", new Rectangle(currentPosition.X + (32 + 2) * 4 * 2, currentPosition.Y, 128, 64), null, null, UItexture, new Rectangle(128, 64, 32, 16), 4f)
+			{
+				myID = region_openleahs,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			};
 
 
 			if (Game1.options.snappyMenus && Game1.options.gamepadControls)
@@ -284,7 +319,7 @@ namespace DynamicBodies.UI
 
 		public override void snapToDefaultClickableComponent()
 		{
-			base.currentlySnappedComponent = base.getComponentWithID(521);
+			base.currentlySnappedComponent = base.getComponentWithID(region_directionRight);
 			this.snapCursorToCurrentSnappedComponent();
 		}
 
@@ -369,11 +404,11 @@ namespace DynamicBodies.UI
 
 						if (changed_pet_name != null)
 						{
-							multiplayer.globalChatInfoMessage("Makeover_Pet", Game1.player.Name, changed_pet_name);
+							ModEntry.multiplayer.globalChatInfoMessage("Makeover_Pet", Game1.player.Name, changed_pet_name);
 						}
 						else
 						{
-							multiplayer.globalChatInfoMessage("Makeover", Game1.player.Name);
+							ModEntry.multiplayer.globalChatInfoMessage("Makeover", Game1.player.Name);
 						}
 						Game1.flashAlpha = 1f;
 						Game1.playSound("yoba");
@@ -403,6 +438,9 @@ namespace DynamicBodies.UI
 			{
 				case "Skin":
 					Game1.player.changeSkinColor((int)Game1.player.skin + change);
+					PlayerBaseExtended pbe = PlayerBaseExtended.Get(Game1.player);
+					pbe.nakedLower.texture = null;
+					pbe.nakedUpper.texture = null;
 					Game1.playSound("skeletonStep");
 					break;
 				case "Direction":
@@ -410,6 +448,26 @@ namespace DynamicBodies.UI
 					this._displayFarmer.FarmerSprite.StopAnimation();
 					this._displayFarmer.completelyStopAnimatingOrDoingAction();
 					Game1.playSound("pickUpItem");
+					break;
+				case "Pet":
+					Game1.player.whichPetBreed += change;
+					if (Game1.player.whichPetBreed >= 3)
+					{
+						Game1.player.whichPetBreed = 0;
+						if (!this.isModifyingExistingPet)
+						{
+							Game1.player.catPerson = !Game1.player.catPerson;
+						}
+					}
+					else if (Game1.player.whichPetBreed < 0)
+					{
+						Game1.player.whichPetBreed = 2;
+						if (!this.isModifyingExistingPet)
+						{
+							Game1.player.catPerson = !Game1.player.catPerson;
+						}
+					}
+					Game1.playSound("coin");
 					break;
 			}
 		}
@@ -484,6 +542,29 @@ namespace DynamicBodies.UI
 
 			this.nameBox.Update();
 			this.favThingBox.Update();
+
+			//Sub menu buttons
+			if (doctorsButton.containsPoint(x, y))
+			{
+				Game1.activeClickableMenu = new DoctorModifier(true);
+				doctorsButton.scale -= 0.25f;
+				doctorsButton.scale = Math.Max(0.75f * doctorsButton.baseScale, doctorsButton.scale);
+				Game1.playSound("shwip");
+			}
+			if (leahsButton.containsPoint(x, y))
+			{
+				Game1.activeClickableMenu = new FullColourModifier(true);
+				leahsButton.scale -= 0.25f;
+				leahsButton.scale = Math.Max(0.75f * doctorsButton.baseScale, leahsButton.scale);
+				Game1.playSound("shwip");
+			}
+			if (pamsButton.containsPoint(x, y))
+			{
+				Game1.activeClickableMenu = new SimpleColourModifier(true);
+				pamsButton.scale -= 0.25f;
+				pamsButton.scale = Math.Max(0.75f * doctorsButton.baseScale, pamsButton.scale);
+				Game1.playSound("shwip");
+			}
 
 			if (!this.randomButton.containsPoint(x, y))
 			{
@@ -628,6 +709,33 @@ namespace DynamicBodies.UI
 			this.randomButton.tryHover(x, y, 0.25f);
 			this.nameBox.Hover(x, y);
 			this.favThingBox.Hover(x, y);
+
+			if (doctorsButton.containsPoint(x, y))
+			{
+				doctorsButton.scale = Math.Min(doctorsButton.scale + 0.02f, doctorsButton.baseScale * 1.1f);
+			}
+			else
+			{
+				doctorsButton.scale = Math.Max(doctorsButton.scale - 0.02f, doctorsButton.baseScale);
+			}
+
+			if (leahsButton.containsPoint(x, y))
+			{
+				leahsButton.scale = Math.Min(leahsButton.scale + 0.02f, leahsButton.baseScale * 1.1f);
+			}
+			else
+			{
+				leahsButton.scale = Math.Max(leahsButton.scale - 0.02f, leahsButton.baseScale);
+			}
+
+			if (pamsButton.containsPoint(x, y))
+			{
+				pamsButton.scale = Math.Min(pamsButton.scale + 0.02f, pamsButton.baseScale * 1.1f);
+			}
+			else
+			{
+				pamsButton.scale = Math.Max(pamsButton.scale - 0.02f, pamsButton.baseScale);
+			}
 		}
 
 		public bool canLeaveMenu()
@@ -724,6 +832,12 @@ namespace DynamicBodies.UI
 
 
 			this.randomButton.draw(b);
+
+			//Draw the new buttons
+			doctorsButton.draw(b);
+			leahsButton.draw(b);
+			pamsButton.draw(b);
+
 			b.End();
 			b.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
 			this._displayFarmer.FarmerRenderer.draw(b, this._displayFarmer.FarmerSprite.CurrentAnimationFrame, this._displayFarmer.FarmerSprite.CurrentFrame, this._displayFarmer.FarmerSprite.SourceRect, new Vector2(this.portraitBox.Center.X - 32, this.portraitBox.Bottom - 160), Vector2.Zero, 0.8f, Color.White, 0f, 1f, this._displayFarmer);
