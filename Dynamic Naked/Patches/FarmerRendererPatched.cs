@@ -558,8 +558,8 @@ namespace DynamicBodies.Patches
                 if (pbe.bodyHair.option != "Default")
                 {
                     bodyHairText = pbe.GetBodyHairTexture(who);
-                    pbe.dirtyLayers["bodyHair"] = false;
                 }
+                pbe.dirtyLayers["bodyHair"] = false;
 
                 if (bodyHairText != null)
                 {
