@@ -27,11 +27,12 @@ namespace DynamicBodies.UI
 
 		public const int region_nameBox = 536, region_favThingBox = 538;
 
-		public const int region_opendoctors = 701, region_openleahs = 702, region_openpams = 703;
+		public const int region_opendoctors = 701, region_openleahs = 702, region_openpams = 703, region_openhaley = 704;
 
 		public ClickableTextureComponent doctorsButton;
 		public ClickableTextureComponent leahsButton;
 		public ClickableTextureComponent pamsButton;
+		public ClickableTextureComponent haleyButton;
 
 		private Texture2D UItexture;
 
@@ -291,7 +292,15 @@ namespace DynamicBodies.UI
 			};
 			pamsButton = new ClickableTextureComponent("Sink", new Rectangle(currentPosition.X + (32 + 2) * 4 * 2, currentPosition.Y, 128, 64), null, null, UItexture, new Rectangle(128, 64, 32, 16), 4f)
 			{
-				myID = region_openleahs,
+				myID = region_openpams,
+				upNeighborID = -99998,
+				leftNeighborID = -99998,
+				rightNeighborID = -99998,
+				downNeighborID = -99998
+			};
+			haleyButton = new ClickableTextureComponent("Trinkets", new Rectangle(currentPosition.X + (32 + 2) * 4 * 3, currentPosition.Y, 128, 64), null, null, UItexture, new Rectangle(128, 16, 32, 16), 4f)
+			{
+				myID = region_openhaley,
 				upNeighborID = -99998,
 				leftNeighborID = -99998,
 				rightNeighborID = -99998,
@@ -545,14 +554,21 @@ namespace DynamicBodies.UI
 			{
 				Game1.activeClickableMenu = new FullColourModifier(true);
 				leahsButton.scale -= 0.25f;
-				leahsButton.scale = Math.Max(0.75f * doctorsButton.baseScale, leahsButton.scale);
+				leahsButton.scale = Math.Max(0.75f * leahsButton.baseScale, leahsButton.scale);
 				Game1.playSound("shwip");
 			}
 			if (pamsButton.containsPoint(x, y))
 			{
 				Game1.activeClickableMenu = new SimpleColourModifier(true);
 				pamsButton.scale -= 0.25f;
-				pamsButton.scale = Math.Max(0.75f * doctorsButton.baseScale, pamsButton.scale);
+				pamsButton.scale = Math.Max(0.75f * pamsButton.baseScale, pamsButton.scale);
+				Game1.playSound("shwip");
+			}
+			if (haleyButton.containsPoint(x, y))
+			{
+				Game1.activeClickableMenu = new AccessoryModifier(true);
+				haleyButton.scale -= 0.25f;
+				haleyButton.scale = Math.Max(0.75f * haleyButton.baseScale, haleyButton.scale);
 				Game1.playSound("shwip");
 			}
 
@@ -829,6 +845,15 @@ namespace DynamicBodies.UI
 			{
 				pamsButton.scale = Math.Max(pamsButton.scale - 0.02f, pamsButton.baseScale);
 			}
+
+			if (haleyButton.containsPoint(x, y))
+			{
+				haleyButton.scale = Math.Min(haleyButton.scale + 0.02f, haleyButton.baseScale * 1.1f);
+			}
+			else
+			{
+				haleyButton.scale = Math.Max(haleyButton.scale - 0.02f, haleyButton.baseScale);
+			}
 		}
 
 		public bool canLeaveMenu()
@@ -930,6 +955,7 @@ namespace DynamicBodies.UI
 			doctorsButton.draw(b);
 			leahsButton.draw(b);
 			pamsButton.draw(b);
+			haleyButton.draw(b);
 
 			b.End();
 			b.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
