@@ -24,9 +24,10 @@ _ReSharper*/
 *.nuget.props
 *.nuget.targets
 
-# Photoshop and zip documents
+# Photoshop, zip documents, compiled effects/shaders
 *.psd
 *.zip
+*.mgfx
 
 # Mod screenshots etc
 Dyanmic Naked Marketting/

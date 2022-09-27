@@ -45,5 +45,6 @@
 	"primary_color":"Color",
 	"secondary_color":"2nd Color",
 	"buy_for":"Buy for",
-	"owned":"Purchased"
+	"owned":"Purchased",
+	"own_all":"You must buy all trinkets equipped."
 }
