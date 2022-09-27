@@ -14,6 +14,7 @@ This document helps mod authors create a content pack for Dynamic Bodies.
   * [Hair and Beards](#hair)
   * [Shoes](#shoes)
   * [Shirt Overlays](#shirt-overlays)
+  * [Trinkets or Accessories](#trinkets)
 * [Working with other mods](#working-with-other-mods)
 
 ## Introduction
@@ -286,6 +287,54 @@ a `shirts.json` file which may look like;
 On the left `Hanging Overalls` is the name of the shirt for JSONAssets, and on the right is the 8x32 pixel image
 to overlay onto it, simply add `"Metadata": "DB.PantsOverlay"` in your JSONAssets file to flag the added
 shirt as a Dynamic Bodies shirt with an overlay from the pant color.
+
+### Trinkets
+Trinkets is a new system for accessories, it allows you to add a cost to the items which can be purchased and
+equipped in Haley's place. Unlike other customisation options, this requires you to buy each item, but
+once bought you can wear it as often as you like. This is because the source code has a list of what
+looks to be initial accessories you can use, but others you have to access later, but the code 
+wasn't finished - so here it is!
+
+The trinkets can work the same as the default accessories, but they also allow for 1 or 2 customisable
+colours, to limit the amount similar lipsticks/blushes etc being made.
+
+Under the `[DB] YourModName\Trinkets` folder create a `trinkets.json` file which may look like;
+```
+{
+  "trinkets": {
+    "Glasses": {
+      "usesUniqueLeftSprite": false,
+      "layers": [0,1,2,3,4],
+      "primaryColor": true,
+      "secondaryColor": true,
+      "cost": 50,
+    },
+    "Rainbow Scarf": {
+      "usesUniqueLeftSprite": false,
+      "layers": [2,3,4,5],
+      "extraWidth": 16,
+      "primaryColor": false,
+      "secondaryColor": false,
+      "cost": 150,
+      "anim_frames": {
+        "Walk": { 0: 0, 1:1, 2:0, 3:2 },
+        "Run": { 0: 0, 1:0, 2:1, 3:1, 4:0, 5:0, 6:2, 7:2 },
+        "Ride": { 0:1, 1:0, 2:2, 3:2, 4:0, 5:1 },
+      }
+    },
+  }
+}
+```
+Under `trinkets` is the name of the files for the trinket. You can specify what
+[layers](author-guide/trinkets.md#layers) the trinket can be equipped on, which
+[colour customisations](author-guide/trinkets.md#recoloring-notes) it has,
+and using the basic animation system for movement.
+
+The textures need to be structured like vanilla, facing foward is the top row, facing right
+the second row, and facing up is the third row. If you have set `"usesUniqueLeftSprite": true` then the
+fourth row is looking left.
+
+[`Trinkets` documentation](author-guide/trinkets.md) for more info.
 
 
 ## Working with other mods
