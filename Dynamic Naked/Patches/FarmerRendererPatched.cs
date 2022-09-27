@@ -393,7 +393,12 @@ namespace DynamicBodies.Patches
             AdjustedVanillaMethods.drawEyes(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref pbe.cacheImage, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
             __instance.drawHairAndAccesories(b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth);
             AdjustedVanillaMethods.drawArms(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref pbe.cacheImage, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
-            
+
+            //Draw trinket 5
+            if (pbe.trinkets[4].option != "Default")
+            {
+                DrawTrinket(4, __instance, pbe, ___positionOffset, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth + 5E-05f, ((!Game1.isUsingBackToFrontSorting) ? 1 : (-1)));
+            }
             //prevent further rendering
             return false;
         }
@@ -1086,36 +1091,7 @@ namespace DynamicBodies.Patches
                 //Draw trinket 1
                 if (pbe.trinkets[0].option != "Default")
                 {
-                    List<string> all_trinkets = ModEntry.getContentPackOptions(ModEntry.trinketOptions[0]).ToList();
-                    int current_index = all_trinkets.IndexOf((who.modData.ContainsKey("DB.trinket0")) ? who.modData["DB.trinket0"] : "Default");
-                    Trinkets.ContentPackTrinketOption option = ModEntry.trinketOptions[0][current_index] as Trinkets.ContentPackTrinketOption;
-
-                    bool flip = !option.settings.usesUniqueLeftSprite;
-                    Vector2 offsetPosition = Vector2.Zero;
-                    offsetPosition.X -= (option.settings.extraWidth / 2f) * 4f;
-                    offsetPosition.Y = option.settings.yOffset * 4f;
-
-                    Texture2D trinket_texture = pbe.GetTrinketTexture(who, 0);
-                    Rectangle trinketSourceRect = ExpandedAnimations.getFrameRectangle(who, option.settings, option.settings.usesUniqueLeftSprite ? trinket_texture.Height / 4 : trinket_texture.Height / 3, 16 + option.settings.extraWidth, facingDirection);
-
-                    if (trinket_texture != null)
-                    {
-                        switch (facingDirection)
-                        {
-                            case 0:
-                                b.Draw(trinket_texture, position + origin + ___positionOffset + offsetPosition + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + (int)__instance.heightOffset.Value), trinketSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth + (3.2E-07f + 1.95E-05f)/2f);
-                                break;
-                            case 1:
-                                b.Draw(trinket_texture, position + origin + ___positionOffset + offsetPosition + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, 4 + FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + (int)__instance.heightOffset.Value), trinketSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth + (3.2E-07f + 1.95E-05f) / 2f);
-                                break;
-                            case 2:
-                                b.Draw(trinket_texture, position + origin + ___positionOffset + offsetPosition + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, 8 + FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + (int)__instance.heightOffset.Value - 4), trinketSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth + (3.2E-07f + 1.95E-05f) / 2f);
-                                break;
-                            case 3:
-                                b.Draw(trinket_texture, position + origin + ___positionOffset + offsetPosition + new Vector2(-FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, 4 + FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + (int)__instance.heightOffset.Value), trinketSourceRect, Color.White, rotation, origin, 4f * scale, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + (3.2E-07f + 1.95E-05f) / 2f);
-                                break;
-                        }
-                    }
+                    DrawTrinket(0, __instance, pbe, ___positionOffset, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth + (3.2E-07f + 1.95E-05f) / 2f, sort_direction);
                 }
 
                 //Draw the beards
@@ -1187,6 +1163,12 @@ namespace DynamicBodies.Patches
                     }
                 }
 
+                //Draw trinket 2
+                if (pbe.trinkets[1].option != "Default")
+                {
+                    DrawTrinket(1, __instance, pbe, ___positionOffset, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth + (1.95E-05f + 2.9E-05f) / 2f, sort_direction);
+                }
+
                 //Draw Vanilla accessories
                 if ((int)who.accessory.Value >= 6)
                 {
@@ -1195,6 +1177,11 @@ namespace DynamicBodies.Patches
 
                 DrawHair(pbe, ___positionOffset, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth, sort_direction);
 
+                //Draw trinket 3
+                if (pbe.trinkets[2].option != "Default")
+                {
+                    DrawTrinket(2, __instance, pbe, ___positionOffset, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth + (ModEntry.hairlayer + 3.9E-05f) / 2f, sort_direction);
+                }
 
                 //Draw naked
                 if (!pbe.nakedLower.CheckForOption("below accessories")) DrawLowerNaked(__instance, ___positionOffset, ___rotationAdjustment, ___baseTexture, animationFrame, sourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth, ModEntry.FS_pantslayer, 5.95E-05f);
@@ -1205,10 +1192,50 @@ namespace DynamicBodies.Patches
                     AdjustedVanillaMethods.DrawHat(__instance, ___positionOffset, ref ___hatSourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, layerDepth);
                 }
 
+                //Draw trinket 4
+                if (pbe.trinkets[3].option != "Default")
+                {
+                    DrawTrinket(3, __instance, pbe, ___positionOffset, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth + (3.9E-05f + 4.9E-05f) / 2f, sort_direction);
+                }
+
             }
             //prevent further rendering
             return false;
 
+        }
+
+        public static void DrawTrinket(int trinket, FarmerRenderer __instance, PlayerBaseExtended pbe, Vector2 ___positionOffset, SpriteBatch b, int facingDirection, Farmer who, Vector2 position, Vector2 origin, float scale, int currentFrame, float rotation, Color overrideColor, float layerDepth, float sort_direction)
+        {
+            List<string> all_trinkets = ModEntry.getContentPackOptions(ModEntry.trinketOptions[trinket]).ToList();
+            int current_index = all_trinkets.IndexOf((who.modData.ContainsKey("DB.trinket"+ trinket)) ? who.modData["DB.trinket" +trinket] : "Default");
+            Trinkets.ContentPackTrinketOption option = ModEntry.trinketOptions[trinket][current_index] as Trinkets.ContentPackTrinketOption;
+
+            bool flip = !option.settings.usesUniqueLeftSprite;
+            Vector2 offsetPosition = Vector2.Zero;
+            offsetPosition.X -= (option.settings.extraWidth / 2f) * 4f;
+            offsetPosition.Y = option.settings.yOffset * 4f;
+
+            Texture2D trinket_texture = pbe.GetTrinketTexture(who, trinket);
+            Rectangle trinketSourceRect = ExpandedAnimations.getFrameRectangle(who, option.settings, option.settings.usesUniqueLeftSprite ? trinket_texture.Height / 4 : trinket_texture.Height / 3, 16 + option.settings.extraWidth, facingDirection);
+
+            if (trinket_texture != null)
+            {
+                switch (facingDirection)
+                {
+                    case 0:
+                        b.Draw(trinket_texture, position + origin + ___positionOffset + offsetPosition + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + (int)__instance.heightOffset.Value), trinketSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth);
+                        break;
+                    case 1:
+                        b.Draw(trinket_texture, position + origin + ___positionOffset + offsetPosition + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, 4 + FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + (int)__instance.heightOffset.Value), trinketSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth);
+                        break;
+                    case 2:
+                        b.Draw(trinket_texture, position + origin + ___positionOffset + offsetPosition + new Vector2(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, 8 + FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + (int)__instance.heightOffset.Value - 4), trinketSourceRect, Color.White, rotation, origin, 4f * scale, SpriteEffects.None, layerDepth);
+                        break;
+                    case 3:
+                        b.Draw(trinket_texture, position + origin + ___positionOffset + offsetPosition + new Vector2(-FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4, 4 + FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4 + (int)__instance.heightOffset.Value), trinketSourceRect, Color.White, rotation, origin, 4f * scale, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth);
+                        break;
+                }
+            }
         }
 
         public static void DrawHair(PlayerBaseExtended pbe, Vector2 ___positionOffset, SpriteBatch b, int facingDirection, Farmer who, Vector2 position, Vector2 origin, float scale, int currentFrame, float rotation, Color overrideColor, float layerDepth, float sort_direction)
