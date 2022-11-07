@@ -257,8 +257,7 @@ namespace DynamicBodies
                 args.LoadFromModFile<IRawTextureData>(args.Name.ToString().Substring("Mods/ribeena.dynamicbodies/".Length), AssetLoadPriority.Low);
             }
 
-            if (args.Name.IsEquivalentTo("Maps\\townInterior")
-                || args.Name.IsEquivalentTo("Mods/ribeena.dynamicbodies/assets/Character/shirts_overlay.png"))
+            if (args.Name.IsEquivalentTo("Mods/ribeena.dynamicbodies/assets/Character/shirts_overlay.png"))
             {
                 args.Edit(EditImageAsset);
             }
@@ -268,13 +267,21 @@ namespace DynamicBodies
                 args.Edit(bootsPatcher.PatchImage);
             }
 
-            if (args.Name.IsEquivalentTo("Maps\\Hospital")
+            if (Config.adjustmaps)
+            {
+                if (args.Name.IsEquivalentTo("Maps\\townInterior"))
+                {
+                    args.Edit(EditImageAsset);
+                }
+
+                if (args.Name.IsEquivalentTo("Maps\\Hospital")
                 || args.Name.IsEquivalentTo("Maps\\LeahHouse")
                 || args.Name.IsEquivalentTo("Maps\\Trailer")
                 || args.Name.IsEquivalentTo("Maps\\Trailer_big")
-                || args.Name.IsEquivalentTo("Maps\\HaleyHouse")) 
-            {
-                args.Edit(EditMapAsset);
+                || args.Name.IsEquivalentTo("Maps\\HaleyHouse"))
+                {
+                    args.Edit(EditMapAsset);
+                }
             }
         }
 
@@ -757,6 +764,12 @@ namespace DynamicBodies
                 name: () => "Free character customisation",
                 getValue: () => Config.freecustomisation,
                 setValue: value => Config.freecustomisation = value
+            );
+            configMenu.AddBoolOption(
+                mod: this.ModManifest,
+                name: () => "Add mirror stations to maps",
+                getValue: () => Config.adjustmaps,
+                setValue: value => Config.adjustmaps = value
             );
         }
 
