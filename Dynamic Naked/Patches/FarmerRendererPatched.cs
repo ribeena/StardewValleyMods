@@ -1618,7 +1618,7 @@ namespace DynamicBodies.Patches
 
 
             //Draw the base
-            b.Draw(___baseTexture, position + new Vector2(0f, (who.IsMale ? 0 : -4)) * scale / 4f, new Rectangle(0, 0, 16, who.isMale ? 15 : 16), Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, layerDepth);
+            b.Draw(pbe.cacheImage, position + new Vector2(0f, (who.IsMale ? 0 : -4)) * scale / 4f, new Rectangle(0, 0, 16, who.isMale ? 15 : 16), Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, layerDepth);
             
             //Draw the beards
             Texture2D beardTexture = null;
