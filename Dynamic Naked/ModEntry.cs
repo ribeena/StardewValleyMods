@@ -43,6 +43,7 @@ namespace DynamicBodies
 
         internal static BootsPatched bootsPatcher;
         internal static FarmerRendererPatched farmerRendererPatcher;
+        internal static CharacterCreatorPatched creatorPatched;
 
         private static bool debugMode = true;
 
@@ -146,8 +147,9 @@ namespace DynamicBodies
             //Fix up rendering of boots
             bootsPatcher = new BootsPatched(harmony);
 
+            //Fix up new game a bit
+            creatorPatched = new CharacterCreatorPatched(harmony);
 
-            
 
             helper.ConsoleCommands.Add("db_layer_get", "gets layer", delegate { context.Monitor.Log($"OK, layer is {hairlayer}.", LogLevel.Debug); });
             helper.ConsoleCommands.Add("db_layer_set", "sets layer", delegate (string command, string[] args) { hairlayer = float.Parse(args[0]); });
