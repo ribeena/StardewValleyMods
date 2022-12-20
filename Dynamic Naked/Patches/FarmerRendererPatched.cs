@@ -173,17 +173,6 @@ namespace DynamicBodies.Patches
                 }
             }
 
-            
-            /*
-            //these sick frames are already green..? 
-            bool sick_frame = currentFrame == 104 || currentFrame == 105;
-            if (____sickFrame != sick_frame)
-            {
-                ____sickFrame = sick_frame;
-                ____shirtDirty = true;
-                ____spriteDirty = true;
-            }*/
-
             //Copy any dirty flags
             pbe.dirtyLayers["sprite"] = pbe.dirtyLayers["sprite"] || ____spriteDirty;
             pbe.dirtyLayers["baseTexture"] = pbe.dirtyLayers["baseTexture"] || ____baseTextureDirty;
@@ -301,7 +290,13 @@ namespace DynamicBodies.Patches
             {
                 DrawHairBackUI(pbe, ___positionOffset, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth, ((!Game1.isUsingBackToFrontSorting) ? 1 : (-1)));
             }
+
             AdjustedVanillaMethods.drawBase(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref pbe.cacheImage, b, animationFrame, currentFrame, ref sourceRect, ref position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
+            
+            if (pbe.arm.textures.ContainsKey("cache") && pbe.arm.textures["cache"] != null)
+            {
+                AdjustedVanillaMethods.drawArmBack(__instance, ref ___rotationAdjustment, ___positionOffset, pbe.arm.textures["cache"], b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
+            }
             
             ///////////////////////////////
             /// Setup a new overlay drawing for upper body
@@ -394,7 +389,7 @@ namespace DynamicBodies.Patches
             //ensure subsequent layers are above the eyes
             layerDepth += 1.2E-07f;
             __instance.drawHairAndAccesories(b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth);
-            AdjustedVanillaMethods.drawArms(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref pbe.cacheImage, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who);
+            AdjustedVanillaMethods.drawArms(__instance, ref ___rotationAdjustment, ref ___positionOffset, ref pbe.cacheImage, b, animationFrame, currentFrame, sourceRect, position, origin, layerDepth, facingDirection, overrideColor, rotation, scale, who, (pbe.arm.textures.ContainsKey("cache") && pbe.arm.textures["cache"] != null));
 
             //Draw trinket 5
             if (pbe.trinkets[4].option != "Default")
@@ -576,6 +571,12 @@ namespace DynamicBodies.Patches
                     editor.PatchImage(bodyHairText, new Rectangle(0, 0, bodyHairText.Width, bodyHairText.Height), targetArea: new Rectangle(0, 0, bodyHairText.Width, bodyHairText.Height), PatchMode.Overlay);
                 }
 
+                if (pbe.arm.textures.ContainsKey("source") && pbe.arm.textures["source"] != null)
+                {
+                    //Render the back arms
+                    pbe.arm.textures["cache"] = PlayerBaseExtended.ApplyPaletteColors(pbe.arm.textures["source"]);
+                }
+
             }
 
             
@@ -657,18 +658,6 @@ namespace DynamicBodies.Patches
                         editor.PatchImage(faceText2D, new Rectangle(96, 0, 32, 24), targetArea: new Rectangle(256, 0, 32, 24), PatchMode.Replace);
                     }
 
-
-
-                    //Top arms
-                    //editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width, armsText2D.Height-96), targetArea: new Rectangle(96, 0, armsText2D.Width, armsText2D.Height-96), PatchMode.Replace);
-                    //Bottom arms
-                    //editor.PatchImage(armsText2D, new Rectangle(48, 576, armsText2D.Width-48, 96), targetArea: new Rectangle(144, 576, armsText2D.Width-48, 96), PatchMode.Replace);
-                    //Bath overlay
-                    //editor.PatchImage(armsText2D, new Rectangle(0, 576, 48, 96), targetArea: new Rectangle(0, 576, 48, 96), PatchMode.Overlay);
-
-
-                    //monitor.Log($"Edit sleeve image through Edit<t>", LogLevel.Debug);
-
                     IRawTextureData shoes;
                     if (pbe.shoeStyle == "None")
                     {
@@ -723,21 +712,48 @@ namespace DynamicBodies.Patches
                     if (pbe.arm.option == "Default")
                     {
                         armsText2D = ModEntry.context.Helper.ModContent.Load<IRawTextureData>($"assets\\Character\\{gender}arm_{pbe.sleeveLength}.png");
+                        pbe.arm.textures["source"] = ModEntry.context.Helper.ModContent.Load<Texture2D>($"assets\\Character\\{gender}arm_{pbe.sleeveLength}_back.png");
                     }
                     else
                     {
+                        bool customarm = false;
+                        //Patch the arms
                         try
                         {
                             armsText2D = pbe.arm.provider.ModContent.Load<IRawTextureData>($"assets\\arms\\{pbe.arm.file}_{pbe.sleeveLength}.png");
+                            customarm = true;
                         }
                         catch (NullReferenceException e)
                         {
                             //Fallback
                             armsText2D = ModEntry.context.Helper.ModContent.Load<IRawTextureData>($"assets\\Character\\{gender}arm_{pbe.sleeveLength}.png");
+
+                            pbe.arm.textures["source"] = ModEntry.context.Helper.ModContent.Load<Texture2D>($"assets\\Character\\{gender}arm_{pbe.sleeveLength}_back.png");
+                        }
+
+                        if(customarm)
+                        {
+                            //Check for back arm from mod content
+                            try
+                            {
+                                if (pbe.arm.provider.HasFile($"assets\\arms\\{pbe.arm.file}_{pbe.sleeveLength}_back.png"))
+                                {
+                                    Texture2D armsTextBack = pbe.arm.provider.ModContent.Load<Texture2D>($"assets\\arms\\{pbe.arm.file}_{pbe.sleeveLength}_back.png");
+                                    pbe.arm.textures["source"] = armsTextBack;
+                                }
+                                else
+                                {
+                                    pbe.arm.textures["source"] = null;
+                                }
+                            }
+                            catch (NullReferenceException e)
+                            {
+                                //Fallback
+                                pbe.arm.textures["source"] = null;
+                            }
                         }
                     }
-                    //editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width, armsText2D.Height), targetArea: new Rectangle(96, 0, armsText2D.Width, armsText2D.Height), PatchMode.Replace);
-
+                    
                     //Top row
                     editor.PatchImage(armsText2D, new Rectangle(0, 0, armsText2D.Width - 32, 32), targetArea: new Rectangle(96, 0, armsText2D.Width - 32, 32), PatchMode.Replace);
                     //remainder

@@ -634,7 +634,7 @@ namespace DynamicBodies.Data
             return trinkets[i].texture;
         }
 
-        private static Texture2D ApplyPaletteColors(Texture2D source_texture)
+        public static Texture2D ApplyPaletteColors(Texture2D source_texture)
         {
             Texture2D texture = null;
             //Need to render a new texture

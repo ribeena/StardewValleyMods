@@ -315,14 +315,40 @@ namespace DynamicBodies
 			}
 		}
 
-		public static void drawArms(FarmerRenderer farmerRenderer, ref Vector2 _rotationAdjustment, ref Vector2 _positionOffset, ref Texture2D _baseTexture, SpriteBatch b, FarmerSprite.AnimationFrame animationFrame, int currentFrame, Rectangle sourceRect, Vector2 position, Vector2 origin, float layerDepth, int facingDirection, Color overrideColor, float rotation, float scale, Farmer who)
+        public static void drawArmBack(FarmerRenderer farmerRenderer, ref Vector2 _rotationAdjustment, Vector2 _positionOffset, Texture2D _backTexture, SpriteBatch b, FarmerSprite.AnimationFrame animationFrame, int currentFrame, Rectangle sourceRect, Vector2 position, Vector2 origin, float layerDepth, int facingDirection, Color overrideColor, float rotation, float scale, Farmer who)
+        {
+            //Don't bother rendering if there's a slingshot happening
+            /*if (who.usingSlingshot || (who.CurrentTool is Slingshot))
+            {
+                return;
+            }*/
+
+            float arm_layer_offset = -1E-07f;
+
+            if (animationFrame.secondaryArm && !who.bathingClothes.Value)
+            {
+                //Go to the secondary arms
+                sourceRect.Offset(96, 0);
+            }
+
+            b.Draw(_backTexture, position + origin + _positionOffset + who.armOffset, sourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + arm_layer_offset);
+        }
+
+        public static void drawArms(FarmerRenderer farmerRenderer, ref Vector2 _rotationAdjustment, ref Vector2 _positionOffset, ref Texture2D _baseTexture, SpriteBatch b, FarmerSprite.AnimationFrame animationFrame, int currentFrame, Rectangle sourceRect, Vector2 position, Vector2 origin, float layerDepth, int facingDirection, Color overrideColor, float rotation, float scale, Farmer who, bool hasBackTexture)
 		{
 			float arm_layer_offset = 4.9E-05f;
-			if (facingDirection == 0)
+			if (facingDirection == 0 && !hasBackTexture)
 			{
 				arm_layer_offset = -1E-07f;
 			}
-			sourceRect.Offset(animationFrame.secondaryArm ? 192 : 96, 0);
+
+            sourceRect.Offset(96, 0);
+            if (animationFrame.secondaryArm && !who.bathingClothes.Value)
+            {
+                //Go to the secondary arms
+                sourceRect.Offset(96, 0);
+            }
+
 			b.Draw(_baseTexture, position + origin + _positionOffset + who.armOffset, sourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + arm_layer_offset);
 			if (!who.usingSlingshot || !(who.CurrentTool is Slingshot))
 			{
