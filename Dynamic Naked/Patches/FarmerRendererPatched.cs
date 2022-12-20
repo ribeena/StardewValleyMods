@@ -631,6 +631,29 @@ namespace DynamicBodies.Patches
                         {
                             //Otherwise load it from a content pack
                             bodyText2D = pbe.body.provider.ModContent.Load<Texture2D>($"assets\\bodies\\{gender}{pbe.body.file}.png");
+                            if (pbe.body.provider.HasFile($"assets\\bodies\\{pbe.body.file}_shirts.png"))
+                            {
+                                pbe.body.textures["shirt"] = pbe.body.provider.ModContent.Load<Texture2D>($"assets\\bodies\\{pbe.body.file}_shirts.png");
+                            } else
+                            {
+                                pbe.body.textures["shirt"] = null;
+                            }
+                            if (pbe.body.provider.HasFile($"assets\\bodies\\{pbe.body.file}_shirts_overlay.png"))
+                            {
+                                pbe.body.textures["shirt_overlay"] = pbe.body.provider.ModContent.Load<Texture2D>($"assets\\bodies\\{pbe.body.file}_shirts_overlay.png");
+                            }
+                            else
+                            {
+                                pbe.body.textures["shirt_overlay"] = null;
+                            }
+                            if (pbe.body.provider.HasFile($"assets\\bodies\\{pbe.body.file}_pants.png"))
+                            {
+                                pbe.body.textures["pants"] = pbe.body.provider.ModContent.Load<Texture2D>($"assets\\bodies\\{pbe.body.file}_pants.png");
+                            }
+                            else
+                            {
+                                pbe.body.textures["pants"] = null;
+                            }
                         } catch (NullReferenceException e)
                         {
                             //Fallback
@@ -659,9 +682,18 @@ namespace DynamicBodies.Patches
                     }
 
                     IRawTextureData shoes;
-                    if (pbe.shoeStyle == "None")
+                    if (pbe.body.option != "Default" && pbe.body.provider.HasFile($"assets\\bodies\\{pbe.body.file}_feet.png"))
+                    {
+                        shoes = pbe.face.provider.ModContent.Load<IRawTextureData>($"assets\\bodies\\{pbe.body.file}_feet.png");
+                    }
+                    else
                     {
                         shoes = ModEntry.context.Helper.ModContent.Load<IRawTextureData>($"assets\\Character\\feet.png");
+                    }
+                    
+                    if (pbe.shoeStyle == "None")
+                    {
+                        
                         ModEntry.debugmsg($"Drawing feet.", LogLevel.Debug);
                     }
                     else
@@ -1082,7 +1114,13 @@ namespace DynamicBodies.Patches
                 //Draw the shirts
                 if (!who.bathingClothes.Value && who.shirtItem.Get() != null)
                 {
-                    AdjustedVanillaMethods.DrawShirt(__instance, FarmerRenderer.shirtsTexture, ___positionOffset, ___rotationAdjustment, ref ___shirtSourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth);
+                    Texture2D shirtsTexture = FarmerRenderer.shirtsTexture;
+                    if (pbe.body.textures.ContainsKey("shirt") && pbe.body.textures["shirt"] != null)
+                    {
+                        shirtsTexture = pbe.body.textures["shirt"];
+                    }
+
+                    AdjustedVanillaMethods.DrawShirt(__instance, shirtsTexture, ___positionOffset, ___rotationAdjustment, ref ___shirtSourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor, layerDepth);
 
                     //layerDepth += 1.4E-07f;
                     if (who.modData.ContainsKey("DB.overallColor") && who.modData["DB.overallColor"] == "true")
@@ -1091,14 +1129,20 @@ namespace DynamicBodies.Patches
                         {
                             //Draw the tinted overalls/highwaisted pants
                             Texture2D overalls_texture = Game1.content.Load<Texture2D>("Mods/ribeena.dynamicbodies/assets/Character/shirts_overlay.png");
+                            
 
                             if (pbe.shirtOverlayIndex >= 0)
                             {
+                                //TODO how does a shirt overlay added with JSON work with a body...?
                                 AdjustedVanillaMethods.DrawShirt(__instance, overalls_texture, ___positionOffset, ___rotationAdjustment, ref ___shirtSourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor.Equals(Color.White) ? Utility.MakeCompletelyOpaque(who.GetPantsColor()) : overrideColor, layerDepth + 1.8E-07f + 1.4E-07f, false, pbe.shirtOverlayIndex);
-
                             }
                             else
                             {
+                                //Only default shirts will allow overlays
+                                if (pbe.body.textures.ContainsKey("shirt_overlay") && pbe.body.textures["shirt_overlay"] != null)
+                                {
+                                    overalls_texture = pbe.body.textures["shirt_overlay"];
+                                }
 
                                 AdjustedVanillaMethods.DrawShirt(__instance, overalls_texture, ___positionOffset, ___rotationAdjustment, ref ___shirtSourceRect, b, facingDirection, who, position, origin, scale, currentFrame, rotation, overrideColor.Equals(Color.White) ? Utility.MakeCompletelyOpaque(who.GetPantsColor()) : overrideColor, layerDepth + 1.8E-07f + 1.4E-07f, false);
                             }

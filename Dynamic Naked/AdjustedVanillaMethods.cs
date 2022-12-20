@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Object = StardewValley.Object;
 using System.IO;
+using DynamicBodies.Data;
 
 namespace DynamicBodies
 {
@@ -244,7 +245,13 @@ namespace DynamicBodies
 			{
 				pants_rect.X += 96;
 			}
-			b.Draw(FarmerRenderer.pantsTexture, position + origin + _positionOffset, pants_rect, overrideColor.Equals(Color.White) ? Utility.MakeCompletelyOpaque(who.GetPantsColor()) : overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + ((who.FarmerSprite.CurrentAnimationFrame.frame == 5) ? 0.00092f : 9.2E-08f));
+            PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
+            Texture2D pantsTexture = FarmerRenderer.pantsTexture;
+            if(pbe.body.textures.ContainsKey("pants") && pbe.body.textures["pants"] != null)
+            {
+                pantsTexture = pbe.body.textures["pants"];
+            }
+			b.Draw(pantsTexture, position + origin + _positionOffset, pants_rect, overrideColor.Equals(Color.White) ? Utility.MakeCompletelyOpaque(who.GetPantsColor()) : overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + ((who.FarmerSprite.CurrentAnimationFrame.frame == 5) ? 0.00092f : 9.2E-08f));
 		}
 		public static void drawEyes(FarmerRenderer farmerRenderer, ref Vector2 _rotationAdjustment, ref Vector2 _positionOffset, ref Texture2D _baseTexture, SpriteBatch b, FarmerSprite.AnimationFrame animationFrame, int currentFrame, Rectangle sourceRect, Vector2 position, Vector2 origin, float layerDepth, int facingDirection, Color overrideColor, float rotation, float scale, Farmer who)
 		{

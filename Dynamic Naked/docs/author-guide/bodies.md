@@ -49,6 +49,26 @@ Above in the `male` section, a 'toned.png' file has been added. The folder will 
          ...
 ```
 
+### Custom clothing and feet
+You can assign specific feet and clothing to match your body-shape if it's significantly different.
+You do this by including a file with "_shirts" ("_shirts_overlay" for matching overalls), "_pants",
+and "_feet". If you did them all, your folder would look like;
+```
+📁 Mods/
+   📁 [DB] YourModName/
+      🗎 content.json
+      🗎 manifest.json
+      📁 assets/
+         📁 bodies/
+            🗎 toned.png
+            🗎 toned_feet.png
+            🗎 toned_shirts.png
+            🗎 toned_shirts_overlay.png
+            🗎 toned_pants.png
+            ...
+         ...
+```
+
 ## Body Hair
 The body hair option [renders to the hair colors](hair.md#recoloring-notes) chosen by the player.
 These are an image
