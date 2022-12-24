@@ -103,6 +103,11 @@ namespace DynamicBodies.Patches
             if (field == "pants")
             {
                 pbe.pants = -1;//force pants change
+                //Update stored pants colour, darken it
+                if(who.pantsItem.Value != null)
+                {
+                    pbe.paletteCache[16] = changeBrightness(who.pantsColor.Value, new Color(50,50,50), false).ToVector4();
+                }
             }
 
             pbe.dirty = true;
@@ -221,16 +226,49 @@ namespace DynamicBodies.Patches
             if (pbe.dirty)
             {
                 //Check if the texture needs updating
-                if (pbe.shirt != who.GetShirtIndex())
+                if (pbe.shirt != who.GetShirtIndex() || pbe.dirtyLayers["shirt"])
                 {
                     pbe.shirt = who.GetShirtIndex();
                     if (who.shirtItem.Value == null)
                     {
                         pbe.sleeveLength = "Sleeveless";
+                        if(pbe.nakedUpper.CheckForOption("sleeve short"))
+                        {
+                            pbe.sleeveLength = "Short";
+                        }
+                        if (pbe.nakedUpper.CheckForOption("sleeve"))
+                        {
+                            pbe.sleeveLength = "Normal";
+                        }
+                        if (pbe.nakedUpper.CheckForOption("sleeve long"))
+                        {
+                            pbe.sleeveLength = "Long";
+                        }
                     }
                     else
                     {
-                        pbe.sleeveLength = ModEntry.AssignShirtLength(who.shirtItem.Value as Clothing, who.IsMale);
+                        if (who.bathingClothes.Value && who.modData.ContainsKey("DB.bathers") && who.modData["DB.bathers"] == "false")
+                        {
+
+                            pbe.sleeveLength = "Sleeveless";
+                            if (pbe.nakedUpper.CheckForOption("sleeve short"))
+                            {
+                                pbe.sleeveLength = "Short";
+                            }
+                            if (pbe.nakedUpper.CheckForOption("sleeve"))
+                            {
+                                pbe.sleeveLength = "Normal";
+                            }
+                            if (pbe.nakedUpper.CheckForOption("sleeve long"))
+                            {
+                                pbe.sleeveLength = "Long";
+                            }
+
+                        }
+                        else
+                        {
+                            pbe.sleeveLength = ModEntry.AssignShirtLength(who.shirtItem.Value as Clothing, who.IsMale);
+                        }
                     }
 
                     if (who.shirtItem.Value != null)
@@ -340,12 +378,15 @@ namespace DynamicBodies.Patches
                                 break;
                         }
                         animoffset = new Vector2((float)(FarmerRenderer.featureXOffsetPerFrame[currentFrame] * 4), (float)(FarmerRenderer.featureYOffsetPerFrame[currentFrame] * 4) + (float)(int)__instance.heightOffset.Value * scale);
+
                     }
                     float layerOffset = ((who.FarmerSprite.CurrentAnimationFrame.frame == 5) ? 0.00096f : 9.6E-08f);
 
                     if (!FarmerRenderer.isDrawingForUI && (bool)who.swimming.Value)
                     {
                         //don't draw it in the water
+                        overlay_rect.Height = 16;
+                        b.Draw(nakedUpperTexture, position + origin + ___positionOffset + animoffset, overlay_rect, overrideColor, rotation, origin, 4f * scale, flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + layerOffset);
                     }
                     else
                     {
@@ -353,14 +394,10 @@ namespace DynamicBodies.Patches
                         if (FarmerRenderer.isDrawingForUI)
                         {
                             //Change the frame for UI version
-                            sourceRect.X = 0;
-                            sourceRect.Y = 0;
-                            b.Draw(nakedUpperTexture, position + origin + ___positionOffset, overlay_rect, overrideColor, rotation, origin, 4f * scale, flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + layerOffset);
+                            overlay_rect.Y = 0;
                         }
-                        else
-                        {
-                            b.Draw(nakedUpperTexture, position + origin + ___positionOffset + animoffset, overlay_rect, overrideColor, rotation, origin, 4f * scale, flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + layerOffset);
-                        }
+                        b.Draw(nakedUpperTexture, position + origin + ___positionOffset + animoffset, overlay_rect, overrideColor, rotation, origin, 4f * scale, flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + layerOffset);
+                        
                     }
                 }
             }
@@ -1001,6 +1038,8 @@ namespace DynamicBodies.Patches
 
         private static void UpdateShirtPalette(Farmer who, PlayerBaseExtended pbe)
         {
+            if (who.shirtItem.Get() == null) return; //Shirt was removed so no need to change the colour
+
             Color[] shirtData = new Color[FarmerRenderer.shirtsTexture.Bounds.Width * FarmerRenderer.shirtsTexture.Bounds.Height];
             FarmerRenderer.shirtsTexture.GetData(shirtData);
 

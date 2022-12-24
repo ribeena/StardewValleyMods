@@ -352,6 +352,21 @@ namespace DynamicBodies
                 sourceRect.Offset(96, 0);
             }
 
+            if (who.bathingClothes.Value && who.modData.ContainsKey("DB.bathers") && who.modData["DB.bathers"] == "false")
+            {
+                PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
+                if (pbe.nakedUpper.CheckForOption("sleeve short") || pbe.nakedUpper.CheckForOption("sleeve")
+                    || pbe.nakedUpper.CheckForOption("sleeve long"))
+                {
+                    sourceRect.Offset(0, -574);//Use the normal arms
+                }
+                if (FarmerRenderer.isDrawingForUI)
+                {
+                    //Weird offset issue
+                    //_positionOffset.Y -= 8;
+                }
+            }
+
             b.Draw(_backTexture, position + origin + _positionOffset + who.armOffset, sourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + arm_layer_offset);
         }
 
@@ -370,7 +385,24 @@ namespace DynamicBodies
                 sourceRect.Offset(96, 0);
             }
 
-			b.Draw(_baseTexture, position + origin + _positionOffset + who.armOffset, sourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + arm_layer_offset);
+
+            if (who.bathingClothes.Value && who.modData.ContainsKey("DB.bathers") && who.modData["DB.bathers"] == "false")
+            {
+                PlayerBaseExtended pbe = PlayerBaseExtended.Get(who);
+                if (pbe.nakedUpper.CheckForOption("sleeve short") || pbe.nakedUpper.CheckForOption("sleeve")
+                    || pbe.nakedUpper.CheckForOption("sleeve long"))
+                {
+                    sourceRect.Offset(0, -574);//Use the normal arms
+                }
+                if (FarmerRenderer.isDrawingForUI)
+                {
+                    //Weird offset issue
+                    //_positionOffset.Y -= 8;
+                }
+            }
+            
+
+            b.Draw(_baseTexture, position + origin + _positionOffset + who.armOffset, sourceRect, overrideColor, rotation, origin, 4f * scale, animationFrame.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, layerDepth + arm_layer_offset);
 			if (!who.usingSlingshot || !(who.CurrentTool is Slingshot))
 			{
 				return;
