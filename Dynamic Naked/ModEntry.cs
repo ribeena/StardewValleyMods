@@ -122,10 +122,10 @@ namespace DynamicBodies
             );
 
             //Patch for touch events
-            /*harmony.Patch(
+            harmony.Patch(
                 original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.performTouchAction), new[] { typeof(string), typeof(Vector2) }),
-                prefix: new HarmonyMethod(GetType(), nameof(pre_performAction))
-            );*/
+                prefix: new HarmonyMethod(GetType(), nameof(pre_performTouchAction))
+            );
 
             //Patch for actions on maps
             harmony.Patch(
@@ -506,6 +506,47 @@ namespace DynamicBodies
 
                 return false;
             }
+
+            //Override arbitrary gender lock on bathhouse
+            if (Config.bathhouse && action.StartsWith("WarpWomensLocker"))
+            {
+                String[] actionParams = action.Split(" ");
+
+                who.faceGeneralDirection(new Vector2(tileLocation.X, tileLocation.Y) * 64f);
+                if (actionParams.Length < 5)
+                {
+                    Game1.currentLocation.playSoundAt("doorClose", new Vector2(tileLocation.X, tileLocation.Y));
+                }
+                Game1.warpFarmer(actionParams[3], Convert.ToInt32(actionParams[1]), Convert.ToInt32(actionParams[2]), flip: false);
+                return false;
+            }
+            if (Config.bathhouse && action.StartsWith("WarpMensLocker"))
+            {
+                String[] actionParams = action.Split(" ");
+
+                who.faceGeneralDirection(new Vector2(tileLocation.X, tileLocation.Y) * 64f);
+                if (actionParams.Length < 5)
+                {
+                    Game1.currentLocation.playSoundAt("doorClose", new Vector2(tileLocation.X, tileLocation.Y));
+                }
+                Game1.warpFarmer(actionParams[3], Convert.ToInt32(actionParams[1]), Convert.ToInt32(actionParams[2]), flip: false);
+                return false;
+            }
+
+            return true;
+        }
+
+        public static bool pre_performTouchAction(GameLocation __instance, string fullActionString, Vector2 playerStandingPosition)
+        {
+            
+
+            //Override arbitrary gender lock on bathhouse
+            if (Config.bathhouse && (fullActionString.StartsWith("WomensLocker") || fullActionString.StartsWith("MensLocker")))
+            {
+                //Don't tell them which locker it is
+                return false;
+            }
+
             return true;
         }
 
@@ -811,6 +852,12 @@ namespace DynamicBodies
                 name: () => "Add mirror stations to maps",
                 getValue: () => Config.adjustmaps,
                 setValue: value => Config.adjustmaps = value
+            );
+            configMenu.AddBoolOption(
+                mod: this.ModManifest,
+                name: () => "Gender-free bathhouse lockers",
+                getValue: () => Config.bathhouse,
+                setValue: value => Config.bathhouse = value
             );
         }
 
