@@ -41,6 +41,7 @@ namespace DynamicBodies
         internal static IMonitor monitor;
         internal static IModHelper modHelper;
 
+        static Harmony harmony;
         internal static BootsPatched bootsPatcher;
         internal static FarmerRendererPatched farmerRendererPatcher;
         internal static CharacterCreatorPatched creatorPatched;
@@ -48,6 +49,7 @@ namespace DynamicBodies
         private static bool debugMode = true;
 
         public static IGenericModConfigMenuApi configMenu = null;
+        public static IDynamicGameAssetsApi dga = null;
 
         public static float FS_pantslayer = 0.009E-05f;
         public static float hairlayer = 2.25E-05f;
@@ -108,7 +110,7 @@ namespace DynamicBodies
             context.Helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             //context.Helper.Events.GameLoop.Saving += OnSaveRevertTextures;
 
-            var harmony = new Harmony(ModManifest.UniqueID);
+            harmony = new Harmony(ModManifest.UniqueID);
 
             
             //Fix up rendering of the farmer
@@ -594,6 +596,11 @@ namespace DynamicBodies
         {
             PlayerBaseExtended.extendedFarmers.Clear();
             SetModDataDefaults(Game1.player);
+
+            if(dga != null)
+            {
+                BootsPatched.PatchDGA(harmony);
+            }
         }
 
         public static void SetModDataDefaults(Farmer who)
@@ -826,6 +833,63 @@ namespace DynamicBodies
             {
                 engb = Helper.ModContent.Load<BritishStrings>("assets\\i18n\\en-gb.json");
             }
+
+            //Check for DGA compatibility
+            if(Helper.ModRegistry.IsLoaded("spacechase0.DynamicGameAssets"))
+            {
+                dga = Helper.ModRegistry.GetApi<IDynamicGameAssetsApi>("spacechase0.DynamicGameAssets");
+                
+                foreach (IContentPack contentPack in context.Helper.ContentPacks.GetOwned())
+                {
+                    if (contentPack.HasFile("DGA\\content.json"))
+                    {
+                        DGAManifest pack_manifest = new DGAManifest(contentPack.Manifest);
+
+                        debugmsg($"DGA sub-content pack loading ... DGA id is {pack_manifest.UniqueID}", LogLevel.Debug);
+                        dga.AddEmbeddedPack(pack_manifest, Path.Combine(contentPack.DirectoryPath, "DGA"));
+
+
+                        DGAPackData[] allDGAPackData = contentPack.ModContent.Load<List<DGAPackData>>("DGA\\content.json").ToArray();
+
+                        if(allDGAPackData != null && allDGAPackData.Length > 0) {
+                            debugmsg($"Has Pack Data!", LogLevel.Debug);
+                            foreach (DGAPackData DGAPackData in allDGAPackData)
+                            {
+                                
+                                if (DGAPackData != null && DGAPackData.ItemType != null)
+                                {
+                                    if(DGAPackData.ItemType == "Boots")
+                                    {
+                                        //Load the boots color palette
+                                        IRawTextureData bootPalette = contentPack.ModContent.Load<IRawTextureData>(Path.Combine(contentPack.DirectoryPath, "DGA", DGAPackData.FarmerColors.Split(":")[0]));
+                                        int c_offset = 0;
+                                        try
+                                        {
+                                            c_offset = int.Parse(DGAPackData.FarmerColors.Split(":")[1]) * 4;
+                                        } catch { }
+                                        ShoesPalette.LoadPalette(bootPalette, c_offset, pack_manifest.UniqueID + "/" + DGAPackData.ID);
+
+                                        Texture2D bootIcon = contentPack.ModContent.Load<Texture2D>(Path.Combine(contentPack.DirectoryPath, "DGA", DGAPackData.Texture.Split(":")[0]));
+                                        int i_offset = 0;
+                                        try
+                                        {
+                                            i_offset = int.Parse(DGAPackData.Texture.Split(":")[1]);
+                                        }
+                                        catch { }
+                                        BootsPatched.CreateDGATexture(bootIcon, i_offset, pack_manifest.UniqueID + "/" + DGAPackData.ID);
+
+                                        debugmsg($"{DGAPackData.ItemType} color & icon added for {pack_manifest.UniqueID}/{DGAPackData.ID}", LogLevel.Debug);
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            //Set-up the shoe colors
+            ShoesPalette.LoadPalettes(Game1.content.Load<Texture2D>("Characters\\Farmer\\shoeColors"));
 
             //////////////////////////////////////////////
             // Add support for generic mod menu

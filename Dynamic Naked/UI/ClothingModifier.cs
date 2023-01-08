@@ -12,6 +12,7 @@ using StardewValley.Objects;
 using StardewModdingAPI;
 using StardewValley.Menus;
 using StardewValley;
+using DynamicBodies.Framework;
 
 namespace DynamicBodies.UI
 {
@@ -52,7 +53,7 @@ namespace DynamicBodies.UI
 
 		public ClickableTextureComponent stainBottle;
 		private Rectangle stainBottleRainbowBack;
-		private int prismatic_stain = -1;
+		private string prismatic_stain = "";
 
 		public ClickableTextureComponent craftResultDisplay;
 
@@ -73,7 +74,6 @@ namespace DynamicBodies.UI
 
 		public Color bgColor;
 		public Color darkText;
-		public Dictionary<int, Color> bootColors = new Dictionary<int, Color>();
 
 		private Texture2D stainBottleOverlay;
 		private Color[] stainData;
@@ -118,6 +118,9 @@ namespace DynamicBodies.UI
 				tryDefaultIfNoDownNeighborExists = true,
 				fullyImmutable = true
 			};
+
+			//Update the stain colors incase it's changed by JSONAssets
+			ShoesPalette.LoadPalettes();
 
 			stainBottleOverlay = new Texture2D(Game1.graphics.GraphicsDevice, 24, 24);
 			stainData = new Color[24 * 24];
@@ -169,22 +172,6 @@ namespace DynamicBodies.UI
 			bgColor = data[moreTailoringTextures.Width * 2 + - 6];
 			darkText = data[2];
 
-			Texture2D shoesTex = Game1.content.Load<Texture2D>("Characters\\Farmer\\shoeColors");
-			data = new Color[shoesTex.Width * shoesTex.Height];
-			shoesTex.GetData(data, 0, data.Length);
-			for (int i = 0; i < shoesTex.Height; i++)
-			{
-				Color pixel = data[shoesTex.Width * i + 3];
-				if(pixel.A > 10)
-                {
-					bootColors.Add(i, pixel);
-                }
-			}
-			//Get rid of the naked version
-            if (bootColors.ContainsKey(12))
-            {
-				bootColors.Remove(12);
-            }
 
 			this._CreateButtons();
 			if (base.trashCan != null)
@@ -427,7 +414,8 @@ namespace DynamicBodies.UI
 		private void _bootsSpotClicked()
 		{
 			Item old_item = this.bootsSpot.item;
-			if (base.heldItem == null || this.IsValidCraftIngredient(base.heldItem))
+            _DGABootFix(base.heldItem);
+            if (base.heldItem == null || this.IsValidCraftIngredient(base.heldItem))
 			{
 				Game1.playSound("stoneStep");
 				this.bootsSpot.item = base.heldItem;
@@ -450,6 +438,29 @@ namespace DynamicBodies.UI
 				ModEntry.MakePlayerDirty();
 			}
 		}
+
+		private void _DGABootFix(Item item)
+		{
+            if (item is Boots)  ModEntry.debugmsg("boots palette is "+ (item as Boots).indexInColorSheet, LogLevel.Debug);
+
+            if (ModEntry.dga == null) return;
+            if (item == null) return;
+
+			if (item is Boots)
+			{
+				if (ModEntry.dga.GetDGAItemId(item) == null)
+				{
+                    //Not a DGA boot
+                    item.modData["DGA.FarmerColors"] = (item as Boots).indexInColorSheet+"";
+                    ModEntry.debugmsg("Vanilla-ish boots palette stored on item", LogLevel.Debug);
+                }
+				else if (!item.modData.ContainsKey("DGA.FarmerColors"))
+				{
+					item.modData["DGA.FarmerColors"] = ModEntry.dga.GetDGAItemId(item);
+					ModEntry.debugmsg("DGA boots palette stored on item", LogLevel.Debug);
+				}
+			}
+        }
 
 		public bool IsValidCraftIngredient(Item item)
 		{
@@ -479,21 +490,28 @@ namespace DynamicBodies.UI
 		private void _stainIngredientSpotClicked()
 		{
 			Item old_item = this.stainIngredientSpot.item;
-			if (base.heldItem == null || this.IsValidCraftIngredient(base.heldItem))
+            _DGABootFix(base.heldItem);
+            if (base.heldItem == null || this.IsValidCraftIngredient(base.heldItem))
 			{
 				if (base.heldItem != null && base.heldItem.HasContextTag("color_prismatic"))
 				{
 					if (bootsSpot.item == null)
 					{
-						prismatic_stain = bootColors.Keys.First();
+						prismatic_stain = ShoesPalette.First();
 					} else
                     {
-						prismatic_stain = (bootsSpot.item as Boots).indexInColorSheet;
+						if (bootsSpot.item.modData.ContainsKey("DGA.FarmerColors")) {
+							prismatic_stain = bootsSpot.item.modData["DGA.FarmerColors"];
+                        }
+						else
+						{
+							prismatic_stain = (bootsSpot.item as Boots).indexInColorSheet + "";
+						}
                     }
 				}
 				else
 				{
-					prismatic_stain = -1;
+					prismatic_stain = "";
 				}
 
 				Game1.playSound("stoneStep");
@@ -524,7 +542,22 @@ namespace DynamicBodies.UI
 			stainBottleOverlay.SetData(stainData);
 		}
 
-		public override void receiveKeyPress(Keys key)
+        private void _applyStainBottleColor(string stain_id)
+        {
+            ModEntry.debugmsg($"Stain id is {stain_id}", LogLevel.Debug);
+
+            foreach (KeyValuePair<int, Dictionary<int, Color>> kvp in stainColors)
+            {
+                Color change = ShoesPalette.GetColors(stain_id)[kvp.Key];
+                foreach (KeyValuePair<int, Color> stainPixel in kvp.Value)
+                {
+                    stainData[stainPixel.Key] = change;
+                }
+            }
+            stainBottleOverlay.SetData(stainData);
+        }
+
+        public override void receiveKeyPress(Keys key)
 		{
 			if (key == Keys.Delete)
 			{
@@ -779,7 +812,7 @@ namespace DynamicBodies.UI
 						Game1.playSound("bigSelect");
 						ColorBoot();
 						this._UpdateDescriptionText();
-						prismatic_stain = -1;
+						prismatic_stain = "";
 					}
 					else
 					{
@@ -794,29 +827,9 @@ namespace DynamicBodies.UI
 			else if (this.stainBottle.containsPoint(x, y))
 			{
 				//Change the stain
-				if (prismatic_stain >= 0)
+				if (prismatic_stain != "")
 				{
-					int[] options = stainColors.Keys.ToArray();
-					bool is_next = false;
-					foreach(int key in bootColors.Keys)
-                    {
-						if (is_next)
-                        {
-							prismatic_stain = key;
-							is_next = false;
-							break;
-                        }
-						//Next loop get that number
-						if(key == prismatic_stain)
-                        {
-							is_next = true;
-                        }
-                    }
-					//Didn't find a next
-                    if (is_next)
-                    {
-						prismatic_stain = bootColors.Keys.First();
-                    }
+					prismatic_stain = ShoesPalette.Next(prismatic_stain);
 					_ValidateCraft();
 					Game1.playSound("bigSelect");
 				}
@@ -900,41 +913,55 @@ namespace DynamicBodies.UI
 
 		protected void _ValidateCraft()
 		{
-			Item left_item = this.bootsSpot.item;
-			Item right_item = this.stainIngredientSpot.item;
-			if (right_item != null && GetStainIndex(right_item) >= 0 && left_item == null)
+			Item boot_item = this.bootsSpot.item;
+			Item stain_item = this.stainIngredientSpot.item;
+			if (stain_item != null && GetStainIndex(stain_item) != "" && boot_item == null)
 			{
 				this._craftState = CraftState.ValidStainOnly;
 				//Update dye bottle
-				if (right_item.HasContextTag("color_prismatic"))
+				if (stain_item.HasContextTag("color_prismatic"))
 				{
 					_applyStainBottleColor(prismatic_stain);
 				}
 				else
 				{
-					int stain = GetStainIndex(right_item);
-					_applyStainBottleColor(stain);
+					if (stain_item is Boots && stain_item.modData.ContainsKey("DGA.FarmerColors"))
+					{
+						_applyStainBottleColor(stain_item.modData["DGA.FarmerColors"]);
+                    }
+					else
+					{
+						_applyStainBottleColor(GetStainIndex(stain_item));
+					}
 				}
 			}
-			else if (left_item == null || (left_item == null && right_item == null))
+			else if (boot_item == null || (boot_item == null && stain_item == null))
 			{
 				this._craftState = CraftState.MissingIngredients;
 			} 
-			else if (this.IsValidCraft(left_item, right_item))
+			else if (this.IsValidCraft(boot_item, stain_item))
 			{
 				this._craftState = CraftState.Valid;
-				Item left_item_clone = left_item.getOne();
-				this.craftResultDisplay.item = this.CraftItem(left_item_clone, right_item.getOne());
-				if (right_item.HasContextTag("color_prismatic"))
+				Item boot_clone = boot_item.getOne();
+				this.craftResultDisplay.item = this.CraftItem(boot_clone, stain_item.getOne());
+				if (stain_item.HasContextTag("color_prismatic"))
 				{
 					_applyStainBottleColor(prismatic_stain);
 				}
 				else
 				{
-					//dye bottle matches the base boot
-					_applyStainBottleColor(((Boots)left_item_clone).indexInColorSheet);
+                    if (boot_clone.modData.ContainsKey("DGA.FarmerColors")) 
+                    {
+						ModEntry.debugmsg("DGA.FarmerColors is " + boot_clone.modData["DGA.FarmerColors"], LogLevel.Debug);
+						_applyStainBottleColor(boot_clone.modData["DGA.FarmerColors"]);
+                    }
+                    else
+                    {
+                        //dye bottle matches the base boot
+                        _applyStainBottleColor(((Boots)boot_clone).indexInColorSheet);
+                    }
 				}
-				if (this.craftResultDisplay.item == left_item_clone)
+				if (this.craftResultDisplay.item == boot_clone)
 				{
 					this._isDyeCraft = true;
 				}
@@ -1032,13 +1059,25 @@ namespace DynamicBodies.UI
 		public bool DyeItems(Boots boot, Item dye_object)
 		{
 			ModEntry.debugmsg("Trying stain", LogLevel.Debug);
-			int stain = GetStainIndex(dye_object);
+			string stain = GetStainIndex(dye_object);
 
-			if(stain >= 0)
+			if(stain != "")
             {
 				ModEntry.debugmsg($"Found a stain at [{stain}]", LogLevel.Debug);
-				boot.indexInColorSheet.Set(stain);
-				return true;
+				
+				int stainColorSheet = 1;
+				try
+				{
+                    //Attempt setting the correct color index
+                    stainColorSheet = int.Parse(stain);
+				} catch { }
+				boot.indexInColorSheet.Set(stainColorSheet);
+
+                if (ModEntry.dga != null)
+                {
+                    boot.modData["DGA.FarmerColors"] = stain;
+                }
+                return true;
 			}
             else
             {
@@ -1046,30 +1085,25 @@ namespace DynamicBodies.UI
             }
 		}
 
-		public int GetStainIndex(Item dye_object)
+		public string GetStainIndex(Item dye_object)
         {
             if (dye_object.HasContextTag("color_prismatic"))
             {
 				return prismatic_stain;
             }
 
-			int currentIndex = -1;
+			if (dye_object.modData.ContainsKey("DGA.FarmerColors")) return dye_object.modData["DGA.FarmerColors"];
+			if (dye_object is Boots) return (dye_object as Boots).indexInColorSheet + "";
+
+			string currentIndex = "";
 
 			Color? dye_color = ClothingModifier.GetItemColor(dye_object);
 			if (dye_color.HasValue)
 			{
-				int similarity = int.MaxValue;
-				//find a similar colour
-				foreach (KeyValuePair<int, Color> kvp in bootColors)
-				{
-					int difference = Math.Abs(dye_color.Value.R - kvp.Value.R) + Math.Abs(dye_color.Value.G - kvp.Value.G) + Math.Abs(dye_color.Value.B - kvp.Value.B);
-					if (difference < similarity)
-					{
-						similarity = difference;
-						currentIndex = kvp.Key;
-					}
-				}
+                currentIndex = ShoesPalette.FindClosestColor(dye_color.Value, 2);
 			}
+
+			ModEntry.debugmsg($"Stain found for {dye_object.Name}: {currentIndex}", LogLevel.Debug);
 			return currentIndex;
 		}
 
@@ -1099,27 +1133,37 @@ namespace DynamicBodies.UI
 			return false;
 		}
 
-		public Item CraftItem(Item left_item, Item right_item)
+		public Item CraftItem(Item boot_item, Item stain_item)
 		{
-			if (left_item == null || right_item == null)
+			if (boot_item == null || stain_item == null)
 			{
 				return null;
 			}
-			if (left_item is Boots && right_item is Boots)
+
+			if (boot_item is Boots)
 			{
-				(left_item as Boots).applyStats(right_item as Boots);
-				return left_item;
-			}
-			if (left_item is Boots)
-			{
-				if (right_item.HasContextTag("color_prismatic"))
+				if (stain_item.HasContextTag("color_prismatic"))
 				{
-					(left_item as Boots).indexInColorSheet.Set(prismatic_stain);
-					return left_item;
+
+                    int stainColorSheet = 1;
+                    try
+                    {
+                        //Attempt setting the correct color index
+                        stainColorSheet = int.Parse(prismatic_stain);
+					}
+					catch { }
+                    (boot_item as Boots).indexInColorSheet.Set(stainColorSheet);
+
+                    if (ModEntry.dga != null)
+					{
+                        boot_item.modData["DGA.FarmerColors"] = prismatic_stain;
+                    }
+
+					return boot_item;
 				}
-				if (this.DyeItems(left_item as Boots, right_item))
+				if (this.DyeItems(boot_item as Boots, stain_item))
 				{
-					return left_item;
+					return boot_item;
 				}
 			}
 			return null;
@@ -1202,7 +1246,7 @@ namespace DynamicBodies.UI
 			}
 			if (this.stainBottle.containsPoint(x, y))
 			{
-				if (prismatic_stain >= 0)
+				if (prismatic_stain != "")
 				{
 					base.hoverText = T("boot_change_color");
 				}
@@ -1271,7 +1315,7 @@ namespace DynamicBodies.UI
 				this.craftResultDisplay.visible = false;
 			}
 
-			if(prismatic_stain >= 0)
+			if(prismatic_stain != "")
             {
 				//stainBottleRainbowBack = new Rectangle(0, 88, 24, 24);
 				int frame = (int)(time.TotalGameTime.TotalMilliseconds % 600.0 / 100.0);
@@ -1483,7 +1527,7 @@ namespace DynamicBodies.UI
 			}
 			this.stainIngredientSpot.drawItem(b, 16, 4 * 4);
 
-			if (prismatic_stain >= 0) {
+			if (prismatic_stain != "") {
 				b.Draw(this.moreTailoringTextures, stainBottle.bounds, stainBottleRainbowBack, Color.White);
 			}
 

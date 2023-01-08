@@ -13,8 +13,12 @@
       "IsRequired": false
     },
     {
-      "UniqueID": "TheMightyAmondee.GoodbyeAmericanEnglish",
+      "UniqueID": "spacechase0.DynamicGameAssets",
       "IsRequired": false
     },
+    {
+      "UniqueID": "TheMightyAmondee.GoodbyeAmericanEnglish",
+      "IsRequired": false
+    }
   ],
 }

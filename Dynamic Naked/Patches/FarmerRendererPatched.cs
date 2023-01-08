@@ -85,11 +85,6 @@ namespace DynamicBodies.Patches
                     return;//Abort
                 }
             }
-            if(field == "shirt" || field == "shoes")
-            {
-                //pbe.cacheImage = null;
-                
-            }
             if(field == "shirt")
             {
                 pbe.dirtyLayers["shirt"] = true;
@@ -157,6 +152,7 @@ namespace DynamicBodies.Patches
         }
 
         //Replace the drawing of Farmer Renderer
+        [HarmonyBefore(new string[] { "spacechase0.DynamicGameAssets" })]
         private static bool pre_Draw(FarmerRenderer __instance, ref Vector2 ___positionOffset, ref Vector2 ___rotationAdjustment, ref bool ____sickFrame, ref bool ____spriteDirty, ref bool ____eyesDirty, ref bool ____shirtDirty, ref bool ____pantsDirty, ref bool ____shoesDirty, ref bool ____skinDirty, ref bool ____baseTextureDirty, ref LocalizedContentManager ___farmerTextureManager, ref Dictionary<string, Dictionary<int, List<int>>> ____recolorOffsets, ref Texture2D ___baseTexture, ref string ___textureName, SpriteBatch b, FarmerSprite.AnimationFrame animationFrame, int currentFrame, Rectangle sourceRect, Vector2 position, Vector2 origin, float layerDepth, int facingDirection, Color overrideColor, float rotation, float scale, Farmer who)
         {
             if (who.isFakeEventActor && Game1.eventUp)
@@ -1022,17 +1018,40 @@ namespace DynamicBodies.Patches
         private static void UpdateShoePalette(Farmer who, PlayerBaseExtended pbe)
         {
             Boots boots = who.boots.Value;
+            
             if (boots != null)
             {
-                int which = boots.indexInColorSheet.Value;
 
-                Texture2D shoeColors = Game1.content.Load<Texture2D>("Characters\\Farmer\\shoeColors");
-                Color[] shoeColorsData = new Color[shoeColors.Width * shoeColors.Height];
-                shoeColors.GetData(shoeColorsData);
-                pbe.paletteCache[12] = shoeColorsData[which * 4 % (shoeColors.Height * 4)].ToVector4();
-                pbe.paletteCache[13] = shoeColorsData[which * 4 % (shoeColors.Height * 4) + 1].ToVector4();
-                pbe.paletteCache[14] = shoeColorsData[which * 4 % (shoeColors.Height * 4) + 2].ToVector4();
-                pbe.paletteCache[15] = shoeColorsData[which * 4 % (shoeColors.Height * 4) + 3].ToVector4();
+                if (ModEntry.dga != null)
+                {
+                    string colorID = boots.indexInColorSheet.Value+"";//Start with default
+                    if (ModEntry.dga.GetDGAItemId(boots) != null && !boots.modData.ContainsKey("DGA.FarmerColors"))
+                    {
+                        boots.modData["DGA.FarmerColors"] = ModEntry.dga.GetDGAItemId(boots);
+                        ModEntry.debugmsg("DGA boots palette stored on item", LogLevel.Debug);
+                    }
+
+                    if (boots.modData.ContainsKey("DGA.FarmerColors")) { colorID = boots.modData["DGA.FarmerColors"]; }
+                    else { boots.modData["DGA.FarmerColors"] = colorID; }
+
+                    Color[] shoeColors = ShoesPalette.GetColors(colorID);
+                    pbe.paletteCache[12] = shoeColors[0].ToVector4();
+                    pbe.paletteCache[13] = shoeColors[1].ToVector4();
+                    pbe.paletteCache[14] = shoeColors[2].ToVector4();
+                    pbe.paletteCache[15] = shoeColors[3].ToVector4();
+                }
+                else
+                {
+                    int which = boots.indexInColorSheet.Value;
+
+                    Texture2D shoeColors = Game1.content.Load<Texture2D>("Characters\\Farmer\\shoeColors");
+                    Color[] shoeColorsData = new Color[shoeColors.Width * shoeColors.Height];
+                    shoeColors.GetData(shoeColorsData);
+                    pbe.paletteCache[12] = shoeColorsData[which * 4 % (shoeColors.Height * 4)].ToVector4();
+                    pbe.paletteCache[13] = shoeColorsData[which * 4 % (shoeColors.Height * 4) + 1].ToVector4();
+                    pbe.paletteCache[14] = shoeColorsData[which * 4 % (shoeColors.Height * 4) + 2].ToVector4();
+                    pbe.paletteCache[15] = shoeColorsData[which * 4 % (shoeColors.Height * 4) + 3].ToVector4();
+                }
             }
         }
 
