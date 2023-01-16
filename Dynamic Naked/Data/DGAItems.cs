@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
+using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,8 @@ namespace DynamicBodies.Data
     {
         static Dictionary<string, DGAShirt> shirts = new Dictionary<string, DGAShirt>();
         static Dictionary<string, DGAPants> pants = new Dictionary<string, DGAPants>();
+        static Dictionary<string, string> hats = new Dictionary<string, string>();
+        static Dictionary<string, string> boots = new Dictionary<string, string>();
 
         public static DGAPants GetDGAPants(string dgaid)
         {
@@ -24,6 +27,17 @@ namespace DynamicBodies.Data
             pants[pantsToAdd.ID] = pantsToAdd;
         }
 
+        public static void PantsFixes(Clothing pants)
+        {
+            string dgaid = ModEntry.dga.GetDGAItemId(pants);
+            if (dgaid == null) return;
+            if (pants.modData.ContainsKey("DGA.Fixed")) return;
+            string metadata = GetDGAPants(dgaid).metadata;
+            if (metadata == "") return;
+            pants.otherData.Set(metadata + ", " + pants.otherData.Get());
+            pants.modData["DGA.Fixed"] = "1";
+        }
+
         public static DGAShirt GetDGAShirt(string dgaid)
         {
             if (!shirts.ContainsKey(dgaid)) return null;
@@ -33,6 +47,45 @@ namespace DynamicBodies.Data
         public static void AddDGAShirt(DGAShirt shirtToAdd)
         {
             shirts[shirtToAdd.ID] = shirtToAdd;
+        }
+
+        public static void ShirtFixes(Clothing shirt)
+        {
+            string dgaid = ModEntry.dga.GetDGAItemId(shirt);
+            if (dgaid == null) return;
+            if (shirt.modData.ContainsKey("DGA.Fixed")) return;
+            string metadata = GetDGAShirt(dgaid).metadata;
+            if (metadata == "") return;
+            shirt.otherData.Set(metadata + ", " + shirt.otherData.Get());
+            shirt.modData["DGA.Fixed"] = "1";
+        }
+
+        public static void AddDGAHat(string ID, string metadata)
+        {
+            hats[ID] = metadata;
+        }
+        public static void HatFixes(Hat hat)
+        {
+            string dgaid = ModEntry.dga.GetDGAItemId(hat);
+            if (dgaid == null) return;
+            if (hat.modData.ContainsKey("DGA.Fixed")) return;
+            if (!hats.ContainsKey(dgaid)) return;
+            hat.modData["otherData"] = hats[dgaid] + (hat.modData.ContainsKey("otherData")? ", " + hat.modData["otherData"]:"");
+            hat.modData["DGA.Fixed"] = "1";
+        }
+
+        public static void AddDGAShoe(string ID, string metadata)
+        {
+            boots[ID] = metadata;
+        }
+        public static void ShoeFixes(Boots boot)
+        {
+            string dgaid = ModEntry.dga.GetDGAItemId(boot);
+            if (dgaid == null) return;
+            if (boot.modData.ContainsKey("DGA.Fixed")) return;
+            if (!boots.ContainsKey(dgaid)) return;
+            boot.modData["otherData"] = boots[dgaid] + (boot.modData.ContainsKey("otherData") ? ", " + boot.modData["otherData"] : "");
+            boot.modData["DGA.Fixed"] = "1";
         }
 
         public static string GetTextureLocationVariant(string location, string bodystyle)
@@ -199,7 +252,7 @@ namespace DynamicBodies.Data
         IContentPack contentPack;
         string texture;
 
-        string metadata = string.Empty;
+        public string metadata = string.Empty;
 
         public DGAPants(string id, IContentPack contentPack, string texture, string metadata = "")
         {

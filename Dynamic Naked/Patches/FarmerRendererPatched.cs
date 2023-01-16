@@ -91,11 +91,13 @@ namespace DynamicBodies.Patches
             }
             if(field == "shirt")
             {
+                if (ModEntry.dga != null) DGAItems.ShirtFixes(who.shirtItem.Get());
                 pbe.dirtyLayers["shirt"] = true;
                 //pbe.shirt = -1;//force shirt change
             }
             if(field == "shoes")
             {
+                if (ModEntry.dga != null) DGAItems.ShoeFixes(who.boots.Get());
                 pbe.dirtyLayers["shoes"] = true;
                 pbe.shoes = -1;//force shoe change
             }
@@ -105,8 +107,14 @@ namespace DynamicBodies.Patches
                 //Update stored pants colour, darken it
                 if(who.pantsItem.Value != null)
                 {
+                    if (ModEntry.dga != null) DGAItems.PantsFixes(who.pantsItem.Get());
                     pbe.paletteCache[16] = changeBrightness(who.pantsColor.Value, new Color(50,50,50), false).ToVector4();
                 }
+            }
+
+            if (field == "hat")
+            {
+                if (ModEntry.dga != null) DGAItems.HatFixes(who.hat.Get());
             }
 
             pbe.dirty = true;

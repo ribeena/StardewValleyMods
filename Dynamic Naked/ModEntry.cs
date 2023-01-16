@@ -213,6 +213,7 @@ namespace DynamicBodies
 
         public static void post_Farmer_setup(Farmer __instance)
         {
+            __instance.hat.fieldChangeEvent += delegate { FarmerRendererPatched.FieldChanged("hat", __instance); };
             __instance.boots.fieldChangeEvent += delegate { FarmerRendererPatched.FieldChanged("shoes", __instance); };
             __instance.shirtItem.fieldChangeEvent += delegate { FarmerRendererPatched.FieldChanged("shirt", __instance); };
             __instance.pantsItem.fieldChangeEvent += delegate { FarmerRendererPatched.FieldChanged("pants", __instance); };
