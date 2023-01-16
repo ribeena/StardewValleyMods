@@ -860,6 +860,11 @@ namespace DynamicBodies
                                 {
                                     if(DGAPackData.ItemType == "Boots")
                                     {
+                                        //DGA comptaibility warnings
+                                        if(DGAPackData.FarmerColors.Contains(",") || DGAPackData.FarmerColors.Contains("@"))
+                                        {
+                                            context.Monitor.Log("DGA animation is not supported. First frame will be used only. Please contact content pack author and advise to fix.", LogLevel.Alert);
+                                        }
                                         //Load the boots color palette
                                         IRawTextureData bootPalette = contentPack.ModContent.Load<IRawTextureData>(Path.Combine(contentPack.DirectoryPath, "DGA", DGAPackData.FarmerColors.Split(":")[0]));
                                         int c_offset = 0;
@@ -879,6 +884,28 @@ namespace DynamicBodies
                                         BootsPatched.CreateDGATexture(bootIcon, i_offset, pack_manifest.UniqueID + "/" + DGAPackData.ID);
 
                                         debugmsg($"{DGAPackData.ItemType} color & icon added for {pack_manifest.UniqueID}/{DGAPackData.ID}", LogLevel.Debug);
+                                    }
+
+                                    //Create a DB version of the pants for rendering
+                                    if(DGAPackData.ItemType == "Pants")
+                                    {
+                                        if (DGAPackData.Texture != "")
+                                        {
+                                            DGAItems.AddDGAPants(new DGAPants(pack_manifest.UniqueID + "/" + DGAPackData.ID, contentPack, Path.Combine("DGA", DGAPackData.Texture), DGAPackData.Metadata));
+                                        }
+                                    }
+
+                                    //Create a DB version of the shirt for rendering
+                                    if (DGAPackData.ItemType == "Shirt")
+                                    {
+                                        DGAItems.AddDGAShirt(new DGAShirt(pack_manifest.UniqueID + "/" + DGAPackData.ID, contentPack,
+                                            DGAPackData.TextureMale == "" ? "" : Path.Combine("DGA", DGAPackData.TextureMale),
+                                            DGAPackData.TextureMaleColor == "" ? "" : Path.Combine("DGA", DGAPackData.TextureMaleColor),
+                                            DGAPackData.TextureMaleOverlay == "" ? "" : Path.Combine("DGA", DGAPackData.TextureMaleOverlay),
+                                            DGAPackData.TextureFemale == "" ? "" : Path.Combine("DGA", DGAPackData.TextureFemale),
+                                            DGAPackData.TextureFemaleColor == "" ? "" : Path.Combine("DGA", DGAPackData.TextureFemaleColor),
+                                            DGAPackData.TextureFemaleOverlay == "" ? "" : Path.Combine("DGA", DGAPackData.TextureFemaleOverlay),
+                                            DGAPackData.Metadata));
                                     }
                                 }
                             }

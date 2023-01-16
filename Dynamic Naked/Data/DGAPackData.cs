@@ -19,8 +19,22 @@ namespace DynamicBodies.Data
         [DataMember()]
         public string ID;
         [DataMember()]
-        public string Texture;
+        public string Texture = "";
         [DataMember()]
-        public string FarmerColors;
+        public string FarmerColors = "";
+        [DataMember()]
+        public string Metadata = "";
+        [DataMember()]
+        public string TextureMale = "";
+        [DataMember()]
+        public string TextureMaleColor = "";
+        [DataMember()]
+        public string TextureMaleOverlay = "";
+        [DataMember()]
+        public string TextureFemale = "";
+        [DataMember()]
+        public string TextureFemaleColor = "";
+        [DataMember()]
+        public string TextureFemaleOverlay = "";
     }
 }
